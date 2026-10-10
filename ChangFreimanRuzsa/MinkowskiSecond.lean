@@ -1,0 +1,159 @@
+/-
+Copyright (c) 2026 Gabriel Dahia. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Gabriel Dahia
+-/
+module
+
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Data.Nat.Factorial.Basic
+public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
+public import Mathlib.LinearAlgebra.Matrix.ToLin
+import TauCeti.LinearAlgebra.IntegralLattice.PosDef.Minkowski
+import Mathlib.Algebra.Order.Star.Rat
+import Mathlib.Analysis.Real.Pi.Bounds
+import Mathlib.Analysis.SpecialFunctions.Gamma.BohrMollerup
+import Mathlib.LinearAlgebra.Matrix.PosDef
+
+/-! # Minkowski's second theorem for a weighted sum of squares
+
+Let `B` be an integer matrix with nonzero determinant and let `w` be positive weights. The lattice
+`B ℤⁿ`, with the norm `∑ j, w j * x j ^ 2`, is a positive definite integral lattice of determinant
+`B.det ^ 2 * ∏ j, w j`. Minkowski's second theorem, in the form proved in Tau Ceti, gives
+independent vectors of this lattice whose norms have product at most
+`2 ^ n * n ! * B.det ^ 2 * ∏ j, w j`.
+
+The main result is `exists_linearIndependent_prod_weightedNorm_le`.
+-/
+
+public section
+
+namespace ChangFreimanRuzsa
+
+open Matrix Module TauCeti
+open scoped Nat
+
+variable {n : ℕ} {B : Matrix (Fin n) (Fin n) ℤ} {w : Fin n → ℕ}
+
+/-- The Gram matrix of the columns of `B` for the form `∑ j, w j * x j ^ 2`. -/
+private def weightedGram (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
+    Matrix (Fin n) (Fin n) ℤ :=
+  Bᵀ * diagonal (fun j ↦ (w j : ℤ)) * B
+
+private lemma weightedGram_isSymm (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
+    (weightedGram B w).IsSymm := by
+  simp [Matrix.IsSymm, weightedGram, Matrix.mul_assoc]
+
+private lemma dotProduct_weightedGram_mulVec (c : Fin n → ℤ) :
+    c ⬝ᵥ weightedGram B w *ᵥ c = ∑ j, (w j : ℤ) * (B *ᵥ c) j ^ 2 := by
+  rw [weightedGram, ← mulVec_mulVec, ← mulVec_mulVec, dotProduct_mulVec, vecMul_transpose,
+    dotProduct]
+  exact Finset.sum_congr rfl fun j _ ↦ by rw [mulVec_diagonal]; ring
+
+private lemma det_weightedGram : (weightedGram B w).det = B.det ^ 2 * ∏ j, (w j : ℤ) := by
+  rw [weightedGram, det_mul, det_mul, det_transpose, det_diagonal]
+  ring
+
+private lemma posDef_weightedGram (hB : B.det ≠ 0) (hw : ∀ j, 0 < w j) :
+    ((weightedGram B w).map (Int.castRingHom ℚ)).PosDef := by
+  have hmap : (weightedGram B w).map (Int.castRingHom ℚ) = (B.map (Int.castRingHom ℚ))ᴴ *
+      diagonal (fun j ↦ (w j : ℚ)) * B.map (Int.castRingHom ℚ) := by
+    rw [weightedGram, Matrix.map_mul, Matrix.map_mul, conjTranspose_eq_transpose_of_trivial,
+      transpose_map, diagonal_map (map_zero _)]
+    simp
+  have hdet : IsUnit (B.map (Int.castRingHom ℚ)).det := by
+    rw [isUnit_iff_ne_zero, ← RingHom.mapMatrix_apply, ← RingHom.map_det]
+    simpa using hB
+  rw [hmap]
+  exact (PosDef.diagonal fun j ↦ by exact_mod_cast hw j).conjTranspose_mul_mul_same
+    (mulVec_injective_iff_isUnit.mpr ((isUnit_iff_isUnit_det _).mpr hdet))
+
+/-- The lattice `ℤⁿ` with the form `x ↦ ∑ j, w j * (B x) j ^ 2`. -/
+private noncomputable def weightedLattice (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
+    IntegralLattice (Fin n → ℚ) :=
+  IntegralLattice.ofGramMatrix (Pi.basisFun ℚ (Fin n)) (weightedGram B w) (weightedGram_isSymm B w)
+
+private noncomputable def weightedBasis (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
+    Basis (Fin n) ℤ (weightedLattice B w) :=
+  IntegralLattice.ofGramMatrix.basis _ _ _
+
+/-- The lattice vector with coordinates `y`, as an element of `B ℤⁿ`. -/
+private noncomputable def weightedVec (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
+    weightedLattice B w →ₗ[ℤ] (Fin n → ℤ) :=
+  B.mulVecLin ∘ₗ (weightedBasis B w).equivFun.toLinearMap
+
+private lemma weightedVec_injective (hB : B.det ≠ 0) :
+    Function.Injective (weightedVec B w) :=
+  (mulVec_injective_of_det_ne_zero hB).comp (weightedBasis B w).equivFun.injective
+
+private lemma integralNorm_weightedLattice (y : weightedLattice B w) :
+    (weightedLattice B w).integralNorm y = ∑ j, (w j : ℤ) * weightedVec B w y j ^ 2 := by
+  have hform : (weightedLattice B w).integralForm =
+      Matrix.toBilin (weightedBasis B w) (weightedGram B w) := by
+    rw [← IntegralLattice.gramMatrix_ofGramMatrix (Pi.basisFun ℚ (Fin n)) (weightedGram B w)
+      (weightedGram_isSymm B w), IntegralLattice.gramMatrix_eq_toMatrix]
+    exact (Matrix.toBilin_toMatrix _ _).symm
+  rw [IntegralLattice.integralNorm_apply, hform, Matrix.toBilin_apply]
+  calc _ = (weightedBasis B w).equivFun y ⬝ᵥ
+        weightedGram B w *ᵥ (weightedBasis B w).equivFun y := by
+        simp [dotProduct, mulVec, Finset.mul_sum, mul_assoc]
+    _ = _ := dotProduct_weightedGram_mulVec _
+
+private lemma gamma_sq_le_factorial (n : ℕ) : Real.Gamma (n / 2 + 1) ^ 2 ≤ n ! := by
+  have h := Real.Gamma_mul_add_mul_le_rpow_Gamma_mul_rpow_Gamma (s := 1) (t := n + 1)
+    (a := 1 / 2) (b := 1 / 2) one_pos (by positivity) (by norm_num) (by norm_num) (by norm_num)
+  rw [show (1 : ℝ) / 2 * 1 + 1 / 2 * (n + 1) = n / 2 + 1 by ring, Real.Gamma_one, Real.one_rpow,
+    one_mul, Real.Gamma_nat_eq_factorial, ← Real.sqrt_eq_rpow] at h
+  calc Real.Gamma (n / 2 + 1) ^ 2 ≤ √(n ! : ℝ) ^ 2 :=
+        pow_le_pow_left₀ (Real.Gamma_pos_of_pos (by positivity)).le h 2
+    _ = n ! := Real.sq_sqrt (Nat.cast_nonneg _)
+
+private lemma le_of_mul_pi_pow_le {P Δ : ℝ} (hP : 0 ≤ P) (hΔ : 0 ≤ Δ)
+    (h : P * Real.pi ^ n ≤ 4 ^ n * Real.Gamma (n / 2 + 1) ^ 2 * Δ) : P ≤ 2 ^ n * n ! * Δ := by
+  have hpi : (2 : ℝ) ^ n ≤ Real.pi ^ n :=
+    pow_le_pow_left₀ zero_le_two Real.two_le_pi n
+  have h₁ : P * 2 ^ n ≤ 4 ^ n * (n ! : ℝ) * Δ :=
+    (mul_le_mul_of_nonneg_left hpi hP).trans <| h.trans <| by
+      gcongr
+      exact gamma_sq_le_factorial n
+  rw [show (4 : ℝ) ^ n = 2 ^ n * 2 ^ n by rw [← mul_pow]; norm_num] at h₁
+  refine le_of_mul_le_mul_right ?_ (pow_pos zero_lt_two n)
+  linarith
+
+/-- **Minkowski's second theorem** for the lattice `B ℤⁿ` and the norm `∑ j, w j * x j ^ 2`: there
+are `n` independent lattice vectors whose norms have product at most
+`2 ^ n * n ! * B.det ^ 2 * ∏ j, w j`. -/
+theorem exists_linearIndependent_prod_weightedNorm_le (B : Matrix (Fin n) (Fin n) ℤ)
+    (hB : B.det ≠ 0) (w : Fin n → ℕ) (hw : ∀ j, 0 < w j) :
+    ∃ v : Fin n → Fin n → ℤ, LinearIndependent ℤ v ∧ (∀ i, ∃ c, B *ᵥ c = v i) ∧
+      ((∏ i, ∑ j, (w j : ℤ) * v i j ^ 2 : ℤ) : ℝ) ≤
+        2 ^ n * n ! * ((B.det ^ 2 * ∏ j, (w j : ℤ) : ℤ) : ℝ) := by
+  set L := weightedLattice B w
+  have hL : L.IsPosDef :=
+    (IntegralLattice.isPosDef_ofGramMatrix_iff _ _ _).mpr (posDef_weightedGram hB hw)
+  have hn : finrank ℤ L = n := by simpa using finrank_eq_card_basis (weightedBasis B w)
+  obtain ⟨x, hx, hnorm⟩ :=
+    hL.isPosSemidef.exists_linearIndependent_integralNorm_eq_successiveMinimum
+  have hmink := hL.prod_successiveMinimum_mul_pi_pow_le
+  obtain ⟨v, hv⟩ : ∃ v : Fin n → Fin n → ℤ,
+      v = fun i ↦ weightedVec B w (x (finCongr hn.symm i)) := ⟨_, rfl⟩
+  have hprod : (∏ i, (L.successiveMinimum i : ℝ)) =
+      ((∏ i, ∑ j, (w j : ℤ) * v i j ^ 2 : ℤ) : ℝ) := by
+    rw [← (finCongr hn.symm).prod_comp, hv]
+    push_cast
+    refine Finset.prod_congr rfl fun i _ ↦ ?_
+    have h := congr_arg (Int.cast : ℤ → ℝ) (integralNorm_weightedLattice (x (finCongr hn.symm i)))
+    rw [hnorm] at h
+    exact_mod_cast h
+  have hdet : L.determinant = B.det ^ 2 * ∏ j, (w j : ℤ) :=
+    (IntegralLattice.determinant_ofGramMatrix _ _ _).trans det_weightedGram
+  rw [hprod, hdet, hn] at hmink
+  refine ⟨v, ?_, fun i ↦ ⟨_, (congr_fun hv i).symm⟩, le_of_mul_pi_pow_le ?_ ?_ hmink⟩
+  · rw [hv]
+    exact (hx.comp _ (finCongr hn.symm).injective).map' _
+      (LinearMap.ker_eq_bot.mpr (weightedVec_injective hB))
+  · exact_mod_cast Finset.prod_nonneg fun i _ ↦ Finset.sum_nonneg fun j _ ↦ by positivity
+  · exact_mod_cast mul_nonneg (sq_nonneg B.det)
+      (Finset.prod_nonneg fun j _ ↦ Int.natCast_nonneg (w j))
+
+end ChangFreimanRuzsa

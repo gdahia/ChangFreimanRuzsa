@@ -1,0 +1,176 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+version: "v0.4"
+
+project:
+  name: "Chang's theorem"
+  description: >-
+    Formalization of Chang's polynomial form of Freiman's theorem, with a 2-proper
+    progression as in Green and Tao: a finite set X of integers with |X + X| <= kappa |X| is
+    contained in a 2-proper generalized arithmetic progression with at most
+    exp(10^59 kappa^20) |X|^2 points. The statement for integers is deduced from one for
+    subsets of ZMod q with q prime, where the progression has dimension at most
+    7 * 10^12 kappa^5 and at most exp(10^53 kappa^20) |X| points. The bounds are weaker than
+    those of Chang.
+  authors:
+    - name: "Gabriel Dahia"
+      github: "gdahia"
+  license: "Apache-2.0"
+  responsible_maintainers:
+    - name: "Gabriel Dahia"
+      github: "gdahia"
+
+classification:
+  arxiv: ["math.CO", "math.NT"]
+  msc2020: ["11P70", "11B30", "11B13", "11H06"]
+
+sources:
+  - title: "A polynomial bound in Freiman's theorem"
+    authors:
+      - "Mei-Chu Chang"
+    id: "https://doi.org/10.1215/S0012-7094-02-11331-3"
+    type: "paper"
+    location: "https://doi.org/10.1215/S0012-7094-02-11331-3"
+    relationship: "adapts"
+    note: >-
+      The proof follows Chang's: a Ruzsa model, Chang's lemma on large spectra, a progression
+      inside a Bohr set, and a covering argument. The bounds proved are weaker; see
+      fidelity.divergences.
+    license: "unknown"
+    author_endorsement: "not-contacted"
+  - title: "Compressions, convex geometry and the Freiman-Bilu theorem"
+    authors:
+      - "Ben Green"
+      - "Terence Tao"
+    id: "https://arxiv.org/abs/math/0511069"
+    type: "paper"
+    location: "https://arxiv.org/abs/math/0511069"
+    relationship: "background"
+    note: >-
+      Proposition 1.3 states Chang's theorem with a t-proper progression. The statements
+      here are the case t = 2, with weaker bounds.
+    license: "unknown"
+    author_endorsement: "not-contacted"
+
+related_formalizations:
+  - id: "https://github.com/gdahia/DenseSetsWithoutLargeSumsets"
+    relationship: "adapts"
+    note: >-
+      Source of the proof for subsets of ZMod q. The modules needed are copied from commit
+      5f4b915 into ChangFreimanRuzsa/ and ported to Lean v4.35.0-rc4, in the namespace
+      ChangFreimanRuzsa, without the declarations that the proof does not use, and with the
+      progression inside a Bohr set built from Minkowski's second theorem in Tau Ceti.
+  - id: "https://github.com/YaelDillies/apap"
+    relationship: "builds-on"
+    note: >-
+      A Lake dependency and the source of Chang's lemma on large spectra. Eight of its
+      modules, the one with Chang's lemma among them, are copied in APAPCompat/ with
+      Module.finrank of a submodule in place of APAP's Submodule.finrank, a name that PFR
+      declares too, so that this library can be imported next to PFR. The other modules
+      used are imported.
+  - id: "https://github.com/TauCetiProject/TauCeti"
+    relationship: "builds-on"
+    note: >-
+      A Lake dependency and the source of Minkowski's second theorem for positive definite
+      integral lattices.
+
+status:
+  scope: >-
+    Chang's theorem with a 2-proper progression, for subsets of ZMod q with q prime and for
+    finite sets of integers, with the bounds in fidelity.divergences. Chang's lemma on large
+    spectra is the one of APAP and Minkowski's second theorem the one of Tau Ceti. The
+    statement for integers has no bound on the dimension of the progression. The sorry counts
+    refer to the library and Solution.lean; Challenge.lean has one placeholder for each of
+    its two statements.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude Opus 5.5"]
+      framework: "Claude Code"
+      tool_setup: "Lean 4, Mathlib, shell, the sources of DenseSetsWithoutLargeSumsets, APAP and Tau Ceti."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine"
+      prompting_notes: >-
+        The work began inside the formalization of Campos, Dahia and Marciano, Counting sets
+        with given doubling via dimension: one instruction to state Chang's theorem as in
+        DenseSetsWithoutLargeSumsets, one to use Minkowski's second theorem from Tau Ceti and
+        to import APAP, and one to move the result to this repository in a form that can be
+        imported next to PFR.
+  spend_usd: "not tracked"
+  notes: >-
+    An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
+    with Minkowski's second theorem, removed unused declarations, and wrote the statements
+    for ZMod q and for integers, the bounds for the budgets, Challenge.lean and
+    Solution.lean. The proofs in the copied modules are those of
+    DenseSetsWithoutLargeSumsets. Every proof is checked by Lean.
+
+fidelity:
+  divergences: >-
+    Chang's theorem, as in Green and Tao, Proposition 1.3 with t = 2, gives a 2-proper
+    progression P containing A with |P| <= exp(C K^2 log^3 K) |A| and dimension at most the
+    Freiman dimension of A, where K = |A + A| / |A|.
+
+    Integers. The Lean statement takes kappa >= 2 with |X + X| <= kappa |X| and gives
+    |P| <= exp(10^59 kappa^20) |X|^2. The bound is quadratic in |X|, and the dimension of P
+    is not bounded. The library form has exp(changIntExponent kappa) in place of
+    exp(10^59 kappa^20).
+
+    ZMod q. The Lean statement is for q prime and needs exp(7 * 10^12 kappa^5) < |X| and
+    exp(10^53 kappa^20) |X| <= q. It gives a 2-proper progression of dimension at most
+    7 * 10^12 kappa^5 with at most exp(10^53 kappa^20) |X| points. The library form is
+    written with the budgets changContainerExponent and changZModExponent.
+
+    The statement for integers is deduced from the one for ZMod q. A set too small for the
+    latter is replaced by its sum with a long progression, the result is reduced modulo a
+    large prime q, and the progression Q found is lifted to the integers with q as an
+    additional step. That step has length at most 2 |Q|, which is why the bound is quadratic
+    in |X|.
+
+    A progression is a structure GAP with a dimension, an origin, steps and lengths; its
+    points are origin + sum_i w_i step_i with 0 <= w_i < length_i. It is 2-proper if the
+    points with 0 <= w_i < 2 length_i, starting from twice the origin, are distinct.
+
+    The progression inside a Bohr set comes from Minkowski's second theorem for the
+    ellipsoid inscribed in the frequency box, in the form for integral lattices of Tau Ceti.
+
+review:
+  status: "not reviewed"
+  reviewers: []
+  notes: >-
+    No independent mathematical or formalization review. lake comparator, run on macOS on
+    10 October 2026 with its sandbox disabled, accepts the solution with Lean's kernel, nanoda
+    and con-ron. scripts/verify-comparator.sh, which runs it in the sandbox and needs Linux,
+    has not been run.
+
+alignment:
+  namespace: "ChangFreimanRuzsa"
+  statements:
+    - source: "Chang's theorem for sets of integers"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_card_le"
+      module: "Challenge"
+      status: "proved"
+      note: "With at most exp(10^59 kappa^20) |X|^2 points and no bound on the dimension."
+    - source: "Chang's theorem in ZMod q"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le"
+      module: "Challenge"
+      status: "proved"
+      note: "For q prime, exp(7 * 10^12 kappa^5) < |X| and exp(10^53 kappa^20) |X| <= q."
+    - source: "Chang's theorem for sets of integers, library form"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_of_small_sumset"
+      module: "ChangFreimanRuzsa.Integers"
+      status: "proved"
+      note: "With the budget changIntExponent kappa <= 10^59 kappa^20."
+    - source: "Chang's theorem in ZMod q, library form"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_of_small_sumset"
+      module: "ChangFreimanRuzsa.Cyclic"
+      status: "proved"
+      note: "With the budgets changContainerExponent and changZModExponent."
+
+acknowledgements: >-
+  Lean 4 and Mathlib; the APAP project of Yaël Dillies and Bhavik Mehta; the Tau Ceti
+  project; the Palomar registry template.

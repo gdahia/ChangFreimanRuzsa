@@ -1,0 +1,410 @@
+/-
+Copyright (c) 2026 Gabriel Dahia. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Gabriel Dahia
+-/
+module
+
+public import Mathlib.Combinatorics.Additive.FreimanHom
+public import Mathlib.Basic.Real.Basic
+public import Mathlib.Algebra.Group.Pointwise.Finset.Basic
+public import Mathlib.Data.ZMod.Basic
+import Mathlib.Algebra.Field.ZMod
+import Mathlib.Combinatorics.Additive.PluenneckeRuzsa
+import Mathlib.Combinatorics.Pigeonhole
+import Mathlib.Data.Rat.Cast.Lemmas
+import Mathlib.Data.Rat.Cast.Order
+
+/-! # Stage M of Chang's theorem: the Ruzsa model
+
+A dense subset `X` of `ZMod q` with small doubling is modelled inside a much smaller group
+`ZMod m`, `m ≈ |s • X - s • X|`, at the cost of passing to a subset `X₁ ⊆ X` of density `1 / s`.
+The point of the model is density: in `ZMod m` the density of the image is bounded below by a
+power of the doubling constant, uniformly in `q`, which is what the Fourier stage needs.
+
+The construction is Ruzsa's. Fix an invertible dilation `l` of `ZMod q` — this is the only place
+where primality of `q` is used — and consider the integer representative `(l * x).val ∈ [0, q)`.
+Splitting `[0, q)` into `s` buckets of length `L = ⌈q / s⌉` and keeping the most populated bucket
+`j` produces `X₁` and the integer coordinate
+
+```text
+modelInt L j l x = (l * x).val - j * L ∈ [0, L),
+```
+
+whose `s`-fold sums do not wrap around modulo `q`. Reducing that coordinate modulo `m` is a Freiman
+`s`-isomorphism as soon as the dilation is *good*: no nonzero element of `s • X - s • X` is dilated
+onto a residue divisible by `m` (`IsGoodDilation`). A good dilation exists by counting, because
+there are only `|s • X - s • X| ≤ m` elements to avoid and each of them rules out at most
+`(q - 1) / m` dilations.
+
+## Main results
+
+* `exists_ruzsa_model`: the model over an arbitrary modulus `m ≥ |s • X - s • X|`.
+* `exists_ruzsa_model_of_doubling`: the same statement with the Plünnecke–Ruzsa bound
+  `m ≤ κ ^ (2 * s) * |X|` for the modulus, which is the form Stage F consumes.
+-/
+
+@[expose] public section
+
+namespace ChangFreimanRuzsa
+
+open scoped Pointwise
+
+noncomputable section
+
+namespace RuzsaModel
+
+variable {q m s L j : ℕ}
+
+/-! ### Good dilations -/
+
+/-- A dilation `l` of `ZMod q` is `m`-good for `D` when no nonzero element of `D` is dilated onto a
+residue whose representative is divisible by `m`. This is exactly what makes reduction modulo `m`
+faithful on the additive relations that the Ruzsa model has to preserve. -/
+def IsGoodDilation (m : ℕ) (D : Finset (ZMod q)) (l : ZMod q) : Prop :=
+  ∀ d ∈ D, d ≠ 0 → ¬ m ∣ (l * d).val
+
+lemma IsGoodDilation.subset {D D' : Finset (ZMod q)} {l : ZMod q} (h : IsGoodDilation m D l)
+    (hsub : D' ⊆ D) : IsGoodDilation m D' l := fun d hd ↦ h d (hsub hd)
+
+/-- The nonzero residues of `ZMod q` whose canonical representative is divisible by `m`. Each
+nonzero element of `D` forbids the dilations landing in this set. -/
+def dvdResidues (q m : ℕ) [NeZero q] : Finset (ZMod q) :=
+  Finset.univ.filter fun y ↦ y ≠ 0 ∧ m ∣ y.val
+
+lemma mem_dvdResidues [NeZero q] {y : ZMod q} : y ∈ dvdResidues q m ↔ y ≠ 0 ∧ m ∣ y.val := by
+  simp [dvdResidues]
+
+/-- There are at most `(q - 1) / m` nonzero residues with representative divisible by `m`. -/
+lemma card_dvdResidues_le [NeZero q] : (dvdResidues q m).card ≤ (q - 1) / m := by
+  suffices h : (dvdResidues q m).card ≤ (Finset.Icc 1 ((q - 1) / m)).card by simpa using h
+  apply Finset.card_le_card_of_injOn (fun y ↦ y.val / m)
+  · intro y hy
+    rw [Finset.mem_coe, mem_dvdResidues] at hy
+    have hval : y.val ≠ 0 := fun h ↦ hy.1 ((ZMod.val_eq_zero y).1 h)
+    have hm : m ≤ y.val := Nat.le_of_dvd (Nat.pos_of_ne_zero hval) hy.2
+    have hlt : y.val < q := ZMod.val_lt y
+    simp only [Finset.coe_Icc, Set.mem_Icc]
+    exact ⟨(Nat.one_le_div_iff (Nat.pos_of_dvd_of_pos hy.2 (Nat.pos_of_ne_zero hval))).2 hm,
+      Nat.div_le_div_right (by omega)⟩
+  · intro y hy z hz hyz
+    rw [Finset.mem_coe, mem_dvdResidues] at hy hz
+    have hyz' : y.val / m = z.val / m := hyz
+    apply ZMod.val_injective q
+    rw [← Nat.div_mul_cancel hy.2, ← Nat.div_mul_cancel hz.2, hyz']
+
+/-- **Existence of a good dilation.** A set `D` of at most `m` residues, containing `0`, admits a
+nonzero dilation that maps no nonzero element of `D` onto a multiple of `m`.
+
+A nonzero `d ∈ D` forbids only the dilations `l` with `l * d ∈ dvdResidues q m`, of which there are
+at most `(q - 1) / m`, so at most `(|D| - 1) * ((q - 1) / m) < q - 1` dilations are forbidden
+altogether. -/
+lemma exists_isGoodDilation (hq : q.Prime) {D : Finset (ZMod q)} (h0 : (0 : ZMod q) ∈ D)
+    (hD : D.card ≤ m) : ∃ l : ZMod q, l ≠ 0 ∧ IsGoodDilation m D l := by
+  have : NeZero q := ⟨hq.pos.ne'⟩
+  have := Fact.mk hq
+  have hq2 : 2 ≤ q := hq.two_le
+  have hDpos : 0 < D.card := Finset.card_pos.2 ⟨0, h0⟩
+  have hcard : ((D.erase 0).biUnion fun d ↦ (dvdResidues q m).image (· * d⁻¹)).card
+      < (Finset.univ.erase (0 : ZMod q)).card := by
+    have hbiUnion : ((D.erase 0).biUnion fun d ↦ (dvdResidues q m).image (· * d⁻¹)).card
+        ≤ (D.card - 1) * (dvdResidues q m).card := by
+      apply Finset.card_biUnion_le.trans
+      apply le_trans (Finset.sum_le_card_nsmul _ _ _ fun d _ ↦ Finset.card_image_le)
+      rw [Finset.card_erase_of_mem h0, smul_eq_mul]
+    have huniv : (Finset.univ.erase (0 : ZMod q)).card = q - 1 := by
+      rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, ZMod.card]
+    have hdvd : (dvdResidues q m).card * m ≤ q - 1 :=
+      le_trans (Nat.mul_le_mul_right m card_dvdResidues_le) (Nat.div_mul_le_self _ _)
+    have hmono : (D.card - 1) * (dvdResidues q m).card
+        ≤ (m - 1) * (dvdResidues q m).card := Nat.mul_le_mul_right _ (by omega)
+    have hsub : (m - 1) * (dvdResidues q m).card
+        = (dvdResidues q m).card * m - (dvdResidues q m).card := by
+      rw [Nat.sub_mul, Nat.one_mul, Nat.mul_comm]
+    rw [huniv]
+    rcases Nat.eq_zero_or_pos (dvdResidues q m).card with hK | hK
+    · rw [hK, Nat.mul_zero] at hbiUnion
+      omega
+    · omega
+  obtain ⟨l, hl, hlbad⟩ := Finset.exists_mem_notMem_of_card_lt_card hcard
+  refine ⟨l, Finset.ne_of_mem_erase hl, ?_⟩
+  intro d hd hd0 hdvd
+  refine hlbad (Finset.mem_biUnion.2 ⟨d, Finset.mem_erase.2 ⟨hd0, hd⟩, ?_⟩)
+  refine Finset.mem_image.2 ⟨l * d, ?_, mul_inv_cancel_right₀ hd0 l⟩
+  exact mem_dvdResidues.2 ⟨mul_ne_zero (Finset.ne_of_mem_erase hl) hd0, hdvd⟩
+
+/-- The `n`-fold difference set of a nonempty set contains `0`. -/
+lemma zero_mem_nsmul_sub_nsmul {G : Type*} [AddCommGroup G] [DecidableEq G] {A : Finset G}
+    (hA : A.Nonempty) (n : ℕ) : (0 : G) ∈ n • A - n • A := by
+  obtain ⟨x, hx⟩ := hA
+  have hsub := Finset.sub_mem_sub (Finset.nsmul_mem_nsmul (n := n) hx)
+    (Finset.nsmul_mem_nsmul (n := n) hx)
+  rwa [sub_self] at hsub
+
+/-! ### The model map -/
+
+/-- The integer coordinate of the Ruzsa model: the representative of the dilated point, translated
+so that the selected bucket of length `L` starts at `0`. -/
+def modelInt (L j : ℕ) (l x : ZMod q) : ℤ := ((l * x).val : ℤ) - j * L
+
+/-- The Ruzsa model map: the integer coordinate `modelInt`, read in `ZMod m`. -/
+def modelMap (m L j : ℕ) (l x : ZMod q) : ZMod m := (modelInt L j l x : ZMod m)
+
+/-- Membership in the bucket `j` of length `L` bounds the representative from both sides. -/
+lemma bucket_bounds (hL : 0 < L) {v : ℕ} (hv : v / L = j) : j * L ≤ v ∧ v < j * L + L := by
+  obtain ⟨r, hr, hrv⟩ : ∃ r, r < L ∧ j * L + r = v := by
+    refine ⟨v % L, Nat.mod_lt v hL, ?_⟩
+    rw [← hv, Nat.mul_comm]
+    exact Nat.div_add_mod v L
+  omega
+
+/-- The model coordinate of a point of the bucket `j` is nonnegative. -/
+lemma modelInt_nonneg (hL : 0 < L) {l x : ZMod q} (hx : (l * x).val / L = j) :
+    0 ≤ modelInt L j l x := by
+  have := (bucket_bounds hL hx).1
+  rw [modelInt]
+  omega
+
+/-- The model coordinate of a point of the bucket `j` is smaller than the bucket length. -/
+lemma modelInt_le (hL : 0 < L) {l x : ZMod q} (hx : (l * x).val / L = j) :
+    modelInt L j l x ≤ (L : ℤ) - 1 := by
+  have := (bucket_bounds hL hx).2
+  rw [modelInt]
+  omega
+
+/-- Read back in `ZMod q`, the model coordinate is the dilated point translated by the start of the
+bucket. -/
+lemma natCast_modelInt [NeZero q] (l x : ZMod q) :
+    ((modelInt L j l x : ℤ) : ZMod q) = l * x - (j : ZMod q) * L := by
+  rw [modelInt]
+  push_cast
+  simp
+
+/-- The sum of the model coordinates of a multiset, read back in `ZMod q`, recovers the dilated sum
+of the multiset up to the bucket translation. -/
+lemma natCast_modelInt_sum [NeZero q] (l : ZMod q) (σ : Multiset (ZMod q)) :
+    (((σ.map (modelInt L j l)).sum : ℤ) : ZMod q)
+      = l * σ.sum - (Multiset.card σ : ZMod q) * (j * L) := by
+  induction σ using Multiset.induction_on with
+  | empty => simp
+  | cons a t ih =>
+    rw [Multiset.map_cons, Multiset.sum_cons, Multiset.sum_cons, Multiset.card_cons, Int.cast_add,
+      natCast_modelInt, ih]
+    push_cast
+    ring
+
+/-- The model map is the integer coordinate read modulo `m`, so its multiset sums agree. -/
+lemma intCast_modelInt_sum (l : ZMod q) (σ : Multiset (ZMod q)) :
+    (((σ.map (modelInt L j l)).sum : ℤ) : ZMod m) = (σ.map (modelMap m L j l)).sum := by
+  induction σ using Multiset.induction_on with
+  | empty => simp
+  | cons a t ih => simp only [Multiset.map_cons, Multiset.sum_cons, Int.cast_add, modelMap, ih]
+
+/-- The sum of `n` elements of `A` lies in the `n`-fold sumset of `A`. -/
+lemma multiset_sum_mem_nsmul {G : Type*} [AddCommMonoid G] [DecidableEq G] {A : Finset G}
+    {σ : Multiset G} (hσ : ∀ x ∈ σ, x ∈ A) : σ.sum ∈ Multiset.card σ • A := by
+  induction σ using Multiset.induction_on with
+  | empty => simp
+  | cons a t ih =>
+    rw [Multiset.sum_cons, Multiset.card_cons, succ_nsmul']
+    exact Finset.add_mem_add (hσ a (Multiset.mem_cons_self a t))
+      (ih fun x hx ↦ hσ x (Multiset.mem_cons_of_mem hx))
+
+/-- A good dilation forbids divisibility by `m` of the representative of a dilated nonzero
+element, in the form used at the two signs of a difference of model sums. -/
+lemma not_dvd_of_isGoodDilation [NeZero q] {D : Finset (ZMod q)} {l d : ZMod q}
+    (hgood : IsGoodDilation m D l) (hd : d ∈ D) (hd0 : d ≠ 0) {u : ℤ} (hu0 : 0 < u)
+    (huq : u < q) (hcong : ((u : ℤ) : ZMod q) = l * d) : ¬ (m : ℤ) ∣ u := by
+  intro hdvd
+  refine hgood d hd hd0 (Int.natCast_dvd_natCast.1 ?_)
+  rw [← hcong, ZMod.val_intCast, Int.emod_eq_of_lt hu0.le huq]
+  exact hdvd
+
+/-- The sum of the model coordinates of a multiset of elements of a single bucket stays in
+`[0, card • (L - 1)]`. For multisets of `s` elements this keeps the difference of two such sums
+inside `(-q, q)`, which is the no-wrap-around property the model rests on. -/
+lemma modelInt_sum_bounds [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hL : 0 < L)
+    (hbucket : ∀ x ∈ A, (l * x).val / L = j) {ρ : Multiset (ZMod q)} (hρ : ∀ x ∈ ρ, x ∈ A) :
+    0 ≤ (ρ.map (modelInt L j l)).sum ∧
+      (ρ.map (modelInt L j l)).sum ≤ (Multiset.card ρ : ℤ) * ((L : ℤ) - 1) := by
+  constructor
+  · apply Multiset.sum_nonneg
+    intro z hz
+    obtain ⟨x, hx, rfl⟩ := Multiset.mem_map.1 hz
+    exact modelInt_nonneg hL (hbucket x (hρ x hx))
+  · refine le_trans (Multiset.sum_le_card_nsmul _ ((L : ℤ) - 1) ?_) ?_
+    · intro z hz
+      obtain ⟨x, hx, rfl⟩ := Multiset.mem_map.1 hz
+      exact modelInt_le hL (hbucket x (hρ x hx))
+    · rw [Multiset.card_map, nsmul_eq_mul]
+
+/-- **The heart of the model.** For multisets of `s` elements of `A`, divisibility by `m` of the
+difference of the two sums of model coordinates holds exactly when the two multiset sums agree in
+`ZMod q`.
+
+Both implications go through the fact that the difference of the two integer sums lies in `(-q, q)`:
+it is congruent to `l * (σ.sum - τ.sum)` modulo `q`, hence vanishes as soon as the sums agree, and
+conversely a nonzero difference divisible by `m` would exhibit a nonzero element of `s • A - s • A`
+dilated onto a multiple of `m`, which a good dilation forbids. -/
+lemma dvd_modelInt_sum_sub_iff [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : IsUnit l)
+    (hL : 0 < L) (hLwrap : s * L < q + s) (hbucket : ∀ x ∈ A, (l * x).val / L = j)
+    (hgood : IsGoodDilation m (s • A - s • A) l) {σ τ : Multiset (ZMod q)}
+    (hσ : ∀ x ∈ σ, x ∈ A) (hτ : ∀ x ∈ τ, x ∈ A) (hcσ : Multiset.card σ = s)
+    (hcτ : Multiset.card τ = s) :
+    (m : ℤ) ∣ (σ.map (modelInt L j l)).sum - (τ.map (modelInt L j l)).sum ↔ σ.sum = τ.sum := by
+  have hwrap : (s : ℤ) * ((L : ℤ) - 1) < q := by
+    have : (s : ℤ) * ((L : ℤ) - 1) = ((s * L : ℕ) : ℤ) - s := by push_cast; ring
+    omega
+  have hcong : ∀ ρ ρ' : Multiset (ZMod q), Multiset.card ρ = s → Multiset.card ρ' = s →
+      ((((ρ.map (modelInt L j l)).sum - (ρ'.map (modelInt L j l)).sum : ℤ)) : ZMod q)
+        = l * (ρ.sum - ρ'.sum) := by
+    intro ρ ρ' hcρ hcρ'
+    rw [Int.cast_sub, natCast_modelInt_sum, natCast_modelInt_sum, hcρ, hcρ']
+    ring
+  have key : ∀ ρ ρ' : Multiset (ZMod q), (∀ x ∈ ρ, x ∈ A) → (∀ x ∈ ρ', x ∈ A) →
+      Multiset.card ρ = s → Multiset.card ρ' = s → ρ.sum ≠ ρ'.sum →
+      0 < (ρ.map (modelInt L j l)).sum - (ρ'.map (modelInt L j l)).sum →
+      ¬ (m : ℤ) ∣ (ρ.map (modelInt L j l)).sum - (ρ'.map (modelInt L j l)).sum := by
+    intro ρ ρ' hρ hρ' hcρ hcρ' hne hpos
+    obtain ⟨-, hub⟩ := modelInt_sum_bounds hL hbucket hρ
+    obtain ⟨hlb, -⟩ := modelInt_sum_bounds hL hbucket hρ'
+    rw [hcρ] at hub
+    have hmem : ρ.sum ∈ s • A := by rw [← hcρ]; exact multiset_sum_mem_nsmul hρ
+    have hmem' : ρ'.sum ∈ s • A := by rw [← hcρ']; exact multiset_sum_mem_nsmul hρ'
+    exact not_dvd_of_isGoodDilation hgood (Finset.sub_mem_sub hmem hmem') (sub_ne_zero.2 hne) hpos
+      (by omega) (hcong ρ ρ' hcρ hcρ')
+  constructor
+  · intro hdvd
+    by_contra hne
+    rcases lt_trichotomy ((σ.map (modelInt L j l)).sum - (τ.map (modelInt L j l)).sum) 0 with
+      hneg | hzero | hpos
+    · refine key τ σ hτ hσ hcτ hcσ (Ne.symm hne) (by omega) ?_
+      rw [← neg_sub]
+      exact dvd_neg.2 hdvd
+    · refine hne (sub_eq_zero.1 (hl.mul_right_eq_zero.1 ?_))
+      rw [← hcong σ τ hcσ hcτ, hzero, Int.cast_zero]
+    · exact key σ τ hσ hτ hcσ hcτ hne hpos hdvd
+  · intro heq
+    obtain ⟨hlb, hub⟩ := modelInt_sum_bounds hL hbucket hσ
+    obtain ⟨hlb', hub'⟩ := modelInt_sum_bounds hL hbucket hτ
+    rw [hcσ] at hub
+    rw [hcτ] at hub'
+    have hqdvd : ((q : ℕ) : ℤ) ∣ (σ.map (modelInt L j l)).sum - (τ.map (modelInt L j l)).sum := by
+      rw [← ZMod.intCast_zmod_eq_zero_iff_dvd, hcong σ τ hcσ hcτ, heq, sub_self, mul_zero]
+    rw [Int.eq_zero_of_abs_lt_dvd hqdvd (abs_lt.2 ⟨by omega, by omega⟩)]
+    exact dvd_zero _
+
+/-- **Ruzsa's model, isomorphism step.** On a set `A` all of whose dilates land in the same bucket
+of length `L`, and for a good dilation, reduction of the model coordinate modulo `m` is a Freiman
+`s`-isomorphism onto its image. -/
+theorem isAddFreimanIso_modelMap [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : IsUnit l)
+    (hs : 0 < s) (hL : 0 < L) (hLwrap : s * L < q + s) (hbucket : ∀ x ∈ A, (l * x).val / L = j)
+    (hgood : IsGoodDilation m (s • A - s • A) l) :
+    IsAddFreimanIso s (A : Set (ZMod q)) (A.image (modelMap m L j l) : Set (ZMod m))
+      (modelMap m L j l) := by
+  have hsum : ∀ σ τ : Multiset (ZMod q), (∀ x ∈ σ, x ∈ A) → (∀ x ∈ τ, x ∈ A) →
+      Multiset.card σ = s → Multiset.card τ = s →
+      ((σ.map (modelMap m L j l)).sum = (τ.map (modelMap m L j l)).sum ↔ σ.sum = τ.sum) := by
+    intro σ τ hσ hτ hcσ hcτ
+    rw [← intCast_modelInt_sum, ← intCast_modelInt_sum, ← sub_eq_zero, ← Int.cast_sub,
+      ZMod.intCast_zmod_eq_zero_iff_dvd]
+    exact dvd_modelInt_sum_sub_iff hl hL hLwrap hbucket hgood hσ hτ hcσ hcτ
+  have hinj : Set.InjOn (modelMap m L j l) (A : Set (ZMod q)) := by
+    intro x hx y hy hxy
+    have hmemσ : ∀ z ∈ x ::ₘ Multiset.replicate (s - 1) y, z ∈ A := by
+      intro z hz
+      rcases Multiset.mem_cons.1 hz with rfl | hz
+      · exact hx
+      · rw [Multiset.eq_of_mem_replicate hz]
+        exact hy
+    have hmemτ : ∀ z ∈ Multiset.replicate s y, z ∈ A := by
+      intro z hz
+      rw [Multiset.eq_of_mem_replicate hz]
+      exact hy
+    have hcardσ : Multiset.card (x ::ₘ Multiset.replicate (s - 1) y) = s := by
+      rw [Multiset.card_cons, Multiset.card_replicate]
+      omega
+    have hnsmul : (s : ℕ) • y = (s - 1) • y + y := by
+      rw [← succ_nsmul, Nat.sub_add_cancel hs]
+    have heq := (hsum _ _ hmemσ hmemτ hcardσ (Multiset.card_replicate s y)).1 ?_
+    · rw [Multiset.sum_cons, Multiset.sum_replicate, Multiset.sum_replicate, hnsmul,
+        add_comm] at heq
+      exact add_left_cancel heq
+    · rw [Multiset.map_cons, Multiset.sum_cons, Multiset.map_replicate, Multiset.map_replicate,
+        Multiset.sum_replicate, Multiset.sum_replicate, hxy, ← succ_nsmul', Nat.sub_add_cancel hs]
+  constructor
+  · rw [Finset.coe_image]
+    exact hinj.bijOn_image
+  · intro σ τ hσ hτ hcσ hcτ
+    exact hsum σ τ (fun x hx ↦ hσ hx) (fun x hx ↦ hτ hx) hcσ hcτ
+
+end RuzsaModel
+
+open RuzsaModel
+
+/-- **Stage M of Chang's theorem: the Ruzsa model.** A nonempty `X ⊆ ZMod q`, `q` prime, has a
+subset `X₁` of density at least `1 / s` which is Freiman `s`-isomorphic to a subset of `ZMod m`, for
+any modulus `m` at least as large as `|s • X - s • X|`.
+
+Only the invertibility of the dilation uses that `q` is prime. -/
+theorem exists_ruzsa_model {q s m : ℕ} (hq : q.Prime) (hs : 0 < s) {X : Finset (ZMod q)}
+    (hX : X.Nonempty) (hm : (s • X - s • X).card ≤ m) :
+    ∃ X₁ ⊆ X, X.card ≤ s * X₁.card ∧ ∃ φ : ZMod q → ZMod m,
+      IsAddFreimanIso s (X₁ : Set (ZMod q)) (X₁.image φ : Set (ZMod m)) φ := by
+  have : NeZero q := ⟨hq.pos.ne'⟩
+  have := Fact.mk hq
+  have := hq.two_le
+  obtain ⟨l, hl0, hgood⟩ := exists_isGoodDilation hq (zero_mem_nsmul_sub_nsmul hX s) hm
+  obtain ⟨L, hL, hcover, hwrap⟩ : ∃ L, 0 < L ∧ q ≤ s * L ∧ s * L < q + s := by
+    have := Nat.div_add_mod (q + s - 1) s
+    have := Nat.mod_lt (q + s - 1) hs
+    refine ⟨(q + s - 1) / s, (Nat.one_le_div_iff hs).2 ?_, ?_, ?_⟩
+    · omega
+    · omega
+    · omega
+  have hmaps : ∀ x ∈ X, (l * x).val / L ∈ Finset.range s := by
+    intro x _
+    refine Finset.mem_range.2 ((Nat.div_lt_iff_lt_mul hL).2 ?_)
+    exact lt_of_lt_of_le (ZMod.val_lt _) hcover
+  have hb : (Finset.range s).card • ((X.card : ℚ) / s) ≤ (X.card : ℚ) := by
+    rw [Finset.card_range, nsmul_eq_mul,
+      mul_div_cancel₀ _ (Nat.cast_ne_zero.2 hs.ne' : (s : ℚ) ≠ 0)]
+  obtain ⟨j, -, hjcard⟩ :=
+    Finset.exists_le_card_fiber_of_nsmul_le_card_of_maps_to hmaps ⟨0, Finset.mem_range.2 hs⟩ hb
+  refine ⟨{x ∈ X | (l * x).val / L = j}, Finset.filter_subset _ _, ?_, modelMap m L j l, ?_⟩
+  · rw [Nat.mul_comm]
+    exact_mod_cast (div_le_iff₀ (Nat.cast_pos.2 hs : (0 : ℚ) < s)).1 hjcard
+  · refine isAddFreimanIso_modelMap (isUnit_iff_ne_zero.2 hl0) hs hL hwrap ?_
+      (hgood.subset (Finset.sub_subset_sub ?_ ?_))
+    · intro x hx
+      exact (Finset.mem_filter.1 hx).2
+    · exact Finset.nsmul_subset_nsmul_left (Finset.filter_subset _ _)
+    · exact Finset.nsmul_subset_nsmul_left (Finset.filter_subset _ _)
+
+/-- **Stage M with the Plünnecke–Ruzsa bound on the modulus.** Under a doubling hypothesis
+`|X + X| ≤ κ |X|`, the model group can be taken of size at most `κ ^ (2 * s) * |X|`. The image of
+`X₁` then has density at least `(s * κ ^ (2 * s))⁻¹` in `ZMod m`, a bound independent of `q`: that
+is the whole point of modelling. -/
+theorem exists_ruzsa_model_of_doubling {q s : ℕ} {κ : ℝ} (hq : q.Prime) (hs : 0 < s)
+    {X : Finset (ZMod q)} (hX : X.Nonempty) (hXX : ((X + X).card : ℝ) ≤ κ * X.card) :
+    ∃ (m : ℕ) (X₁ : Finset (ZMod q)) (φ : ZMod q → ZMod m),
+      0 < m ∧ (m : ℝ) ≤ κ ^ (2 * s) * X.card ∧ X₁ ⊆ X ∧ X.card ≤ s * X₁.card ∧
+      IsAddFreimanIso s (X₁ : Set (ZMod q)) (X₁.image φ : Set (ZMod m)) φ := by
+  obtain ⟨X₁, hX₁, hcard, φ, hφ⟩ := exists_ruzsa_model hq hs hX (le_refl (s • X - s • X).card)
+  refine ⟨(s • X - s • X).card, X₁, φ,
+    Finset.card_pos.2 ⟨0, zero_mem_nsmul_sub_nsmul hX s⟩, ?_, hX₁, hcard, hφ⟩
+  have hXpos : (0 : ℝ) < X.card := Nat.cast_pos.2 (Finset.card_pos.2 hX)
+  have hbound : ((s • X - s • X).card : ℝ)
+      ≤ (((X + X).card : ℝ) / X.card) ^ (s + s) * X.card := by
+    have hcast := (NNRat.cast_le (K := ℝ)).2
+      (Finset.pluennecke_ruzsa_inequality_nsmul_sub_nsmul_add hX X s s)
+    push_cast [NNRat.cast_pow] at hcast
+    exact hcast
+  apply le_trans hbound
+  rw [two_mul]
+  gcongr
+  exact (div_le_iff₀ hXpos).2 hXX
+
+end
+
+end ChangFreimanRuzsa

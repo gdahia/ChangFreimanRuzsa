@@ -1,0 +1,53 @@
+name = "ChangFreimanRuzsa"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["APAPCompat", "ChangFreimanRuzsa", "Challenge", "Solution"]
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
+
+# Source of Chang's lemma on large spectra.
+[[require]]
+name = "APAP"
+git = "https://github.com/YaelDillies/apap.git"
+rev = "cfce977a6d11d6175c450547e7593773e37ba36e"
+
+# Pinned to the revision in APAP's manifest.
+[[require]]
+name = "AddCombi"
+git = "https://github.com/leanprover-community/add-combi.git"
+rev = "1b6b09fb20c7f06fe77b84c579c6b73a20ddbd34"
+
+# Source of Minkowski's second theorem.
+[[require]]
+name = "TauCeti"
+git = "https://github.com/TauCetiProject/TauCeti.git"
+rev = "6387e140389a98fd761f1ab169092ad2faf5891a"
+
+# Last, so that its pins of the shared dependencies take precedence on `lake update`.
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.35.0-rc4"
+
+# The modules of APAP above its `Submodule.finrank`, stated without that definition.
+[[lean_lib]]
+name = "APAPCompat"
+leanOptions = { linter.style.header = false } # as in APAP's own lakefile
+
+# The proof development; `Solution.lean` imports it.
+[[lean_lib]]
+name = "ChangFreimanRuzsa"
+
+# The statement-only surface a reader audits.
+[[lean_lib]]
+name = "Challenge"
+roots = ["Challenge"]
+
+# Proves the declarations stated in `Challenge.lean`; Comparator checks the two agree.
+[[lean_lib]]
+name = "Solution"
+roots = ["Solution"]
