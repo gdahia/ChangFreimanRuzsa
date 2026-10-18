@@ -69,7 +69,7 @@ related_formalizations:
       A Lake dependency and the source of the Freiman dimension,
       SumOfSetsInSeveralDimensions.freimanDim, and of the bound
       freimanDim_le_two_mul_sub_one_of_card_add_le, which applies Ruzsa's lower bound for
-      sumsets to a Freiman model of a set. It is private for now.
+      sumsets to a Freiman model of a set.
   - id: "https://github.com/YaelDillies/apap"
     relationship: "builds-on"
     note: >-

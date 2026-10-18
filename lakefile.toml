@@ -31,13 +31,14 @@ rev = "6387e140389a98fd761f1ab169092ad2faf5891a"
 # Freiman dimension.
 [[require]]
 name = "SumOfSetsInSeveralDimensions"
-path = "../SumOfSetsInSeveralDimensions"
+git = "https://github.com/gdahia/SumOfSetsInSeveralDimensions"
+rev = "1f8da867debcce675e07cac515ea9598c1245a92"
 
 # Last, so that its pins of the shared dependencies take precedence on `lake update`.
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.35.0-rc4"
+rev = "v4.35.0"
 
 # The modules of APAP above its `Submodule.finrank`, stated without that definition.
 [[lean_lib]]
