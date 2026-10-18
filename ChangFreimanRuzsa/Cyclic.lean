@@ -16,8 +16,9 @@ nor too large compared with `q`, then `X` lies in a `2`-proper generalized arith
 of bounded dimension and of size at most a constant multiple of `|X|`.
 
 The proof composes the two stages of the argument: `exists_coarseGAP_container` puts `X` in a
-progression of bounded dimension and size, and `exists_twoProperGAP_container` replaces that
-progression by a `2`-proper one.
+progression of bounded dimension and size, and `exists_twoProperGAP_container_of_injOn_nsmul`
+replaces that progression by a `2`-proper one. The second stage is stated for a general group as
+`exists_twoProperGAP_of_coarseGAP`, and `Integers.lean` applies it to sets of integers.
 
 ## Main definitions
 
@@ -25,6 +26,7 @@ progression by a `2`-proper one.
 
 ## Main statements
 
+* `exists_twoProperGAP_of_coarseGAP`: the second stage, in a group with no small torsion.
 * `exists_twoProperGAP_zmod_of_small_sumset`: Chang's theorem in `ZMod q`.
 -/
 
@@ -45,6 +47,28 @@ private lemma exp_mul_le_exp_add_mul {a c d x y : ℝ} (ha : 0 ≤ a) (hd : 0 �
   rw [Real.exp_add, mul_assoc]
   gcongr
 
+/-- The second stage of Chang's theorem, in a group in which the multiples `n • a` with `n < N` of
+every nonzero `a` are distinct. Let `X` lie in a progression `P` of dimension at most
+`changContainerExponent κ` and of size at most `exp (changContainerExponent κ) * |X|`. If
+`exp (changZModExponent κ) * |X| ≤ N`, then `X` lies in a `2`-proper progression of dimension at
+most `changContainerExponent κ` and of size at most `exp (changZModExponent κ) * |X|`. -/
+theorem exists_twoProperGAP_of_coarseGAP {G : Type*} [DecidableEq G] [AddCommGroup G] {N : ℕ}
+    {κ : ℝ} {X : Finset G} {P : GAP G}
+    (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hXP : X ⊆ P.carrier)
+    (hPdim : (P.dim : ℝ) ≤ changContainerExponent κ)
+    (hPcard : (#P.carrier : ℝ) ≤ Real.exp (changContainerExponent κ) * #X)
+    (hroom : Real.exp (changZModExponent κ) * #X ≤ N) :
+    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
+      (Q.dim : ℝ) ≤ changContainerExponent κ ∧
+      (#Q.carrier : ℝ) ≤ Real.exp (changZModExponent κ) * #X := by
+  have hP : Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) * #P.carrier ≤
+      Real.exp (changZModExponent κ) * #X :=
+    exp_mul_le_exp_add_mul properizationConstant_pos.le (Nat.cast_nonneg _) hPdim
+      (Nat.cast_nonneg _) hPcard
+  obtain ⟨Q, hQ, hPQ, hlen, hQdim, hQcard⟩ :=
+    exists_twoProperGAP_container_of_injOn_nsmul P hG (hP.trans hroom)
+  exact ⟨Q, hQ, hXP.trans hPQ, hlen, (Nat.cast_le.2 hQdim).trans hPdim, hQcard.trans hP⟩
+
 /-- **Chang's theorem** in `ZMod q` for a prime `q`: a set `X` with `|X + X| ≤ κ * |X|`,
 `exp (changContainerExponent κ) < |X|` and `exp (changZModExponent κ) * |X| ≤ q` is contained in a
 `2`-proper GAP of dimension at most `changContainerExponent κ` and size at most
@@ -57,11 +81,7 @@ theorem exists_twoProperGAP_zmod_of_small_sumset {q : ℕ} {κ : ℝ} (X : Finse
       (Q.dim : ℝ) ≤ changContainerExponent κ ∧
       (#Q.carrier : ℝ) ≤ Real.exp (changZModExponent κ) * #X := by
   obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_coarseGAP_container X hq hκ hXX hXlower
-  have hP : Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) * #P.carrier ≤
-      Real.exp (changZModExponent κ) * #X :=
-    exp_mul_le_exp_add_mul properizationConstant_pos.le (Nat.cast_nonneg _) hPdim
-      (Nat.cast_nonneg _) hPcard
-  obtain ⟨Q, hQ, hPQ, hlen, hQdim, hQcard⟩ := exists_twoProperGAP_container P hq (hP.trans hXupper)
-  exact ⟨Q, hQ, hXP.trans hPQ, hlen, (Nat.cast_le.2 hQdim).trans hPdim, hQcard.trans hP⟩
+  exact exists_twoProperGAP_of_coarseGAP (fun _ ha ↦ GAP.injOn_nsmul_of_prime hq ha) hXP hPdim
+    hPcard hXupper
 
 end ChangFreimanRuzsa

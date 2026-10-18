@@ -3,14 +3,35 @@
  "packagesDir": ".lake/packages",
  "packages": [
   {
-   "url": "https://github.com/YaelDillies/apap.git",
+   "url": "https://github.com/leanprover-community/mathlib4",
+   "type": "git",
+   "subDir": null,
+   "scope": "leanprover-community",
+   "rev": "1f414401f69059aa7eead47b53ee40bd38455eeb",
+   "name": "mathlib",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": "v4.35.0-rc4",
+   "inherited": false,
+   "configFile": "lakefile.lean"
+  },
+  {
+   "type": "path",
+   "scope": "",
+   "name": "SumOfSetsInSeveralDimensions",
+   "manifestFile": "lake-manifest.json",
+   "inherited": false,
+   "dir": "../SumOfSetsInSeveralDimensions",
+   "configFile": "lakefile.toml"
+  },
+  {
+   "url": "https://github.com/TauCetiProject/TauCeti.git",
    "type": "git",
    "subDir": null,
    "scope": "",
-   "rev": "cfce977a6d11d6175c450547e7593773e37ba36e",
-   "name": "APAP",
+   "rev": "6387e140389a98fd761f1ab169092ad2faf5891a",
+   "name": "TauCeti",
    "manifestFile": "lake-manifest.json",
-   "inputRev": "cfce977a6d11d6175c450547e7593773e37ba36e",
+   "inputRev": "6387e140389a98fd761f1ab169092ad2faf5891a",
    "inherited": false,
    "configFile": "lakefile.toml"
   },
@@ -27,40 +48,16 @@
    "configFile": "lakefile.toml"
   },
   {
-   "url": "https://github.com/TauCetiProject/TauCeti.git",
+   "url": "https://github.com/YaelDillies/apap.git",
    "type": "git",
    "subDir": null,
    "scope": "",
-   "rev": "6387e140389a98fd761f1ab169092ad2faf5891a",
-   "name": "TauCeti",
+   "rev": "cfce977a6d11d6175c450547e7593773e37ba36e",
+   "name": "APAP",
    "manifestFile": "lake-manifest.json",
-   "inputRev": "6387e140389a98fd761f1ab169092ad2faf5891a",
+   "inputRev": "cfce977a6d11d6175c450547e7593773e37ba36e",
    "inherited": false,
    "configFile": "lakefile.toml"
-  },
-  {
-   "url": "https://github.com/leanprover-community/mathlib4",
-   "type": "git",
-   "subDir": null,
-   "scope": "leanprover-community",
-   "rev": "1f414401f69059aa7eead47b53ee40bd38455eeb",
-   "name": "mathlib",
-   "manifestFile": "lake-manifest.json",
-   "inputRev": "v4.35.0-rc4",
-   "inherited": false,
-   "configFile": "lakefile.lean"
-  },
-  {
-   "url": "https://github.com/PatrickMassot/checkdecls.git",
-   "type": "git",
-   "subDir": null,
-   "scope": "",
-   "rev": "3d425859e73fcfbef85b9638c2a91708ef4a22d4",
-   "name": "checkdecls",
-   "manifestFile": "lake-manifest.json",
-   "inputRev": null,
-   "inherited": true,
-   "configFile": "lakefile.lean"
   },
   {
    "url": "https://github.com/leanprover-community/plausible",
@@ -145,6 +142,18 @@
    "inputRev": "main",
    "inherited": true,
    "configFile": "lakefile.toml"
+  },
+  {
+   "url": "https://github.com/PatrickMassot/checkdecls.git",
+   "type": "git",
+   "subDir": null,
+   "scope": "",
+   "rev": "3d425859e73fcfbef85b9638c2a91708ef4a22d4",
+   "name": "checkdecls",
+   "manifestFile": "lake-manifest.json",
+   "inputRev": null,
+   "inherited": true,
+   "configFile": "lakefile.lean"
   },
   {
    "url": "https://github.com/leanprover/lean4-cli",

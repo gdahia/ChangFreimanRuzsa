@@ -6,19 +6,26 @@ Authors: Gabriel Dahia
 module
 
 public import ChangFreimanRuzsa.Cyclic
+import ChangFreimanRuzsa.FreimanRigidity
 
 /-!
 # Chang's theorem for sets of integers
 
 A finite set of integers with small doubling lies in a `2`-proper generalized arithmetic
-progression of comparable size. This is Chang's form of Freiman's theorem, as in Green and Tao,
-*Compressions, convex geometry and the Freiman–Bilu theorem*, Proposition 1.3, with a weaker but
-still polynomial budget.
+progression of bounded dimension and of size at most a constant multiple of the size of the set.
+This is Chang's form of Freiman's theorem, as in Green and Tao, *Compressions, convex geometry and
+the Freiman–Bilu theorem*, Proposition 1.3, with a weaker but still polynomial budget.
 
-It is deduced from the statement for subsets of `ZMod q` in `Cyclic.lean`: a set too small for
-that statement is first replaced by its sum with a long progression, the result is reduced modulo
-a large prime, and the progression found in `ZMod q` is lifted to `ℤ` with `q` as an additional
-step.
+A progression of `ZMod q` that contains the reduction of `X` modulo `q` need not come from a
+progression of `ℤ` that contains `X`, because it may wrap around. So the statement for `ZMod q` in
+`Cyclic.lean` is not used. Only the first step of its proof is carried out modulo a large prime
+`q`: it gives a proper progression inside `2X - 2X`, in the reduction of `X` modulo `q`. The
+reduction is a Freiman isomorphism of order `8` on `X`, so `exists_transported_gap` carries this
+progression back to a proper progression of `ℤ` inside `2X - 2X`. The rest of the argument, the
+covering of `X` by translates and the properization, takes place in `ℤ`: these steps are stated
+for general groups in `Container.lean` and `Cyclic.lean`.
+
+A set too small for this argument is first replaced by its sum with a long progression.
 
 ## Main definitions
 
@@ -26,6 +33,10 @@ step.
 
 ## Main statements
 
+* `exists_coarseGAP_container_int`: a set of integers with small doubling that is not too small
+  lies in a progression of bounded dimension and size.
+* `exists_twoProperGAP_int_of_small_sumset`: Chang's theorem for sets of integers that are not too
+  small.
 * `exists_twoProperGAP_of_small_sumset`: Chang's theorem for sets of integers.
 -/
 
@@ -38,8 +49,7 @@ namespace ChangFreimanRuzsa
 
 /-- The budget of Chang's theorem for sets of integers. -/
 @[expose] noncomputable def changIntExponent (κ : ℝ) : ℝ :=
-  2 * properizationConstant * (changContainerExponent (2 * κ) + 2) ^ 4 +
-    4 * changContainerExponent (2 * κ) + 3
+  changZModExponent (2 * κ) + changContainerExponent (2 * κ) + 1
 
 /-! ## Thickening -/
 
@@ -121,28 +131,46 @@ private lemma exists_thickening {κ E : ℝ} {X : Finset ℤ} (hX : X.Nonempty)
 
 /-! ## Reduction modulo a large prime -/
 
-private lemma exists_prime_ge (X : Finset ℤ) (B : ℝ) :
-    ∃ q : ℕ, q.Prime ∧ B ≤ q ∧ ∀ x ∈ X, 2 * |x| < q := by
-  obtain ⟨q, hq, hprime⟩ :=
-    Nat.exists_infinite_primes (max ⌈B⌉₊ (2 * X.sup Int.natAbs + 1))
-  refine ⟨q, hprime, (Nat.le_ceil B).trans (mod_cast (le_max_left _ _).trans hq),
-    fun x hx ↦ ?_⟩
-  have h₁ := le_sup (f := Int.natAbs) hx
-  have h₂ := (le_max_right _ _).trans hq
+private lemma exists_prime_gt (X : Finset ℤ) :
+    ∃ (q : ℕ) (M : ℤ), q.Prime ∧ 16 * M < q ∧ ∀ x ∈ X, |x| ≤ M := by
+  obtain ⟨q, hq, hprime⟩ := Nat.exists_infinite_primes (16 * X.sup Int.natAbs + 1)
+  refine ⟨q, (X.sup Int.natAbs : ℕ), hprime, by grind, fun x hx ↦ ?_⟩
   rw [Int.abs_eq_natAbs]
-  omega
+  exact mod_cast le_sup (f := Int.natAbs) hx
 
-private lemma injOn_intCast {q : ℕ} {X : Finset ℤ} (hX : ∀ x ∈ X, 2 * |x| < q) :
-    Set.InjOn (Int.cast : ℤ → ZMod q) X := by
-  intro x hx y hy h
-  have hdvd := (ZMod.intCast_eq_intCast_iff_dvd_sub x y q).1 h
-  have hlt : |y - x| < q := by
-    have := hX x hx
-    have := hX y hy
-    have := abs_sub y x
-    linarith
-  have := Int.eq_zero_of_abs_lt_dvd hdvd hlt
-  lia
+private lemma abs_sum_le_card_mul {X : Finset ℤ} {M : ℤ} (hX : ∀ x ∈ X, |x| ≤ M)
+    {s : Multiset ℤ} (hs : ∀ x ∈ s, x ∈ X) : |s.sum| ≤ Multiset.card s * M := by
+  induction s using Multiset.induction_on with
+  | empty => simp
+  | cons a s ih =>
+    rw [Multiset.sum_cons, Multiset.card_cons]
+    push_cast
+    linarith [abs_add_le a s.sum, hX a (hs a (Multiset.mem_cons_self a s)),
+      ih fun x hx ↦ hs x (Multiset.mem_cons_of_mem hx)]
+
+private lemma intCast_inj_of_abs_sub_lt {q : ℕ} {a b : ℤ} (h : |b - a| < q) :
+    (a : ZMod q) = b ↔ a = b :=
+  ⟨fun hab ↦ (sub_eq_zero.1 (Int.eq_zero_of_abs_lt_dvd
+    ((ZMod.intCast_eq_intCast_iff_dvd_sub a b q).1 hab) h)).symm, fun hab ↦ by rw [hab]⟩
+
+/-- Reduction modulo `q` is a Freiman isomorphism of order `8` on a set of integers of absolute
+value less than `q / 16`. -/
+private lemma isAddFreimanIso_intCast {q : ℕ} {M : ℤ} {X : Finset ℤ} (hq : 16 * M < q)
+    (hX : ∀ x ∈ X, |x| ≤ M) :
+    IsAddFreimanIso 8 (X : Set ℤ) (X.image (Int.cast : ℤ → ZMod q) : Set (ZMod q)) Int.cast where
+  bijOn := by
+    rw [coe_image]
+    refine Set.InjOn.bijOn_image fun x hx y hy h ↦ (intCast_inj_of_abs_sub_lt ?_).1 h
+    linarith [abs_sub y x, hX x hx, hX y hy, abs_nonneg x]
+  map_sum_eq_map_sum s t hs ht hs' ht' := by
+    have h₁ := abs_sum_le_card_mul hX fun x hx ↦ mem_coe.1 (hs hx)
+    have h₂ := abs_sum_le_card_mul hX fun x hx ↦ mem_coe.1 (ht hx)
+    rw [hs'] at h₁
+    rw [ht'] at h₂
+    rw [← Int.cast_multiset_sum, ← Int.cast_multiset_sum]
+    refine intCast_inj_of_abs_sub_lt ?_
+    push_cast at h₁ h₂
+    linarith [abs_sub t.sum s.sum]
 
 private lemma card_image_intCast_add_le (q : ℕ) (X : Finset ℤ) :
     #(X.image (Int.cast : ℤ → ZMod q) + X.image (Int.cast : ℤ → ZMod q)) ≤ #(X + X) := by
@@ -151,204 +179,86 @@ private lemma card_image_intCast_add_le (q : ℕ) (X : Finset ℤ) :
   rw [← h]
   exact card_image_le
 
-private lemma exists_twoProperGAP_zmod {κ : ℝ} (hκ : 2 ≤ κ) {X : Finset ℤ}
+/-! ## The progression inside `2X - 2X` -/
+
+/-- A finite set `X` of integers with `|X + X| ≤ κ * |X|` and more than
+`exp (changContainerExponent κ)` elements has a subset `X₁` with `|X| ≤ 8 * |X₁|` and a proper
+progression `Q₁ ⊆ 2X - 2X` of dimension at most `changGapDim κ` whose size is at least `|X|`
+divided by a bound that depends only on `κ`.
+
+The progression is the one that `exists_model_gap` gives for the reduction of `X` modulo a large
+prime, carried back to `ℤ` by `exists_transported_gap`. -/
+private lemma exists_model_gap_int {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (changContainerExponent κ) < #X) :
-    ∃ (q : ℕ) (_ : NeZero q) (Q : GAP (ZMod q)), Q.TwoProper ∧ (∀ i, 1 < Q.length i) ∧
-      (∀ x ∈ X, |x| < q) ∧ X.image (Int.cast : ℤ → ZMod q) ⊆ Q.carrier ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (changZModExponent κ) * #X := by
-  obtain ⟨q, hq, hqB, hqX⟩ := exists_prime_ge X (Real.exp (changZModExponent κ) * #X)
-  have h := exists_twoProperGAP_zmod_of_small_sumset (X.image (Int.cast : ℤ → ZMod q)) hq hκ
-  rw [card_image_of_injOn (injOn_intCast hqX)] at h
-  obtain ⟨Q, hQ, hXQ, hlen, -, hQcard⟩ :=
-    h ((Nat.cast_le.2 (card_image_intCast_add_le q X)).trans hXX) hXlower hqB
-  refine ⟨q, ⟨hq.pos.ne'⟩, Q, hQ, hlen, ?_, hXQ, hQcard⟩
-  intro x hx
-  linarith [hqX x hx, abs_nonneg x]
+    ∃ (X₁ : Finset ℤ) (Q₁ : GAP ℤ), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧ Q₁.Proper ∧
+      (Q₁.dim : ℝ) ≤ changGapDim κ ∧ Q₁.carrier ⊆ (X + X) - (X + X) ∧
+      (#X : ℝ) ≤ 8 * 2 ^ (12 * changGapDim κ ^ 2) * #Q₁.carrier := by
+  obtain ⟨q, M, hq, hM, hXM⟩ := exists_prime_gt X
+  have hiso := isAddFreimanIso_intCast hM hXM
+  have hcard : #(X.image (Int.cast : ℤ → ZMod q)) = #X := card_image_of_injOn hiso.bijOn.injOn
+  obtain ⟨Y₁, Q, hY₁, hY₁card, hQ, hQdim, hQsub, hQcard⟩ :=
+    exists_model_gap (X.image (Int.cast : ℤ → ZMod q)) hq hκ
+      (by rw [hcard]; exact (Nat.cast_le.2 (card_image_intCast_add_le q X)).trans hXX)
+      (by rwa [hcard])
+  obtain ⟨Q₁, hQ₁, hQ₁dim, hQ₁card, hQ₁sub⟩ := exists_transported_gap hiso Q hQ hQsub
+  have hY : Y₁ ⊆ (X.filter fun x : ℤ ↦ (x : ZMod q) ∈ Y₁).image Int.cast := fun y hy ↦ by
+    obtain ⟨x, hx, rfl⟩ := mem_image.1 (hY₁ hy)
+    exact mem_image_of_mem _ (mem_filter.2 ⟨hx, hy⟩)
+  rw [hcard] at hY₁card hQcard
+  exact ⟨X.filter fun x : ℤ ↦ (x : ZMod q) ∈ Y₁, Q₁, filter_subset _ _,
+    hY₁card.trans (Nat.mul_le_mul_left 8 ((card_le_card hY).trans card_image_le)), hQ₁,
+    by rwa [hQ₁dim], hQ₁sub, by rwa [hQ₁card]⟩
 
-/-! ## Lifting a progression from `ZMod q` to `ℤ` -/
-
-private lemma gapMap_snoc {d : ℕ} (o : ℤ) (s : Fin d → ℤ) (t : ℤ) (l : Fin (d + 1) → ℕ)
-    (w : (i : Fin (d + 1)) → Fin (l i)) :
-    gapMap o (Fin.snoc (α := fun _ ↦ ℤ) s t) l w =
-      o + ∑ i : Fin d, ((w i.castSucc : ℕ) : ℤ) * s i + ((w (Fin.last d) : ℕ) : ℤ) * t := by
-  simp [gapMap, Fin.sum_univ_castSucc, add_assoc]
-
-private lemma intCast_gapMap_snoc {q d : ℕ} [NeZero q] {o' : ℤ} {o : ZMod q}
-    (ho : (o' : ZMod q) = o) (s : Fin d → ZMod q) (l : Fin (d + 1) → ℕ)
-    (w : (i : Fin (d + 1)) → Fin (l i)) :
-    ((gapMap o' (Fin.snoc (α := fun _ ↦ ℤ) (fun i ↦ ((s i).val : ℤ)) q) l w : ℤ) : ZMod q) =
-      gapMap o s (fun i ↦ l i.castSucc) fun i ↦ w i.castSucc := by
-  rw [gapMap_snoc]
-  simp [gapMap, ho]
-
-private lemma injective_gapMap_snoc {q d : ℕ} [NeZero q] {o' : ℤ} {o : ZMod q}
-    (ho : (o' : ZMod q) = o) (s : Fin d → ZMod q) (l : Fin (d + 1) → ℕ) {l' : Fin d → ℕ}
-    (hl : ∀ i, l i.castSucc = l' i) (hinj : Function.Injective (gapMap o s l')) :
-    Function.Injective
-      (gapMap o' (Fin.snoc (α := fun _ ↦ ℤ) (fun i ↦ ((s i).val : ℤ)) q) l) := by
-  obtain rfl : l' = fun i ↦ l i.castSucc := funext fun i ↦ (hl i).symm
-  intro w w' h
-  have hc : (fun i : Fin d ↦ w i.castSucc) = fun i : Fin d ↦ w' i.castSucc :=
-    hinj ((intCast_gapMap_snoc ho s l w).symm.trans
-      ((congrArg _ h).trans (intCast_gapMap_snoc ho s l w')))
-  have hc' : ∀ i : Fin d, w i.castSucc = w' i.castSucc := congrFun hc
-  rw [gapMap_snoc, gapMap_snoc] at h
-  simp only [hc'] at h
-  have hlast : ((w (Fin.last d) : ℕ) : ℤ) = (w' (Fin.last d) : ℕ) :=
-    mul_right_cancel₀ (Nat.cast_ne_zero.2 (NeZero.ne q)) (by linarith)
-  funext i
-  refine Fin.lastCases ?_ (fun j ↦ hc' j) i
-  exact Fin.ext (by exact_mod_cast hlast)
-
-private lemma exists_gapMap_snoc_eq {d : ℕ} (o : ℤ) (s : Fin d → ℤ) (t : ℤ)
-    (l : Fin (d + 1) → ℕ) {c : Fin d → ℕ} (hc : ∀ i, c i < l i.castSucc) {k : ℕ}
-    (hk : k < l (Fin.last d)) :
-    ∃ w : (i : Fin (d + 1)) → Fin (l i),
-      gapMap o (Fin.snoc (α := fun _ ↦ ℤ) s t) l w = o + ∑ i, (c i : ℤ) * s i + k * t := by
-  refine ⟨fun i ↦ ⟨Fin.snoc (α := fun _ ↦ ℕ) c k i, ?_⟩, ?_⟩
-  · cases i using Fin.lastCases <;> simp [hc, hk]
-  · simp [gapMap_snoc]
-
-private lemma val_add_sum_lt {q d : ℕ} [NeZero q] (o : ZMod q) (s : Fin d → ZMod q)
-    (l : Fin d → ℕ) (w : (i : Fin d) → Fin (l i)) :
-    o.val + ∑ i, (w i : ℕ) * (s i).val < (∑ i, l i + 1) * q := by
-  have h : ∑ i, (w i : ℕ) * (s i).val ≤ ∑ i, l i * q :=
-    sum_le_sum fun i _ ↦ Nat.mul_le_mul (w i).2.le (ZMod.val_lt _).le
-  rw [← sum_mul] at h
-  have := ZMod.val_lt o
-  rw [add_one_mul]
-  linarith
-
-private lemma exists_lift_coeff {q : ℕ} {x : ℤ} {y J : ℕ} (hx : |x| < q) (hy : y < J * q)
-    (hdvd : (q : ℤ) ∣ y - x) : ∃ k : ℕ, k < J + 1 ∧ x = (y : ℤ) - J * q + k * q := by
-  obtain ⟨j, hj⟩ := hdvd
-  have hq : (0 : ℤ) < q := (abs_nonneg x).trans_lt hx
-  have hy' : (y : ℤ) < J * q := mod_cast hy
-  rw [abs_lt] at hx
-  have hj0 : -1 < j := by nlinarith
-  have hjJ : j < J + 1 := by nlinarith
-  refine ⟨(J - j).toNat, by omega, ?_⟩
-  rw [Int.toNat_of_nonneg (by omega)]
-  linear_combination -hj
-
-private noncomputable def liftGAP {q : ℕ} (Q : GAP (ZMod q)) : GAP ℤ where
-  dim := Q.dim + 1
-  carrier := univ.image (gapMap _ _ _)
-  origin := (Q.origin.val : ℤ) - (∑ i, Q.length i + 1 : ℕ) * q
-  step := Fin.snoc (α := fun _ ↦ ℤ) (fun i ↦ ((Q.step i).val : ℤ)) q
-  length := Fin.snoc (α := fun _ ↦ ℕ) Q.length (∑ i, Q.length i + 2)
-  length_pos i := by cases i using Fin.lastCases <;> simp [Q.length_pos]
-  carrier_eq := rfl
-
-private lemma liftGAP_twoProper {q : ℕ} [NeZero q] {Q : GAP (ZMod q)} (hQ : Q.TwoProper) :
-    (liftGAP Q).TwoProper := by
-  refine injective_gapMap_snoc (o := 2 • Q.origin) ?_ Q.step
-    (fun i ↦ 2 * Fin.snoc (α := fun _ ↦ ℕ) Q.length (∑ i, Q.length i + 2) i)
-    (fun i ↦ by simp) hQ
-  simp [liftGAP]
-
-private lemma mem_liftGAP {q : ℕ} [NeZero q] (Q : GAP (ZMod q)) {x : ℤ} (hx : |x| < q)
-    (hxQ : (x : ZMod q) ∈ Q.carrier) : x ∈ (liftGAP Q).carrier := by
-  set w := Q.coefficientsFin (x : ZMod q)
-  have hspec : gapMap Q.origin Q.step Q.length w = x := Q.coefficientsFin_spec hxQ
-  set y : ℕ := Q.origin.val + ∑ i, (w i : ℕ) * (Q.step i).val with hy
-  have hycast : (x : ZMod q) = ((y : ℤ) : ZMod q) := by
-    rw [← hspec]
-    simp [hy, gapMap]
-  obtain ⟨k, hk, hxk⟩ := exists_lift_coeff hx (val_add_sum_lt Q.origin Q.step Q.length w)
-    ((ZMod.intCast_eq_intCast_iff_dvd_sub x y q).1 hycast)
-  obtain ⟨w', hw'⟩ := exists_gapMap_snoc_eq (liftGAP Q).origin
-    (fun i ↦ ((Q.step i).val : ℤ)) q (liftGAP Q).length (c := fun i ↦ w i)
-    (fun i ↦ by simp [liftGAP]) (k := k) (by simp [liftGAP]; lia)
-  refine (liftGAP Q).carrier_eq ▸ mem_image.2 ⟨w', mem_univ _, ?_⟩
-  refine hw'.trans ?_
-  rw [hxk]
-  simp [liftGAP]
-  ring
-
-private lemma card_liftGAP_le {q : ℕ} (Q : GAP (ZMod q)) (hQ : Q.Proper) :
-    #(liftGAP Q).carrier ≤ #Q.carrier * (∑ i, Q.length i + 2) := by
-  rw [Q.card_eq_prod_length hQ]
-  refine (liftGAP Q).card_le_prod_length.trans_eq ?_
-  change ∏ i : Fin (Q.dim + 1),
-    Fin.snoc (α := fun _ ↦ ℕ) Q.length (∑ i, Q.length i + 2) i = _
-  simp [Fin.prod_univ_castSucc]
-
-private lemma sum_add_two_le_two_mul_prod :
-    ∀ {d : ℕ} (l : Fin d → ℕ), (∀ i, 1 < l i) → ∑ i, l i + 2 ≤ 2 * ∏ i, l i
-  | 0, _, _ => by simp
-  | d + 1, l, hl => by
-    have ih := sum_add_two_le_two_mul_prod (fun i : Fin d ↦ l i.castSucc) fun i ↦ hl _
-    have hp : 1 ≤ ∏ i : Fin d, l i.castSucc :=
-      prod_pos fun (i : Fin d) _ ↦ zero_lt_one.trans (hl i.castSucc)
-    have ha : 2 ≤ l (Fin.last d) := hl (Fin.last d)
-    rw [Fin.sum_univ_castSucc, Fin.prod_univ_castSucc]
-    linarith [Nat.mul_le_mul hp ha, Nat.mul_le_mul_left (∏ i : Fin d, l i.castSucc) ha,
-      Nat.mul_le_mul_right (l (Fin.last d)) hp]
-
-private lemma exists_twoProperGAP_int_of_zmod {q : ℕ} [NeZero q] {Q : GAP (ZMod q)}
-    (hQ : Q.TwoProper) (hlen : ∀ i, 1 < Q.length i) {X : Finset ℤ} (hXq : ∀ x ∈ X, |x| < q)
-    (hXQ : X.image (Int.cast : ℤ → ZMod q) ⊆ Q.carrier) :
-    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ #P.carrier ≤ 2 * #Q.carrier ^ 2 := by
-  refine ⟨liftGAP Q, liftGAP_twoProper hQ,
-    fun x hx ↦ mem_liftGAP Q (hXq x hx) (hXQ (mem_image_of_mem _ hx)), ?_⟩
-  have h₂ := sum_add_two_le_two_mul_prod Q.length hlen
-  rw [← Q.card_eq_prod_length (Q.twoProper_proper hQ)] at h₂
-  calc #(liftGAP Q).carrier
-    _ ≤ #Q.carrier * (∑ i, Q.length i + 2) := card_liftGAP_le Q (Q.twoProper_proper hQ)
-    _ ≤ #Q.carrier * (2 * #Q.carrier) := Nat.mul_le_mul_left _ h₂
-    _ = 2 * #Q.carrier ^ 2 := by ring
+/-- A finite set `X` of integers with `|X + X| ≤ κ * |X|` and more than
+`exp (changContainerExponent κ)` elements lies in a progression of dimension at most
+`changContainerExponent κ` and of size at most `exp (changContainerExponent κ) * |X|`. -/
+theorem exists_coarseGAP_container_int {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
+    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (changContainerExponent κ) < #X) :
+    ∃ P : GAP ℤ, X ⊆ P.carrier ∧ (∀ i, 1 < P.length i) ∧
+      (P.dim : ℝ) ≤ changContainerExponent κ ∧
+      (#P.carrier : ℝ) ≤ Real.exp (changContainerExponent κ) * #X := by
+  obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁, hQ₁dim, hQ₁sub, hQ₁card⟩ :=
+    exists_model_gap_int X hκ hXX hXlower
+  exact exists_coarseGAP_container_of_model_gap
+    (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hκ hXX hX₁X hX₁card hQ₁ hQ₁dim hQ₁sub
+    hQ₁card
 
 /-! ## Chang's theorem -/
 
-private lemma eight_le_exp_three : (8 : ℝ) ≤ Real.exp 3 := by
-  have h : (2 : ℝ) ≤ Real.exp 1 := by linarith [Real.add_one_le_exp (1 : ℝ)]
-  have h3 : Real.exp 3 = Real.exp 1 ^ 3 := by
-    rw [← Real.exp_nat_mul]
-    norm_num
-  rw [h3]
-  exact le_trans (by norm_num) (pow_le_pow_left₀ zero_le_two h 3)
+/-- **Chang's theorem** for sets of integers that are not too small: a finite set `X` of integers
+with `|X + X| ≤ κ * |X|` and `exp (changContainerExponent κ) < |X|` is contained in a `2`-proper
+GAP of dimension at most `changContainerExponent κ` and size at most
+`exp (changZModExponent κ) * |X|`. -/
+theorem exists_twoProperGAP_int_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
+    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (changContainerExponent κ) < #X) :
+    ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
+      (Q.dim : ℝ) ≤ changContainerExponent κ ∧
+      (#Q.carrier : ℝ) ≤ Real.exp (changZModExponent κ) * #X := by
+  obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_coarseGAP_container_int X hκ hXX hXlower
+  exact exists_twoProperGAP_of_coarseGAP
+    (fun _ ha ↦ GAP.injOn_nsmul_of_isAddTorsionFree _ ha) hXP hPdim hPcard (Nat.le_ceil _)
 
-private lemma two_mul_sq_le {a c x y z : ℝ} (hz : 0 ≤ z)
-    (hzy : z ≤ Real.exp a * (Real.exp c * y)) (hyx : y ≤ 2 * Real.exp c * x) :
-    2 * z ^ 2 ≤ Real.exp (2 * a + 4 * c + 3) * x ^ 2 := by
-  have hz' : z ≤ 2 * (Real.exp a * Real.exp c ^ 2) * x :=
-    hzy.trans ((mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left hyx (Real.exp_pos c).le)
-      (Real.exp_pos a).le).trans_eq (by ring))
-  have h2 : Real.exp (2 * a) = Real.exp a ^ 2 := by
-    rw [← Real.exp_nat_mul]
-    norm_num
-  have h4 : Real.exp (4 * c) = Real.exp c ^ 4 := by
-    rw [← Real.exp_nat_mul]
-    norm_num
-  calc 2 * z ^ 2
-    _ ≤ 2 * (2 * (Real.exp a * Real.exp c ^ 2) * x) ^ 2 := by gcongr
-    _ = 8 * ((Real.exp a * Real.exp c ^ 2) ^ 2 * x ^ 2) := by ring
-    _ ≤ Real.exp 3 * ((Real.exp a * Real.exp c ^ 2) ^ 2 * x ^ 2) := by
-      gcongr
-      exact eight_le_exp_three
-    _ = Real.exp (2 * a + 4 * c + 3) * x ^ 2 := by
-      rw [Real.exp_add, Real.exp_add, h2, h4]
-      ring
+private lemma exp_mul_le_exp_add_add_one_mul {z c x y : ℝ} (hx : 0 ≤ x)
+    (hyx : y ≤ 2 * Real.exp c * x) : Real.exp z * y ≤ Real.exp (z + c + 1) * x := by
+  rw [Real.exp_add, Real.exp_add]
+  refine (mul_le_mul_of_nonneg_left hyx (Real.exp_nonneg z)).trans ?_
+  nlinarith [Real.add_one_le_exp (1 : ℝ),
+    mul_nonneg (mul_nonneg (Real.exp_nonneg z) (Real.exp_nonneg c)) hx]
 
 /-- **Chang's theorem** for sets of integers: a finite nonempty `X ⊆ ℤ` with
-`|X + X| ≤ κ * |X|` is contained in a `2`-proper GAP of size at most
-`exp (changIntExponent κ) * |X| ^ 2`. -/
+`|X + X| ≤ κ * |X|` is contained in a `2`-proper GAP of dimension at most
+`changContainerExponent (2 * κ)` and size at most `exp (changIntExponent κ) * |X|`. -/
 theorem exists_twoProperGAP_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧
-      (#P.carrier : ℝ) ≤ Real.exp (changIntExponent κ) * (#X : ℝ) ^ 2 := by
+      (P.dim : ℝ) ≤ changContainerExponent (2 * κ) ∧
+      (#P.carrier : ℝ) ≤ Real.exp (changIntExponent κ) * #X := by
   have hκ' : (2 : ℝ) ≤ 2 * κ := by linarith
-  have hc := changContainerExponent_pos hκ'
   obtain ⟨X', hXX', hX'X', hX'lower, hX'upper⟩ :=
-    exists_thickening hX hXX (Real.one_le_exp hc.le)
-  obtain ⟨q, _, Q, hQ, hlen, hXq, hXQ, hQcard⟩ := exists_twoProperGAP_zmod hκ' hX'X' hX'lower
-  obtain ⟨P, hP, hXP, hPcard⟩ := exists_twoProperGAP_int_of_zmod hQ hlen hXq hXQ
-  refine ⟨P, hP, hXX'.trans hXP, ?_⟩
-  have hPcard' : (#P.carrier : ℝ) ≤ 2 * (#Q.carrier : ℝ) ^ 2 := mod_cast hPcard
-  rw [changZModExponent, Real.exp_add, mul_assoc] at hQcard
-  have h := two_mul_sq_le (Nat.cast_nonneg _) hQcard hX'upper
-  rw [changIntExponent, mul_assoc]
-  exact hPcard'.trans h
+    exists_thickening hX hXX (Real.one_le_exp (changContainerExponent_pos hκ').le)
+  obtain ⟨P, hP, hX'P, -, hdim, hcard⟩ :=
+    exists_twoProperGAP_int_of_small_sumset X' hκ' hX'X' hX'lower
+  exact ⟨P, hP, hXX'.trans hX'P, hdim,
+    hcard.trans (exp_mul_le_exp_add_add_one_mul (Nat.cast_nonneg _) hX'upper)⟩
 
 end ChangFreimanRuzsa

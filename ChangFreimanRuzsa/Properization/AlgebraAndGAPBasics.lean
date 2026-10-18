@@ -14,27 +14,27 @@ import Mathlib.LinearAlgebra.LinearIndependent.BaseChange
 
 /-! # Properization of generalized arithmetic progressions
 
-This file develops the lattice-of-relations description of properness and proves
-`exists_twoProperGAP_container` by iterated saturated quotient rank reduction.
+This file and `ShortRelationsAndIteration.lean` develop the lattice-of-relations description of
+properness and prove `exists_twoProperGAP_container_of_injOn_nsmul` by iterated saturated quotient
+rank reduction. The statements for `ZMod q` and for torsion-free groups,
+`exists_twoProperGAP_container` and `exists_twoProperGAP_container_of_isAddTorsionFree`, follow
+from it.
 
 The main pieces are:
 
 - `GAP.relations`, the kernel of the step homomorphism, and the characterization
   `GAP.twoProper_iff` of properness by the absence of short relations;
 - `GAP.ofData` and `GAP.reshape`, which rebuild a progression from prescribed data;
-- `GAP.relationMinimum`, the successive minima of the relation lattice with respect to the
-  coefficient box, with `GAP.twoProper_of_three_lt_relationMinimum` reading properness off the
-  first minimum;
-- `GAP.single_natCast_mem_relations` and `GAP.exists_hasIndependentShort_dim`: in `ZMod q` the
-  relation lattice contains `q ℤ ^ dim`, so it has full rank and all `dim` successive minima are
-  defined, monotone and positive, not only `λ₁`;
+- `GAP.shortRelationRank`, the largest number of independent relations in a dilate of the
+  coefficient box, with `GAP.twoProper_of_shortRelationRank_eq_zero` reading properness off it;
 - `GAP.exists_smithNormalForm_shortRelations` and
   `GAP.saturatedSpan_shortRelations_le_relations`: the sublattice spanned by all relations below
   the cutoff is saturated in `ℤ ^ dim`, so the quotient is free and `stepHom` factors through it.
 
-The proof quotients simultaneously by the saturated sublattice spanned by all relations below a
-successive-minimum cutoff, reboxes the quotient, and iterates the resulting strict dimension drop.
-The cubic cost of each step telescopes into the quartic exponent in the final theorem.
+The proof quotients simultaneously by the saturated sublattice spanned by all relations in the
+`3`-dilate of the coefficient box, reboxes the quotient, and iterates the resulting strict
+dimension drop. The cubic cost of each step telescopes into the quartic exponent in the final
+theorem.
 
 The reboxing step is the proved shortest-direction projection construction under
 `Chang.Reboxing`; no external geometric input is used.
@@ -984,17 +984,6 @@ lemma cube_step_le_fourth_difference {A : ℝ} (hA : 0 ≤ A) {e d : ℕ} (hed :
       ((d : ℝ) + 2) ^ 4 := by
     nlinarith [sq_nonneg ((d : ℝ) + 1), mul_nonneg hd0 (sq_nonneg ((d : ℝ) + 1))]
   nlinarith [mul_le_mul_of_nonneg_left hpow hA, mul_le_mul_of_nonneg_left hdiff hA]
-
-/-! ## The successive minima of the relation lattice
-
-The coefficient box of a progression is the integer box of half-widths `length i - 1`, so the
-relation lattice `GAP.relations` has successive minima with respect to it. This section reads the
-geometry of numbers of `Chang.GeometryOfNumbers` and the lattice point count of
-`Chang.BoxLatticePoints` through that box, which is the form in which the rank reduction of
-properization consumes them.
-
-The fact that drives the saturated quotient is that 2-properness is implied by `3 < λ₁`, which is
-`GAP.twoProper_of_three_lt_relationMinimum`. -/
 
 end
 

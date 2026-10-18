@@ -27,6 +27,12 @@ name = "TauCeti"
 git = "https://github.com/TauCetiProject/TauCeti.git"
 rev = "6387e140389a98fd761f1ab169092ad2faf5891a"
 
+# Source of the affine dimension of a finite set, of Ruzsa's lower bound for sumsets and of the
+# Freiman dimension.
+[[require]]
+name = "SumOfSetsInSeveralDimensions"
+path = "../SumOfSetsInSeveralDimensions"
+
 # Last, so that its pins of the shared dependencies take precedence on `lake update`.
 [[require]]
 name = "mathlib"

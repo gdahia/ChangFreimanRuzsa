@@ -16,7 +16,8 @@ Proofs of the statements of `Challenge.lean`. The definitions `gapMap`, `GAP` an
 are those of the library. The two statements follow from
 `exists_twoProperGAP_of_small_sumset` and `exists_twoProperGAP_zmod_of_small_sumset`, whose
 bounds are written with the budgets `changIntExponent`, `changZModExponent` and
-`changContainerExponent`, and from the polynomial bounds for these budgets in `Bound.lean`.
+`changContainerExponent`, and from the polynomial bounds for these budgets in `Bound.lean`. The
+statement for integers is not deduced from the one for `ZMod q`; see `Integers.lean`.
 -/
 
 public section
@@ -28,13 +29,14 @@ namespace ChangFreimanRuzsa
 
 /-- **Chang's theorem** for sets of integers. A finite nonempty set `X` of integers with
 `|X + X| ≤ κ * |X|`, where `κ ≥ 2`, is contained in a `2`-proper generalized arithmetic
-progression with at most `exp (10 ^ 59 * κ ^ 20) * |X| ^ 2` points. -/
-theorem exists_twoProperGAP_subset_card_le {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
+progression of dimension at most `3 * 10 ^ 14 * κ ^ 5` with at most
+`exp (10 ^ 59 * κ ^ 20) * |X|` points. -/
+theorem exists_twoProperGAP_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
-    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧
-      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 59 * κ ^ 20) * (#X : ℝ) ^ 2 := by
-  obtain ⟨P, hP, hXP, hcard⟩ := exists_twoProperGAP_of_small_sumset X hX hκ hXX
-  refine ⟨P, hP, hXP, hcard.trans ?_⟩
+    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ 3 * 10 ^ 14 * κ ^ 5 ∧
+      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 59 * κ ^ 20) * #X := by
+  obtain ⟨P, hP, hXP, hdim, hcard⟩ := exists_twoProperGAP_of_small_sumset X hX hκ hXX
+  refine ⟨P, hP, hXP, hdim.trans (changContainerExponent_two_mul_le hκ), hcard.trans ?_⟩
   gcongr
   exact changIntExponent_le hκ
 

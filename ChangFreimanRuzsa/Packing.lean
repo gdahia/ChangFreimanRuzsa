@@ -347,61 +347,49 @@ lemma batchSum_subset_binaryListSum_batchElements (batches : List (Finset G)) :
       exact ⟨x, mem_binaryListSum_of_mem (mem_finsetList.mpr hx),
         y, ih hy, rfl⟩
 
+private lemma add_batchSum_nil (Q : Finset G) : Q + batchSum [] = Q := by
+  rw [batchSum, Finset.singleton_zero, add_zero]
+
+private lemma exists_small_cover_or_batch (A Q : Finset G) (hQ : Q.Nonempty) (m : ℕ) :
+    (∃ F ⊆ A, F.card < m ∧ A ⊆ F + (Q - Q)) ∨
+      ∃ S ⊆ A, S.card = m ∧ (Q + S).card = Q.card * m := by
+  obtain ⟨F, hFA, hFdisjoint, hcover⟩ := exists_maximal_disjoint_translates A Q hQ
+  refine (lt_or_ge F.card m).imp (fun h ↦ ⟨F, hFA, h, hcover⟩) fun h ↦ ?_
+  obtain ⟨S, hSF, hScard⟩ := Finset.exists_subset_card_eq h
+  refine ⟨S, hSF.trans hFA, hScard, ?_⟩
+  rw [add_comm, Finset.card_add_iff.mpr (Finset.pairwiseDisjoint_vadd_iff.mp
+    (Set.Pairwise.mono (Finset.coe_subset.mpr hSF) hFdisjoint)), hScard, Nat.mul_comm]
+
 /-- Chang's batching process. At every nonterminal stage it chooses `m` disjoint translates of
 the current packed set, so adjoining the chosen batch multiplies its cardinality by exactly `m`.
-The process terminates because the packed set grows strictly inside a finite ambient group. -/
-theorem exists_chang_batch_packing [Finite G] (A Q : Finset G)
-    (hQ : Q.Nonempty) (m : ℕ) (hm : 2 ≤ m) :
+The ambient group may be infinite: the process terminates because, by hypothesis, at most `B`
+batches can be adjoined in this way. -/
+theorem exists_chang_batch_packing (A Q : Finset G) (hQ : Q.Nonempty) (m : ℕ) (hm : 0 < m)
+    (B : ℕ) (hB : ∀ batches : List (Finset G), (∀ S ∈ batches, S ⊆ A ∧ S.card = m) →
+      (Q + batchSum batches).card = Q.card * m ^ batches.length → batches.length ≤ B) :
     ∃ batches : List (Finset G), ∃ F : Finset G,
       (∀ S ∈ batches, S ⊆ A ∧ S.card = m) ∧
       (Q + batchSum batches).card = Q.card * m ^ batches.length ∧
       F ⊆ A ∧ F.card < m ∧
       A ⊆ F + ((Q + batchSum batches) - (Q + batchSum batches)) := by
-  let := Fintype.ofFinite G
-  induction hmeasure : Fintype.card G - Q.card using Nat.strong_induction_on generalizing Q with
-  | h n ih =>
-      obtain ⟨F, hFA, hFdisjoint, hcover⟩ :=
-        exists_maximal_disjoint_translates A Q hQ
-      by_cases hFcard : F.card < m
-      · have hQzero : Q + ({0} : Finset G) = Q := by
-          ext x
-          simp [Finset.mem_add]
-        refine ⟨[], F, ?_, ?_, hFA, hFcard, ?_⟩
-        · simp
-        · rw [batchSum, hQzero]
-          simp
-        · simpa only [batchSum, hQzero] using hcover
-      · obtain ⟨S, hSF, hScard⟩ :=
-          Finset.exists_subset_card_eq (Nat.le_of_not_gt hFcard)
-        have hSnonempty : S.Nonempty := by
-          rw [← Finset.card_pos, hScard]
-          omega
-        have hSdisjoint : (S : Set G).PairwiseDisjoint (· +ᵥ Q) :=
-          Set.Pairwise.mono (Finset.coe_subset.mpr hSF) hFdisjoint
-        have hQScard : (Q + S).card = Q.card * m := by
-          rw [add_comm, Finset.card_add_iff.mpr
-            (Finset.pairwiseDisjoint_vadd_iff.mp hSdisjoint), hScard, Nat.mul_comm]
-        have hQcard : 0 < Q.card := Finset.card_pos.mpr hQ
-        have hQScard_strict : Q.card < (Q + S).card := by
-          rw [hQScard]
-          simpa only [one_mul, Nat.mul_comm] using
-            Nat.mul_lt_mul_of_pos_right (show 1 < m by omega) hQcard
-        have hnext :
-            Fintype.card G - (Q + S).card < Fintype.card G - Q.card := by
-          have hQSuniv := Finset.card_le_univ (Q + S)
-          omega
-        obtain ⟨batches, F', hbatches, hpacked, hF'A, hF'card, hF'cover⟩ :=
-          ih (Fintype.card G - (Q + S).card) (by simpa only [hmeasure] using hnext)
-            (Q + S) (hQ.add hSnonempty) rfl
-        refine ⟨S :: batches, F', ?_, ?_, hF'A, hF'card, ?_⟩
-        · intro T hT
-          rw [List.mem_cons] at hT
-          rcases hT with rfl | hT
-          · exact ⟨hSF.trans hFA, hScard⟩
-          · exact hbatches T hT
-        · rw [batchSum, ← add_assoc, hpacked, hQScard, List.length_cons, pow_succ]
-          ring
-        · simpa only [batchSum, ← add_assoc] using hF'cover
+  obtain ⟨F, hFA, hFcard, hcover⟩ | ⟨S, hSA, hScard, hQS⟩ :=
+    exists_small_cover_or_batch A Q hQ m
+  · exact ⟨[], F, by simp, by simp [add_batchSum_nil], hFA, hFcard, by rwa [add_batchSum_nil]⟩
+  cases B with
+  | zero =>
+    exact absurd (hB [S] (by simp [hSA, hScard])
+      (by rw [batchSum, ← add_assoc, add_batchSum_nil, hQS]; simp)) (by simp)
+  | succ B =>
+    obtain ⟨batches, F, hbatches, hpacked, hFA, hFcard, hcover⟩ :=
+      exists_chang_batch_packing A (Q + S) (hQ.add (Finset.card_pos.1 (hScard ▸ hm))) m hm B
+        fun batches hbatches hcard ↦ Nat.le_of_succ_le_succ (hB (S :: batches)
+          (List.forall_mem_cons.2 ⟨⟨hSA, hScard⟩, hbatches⟩)
+          (by rw [batchSum, ← add_assoc, hcard, hQS, List.length_cons, pow_succ]; ring))
+    refine ⟨S :: batches, F, List.forall_mem_cons.2 ⟨⟨hSA, hScard⟩, hbatches⟩, ?_, hFA, hFcard,
+      ?_⟩
+    · rw [batchSum, ← add_assoc, hpacked, hQS, List.length_cons, pow_succ]
+      ring
+    · simpa only [batchSum, ← add_assoc] using hcover
 
 end BatchPacking
 

@@ -35,7 +35,9 @@ The five stages, for `X ⊆ ZMod q` with `q` prime and `|X + X| ≤ κ |X|`:
 * **T** (`FreimanRigidity.lean`) transports `Q` back to a proper progression
   `Q₁ ⊆ 2X₁ - 2X₁` of `ZMod q` of the same dimension and cardinality;
 * **P** (`Packing.lean`) grows `Q₁` by batches of `⌈3 κ⌉` elements of `X₁` until it covers
-  `X₁`, and recovers `X` from `X₁` by Ruzsa covering.
+  `X₁`, and recovers `X` from `X₁` by Ruzsa covering. This stage,
+  `exists_coarseGAP_container_of_model_gap`, uses nothing about `ZMod q`: it is stated for a finite
+  subset of an arbitrary abelian group, and `Integers.lean` applies it to sets of integers.
 
 All the budgets are explicit functions of `κ`; they are collected in `changContainerExponent`, which
 serves as the dimension bound, the logarithm of the container's size relative to `|X|`, and the size
@@ -232,7 +234,7 @@ private lemma pow_le_exp_mul {κ : ℝ} (hκ : 0 ≤ κ) (n : ℕ) : κ ^ n ≤ 
 `changGapDim κ` and whose size is at least `|X|` divided by a bound depending only on `κ`.
 
 Everything analytic happens in the model group; only `Q₁` crosses back. -/
-private theorem exists_model_gap {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
+theorem exists_model_gap {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
     (hXlower : Real.exp (changContainerExponent κ) < X.card) :
@@ -350,63 +352,63 @@ private theorem exists_model_gap {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     nlinarith [pow_pos (by norm_num : (0 : ℝ) < 2) (12 * changGapDim κ ^ 2)]
   exact ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩
 
-/-- The coarse-container interface consumed by the geometric part of Chang's theorem.
+/-- **Stage P.** Let `X` be a nonempty finite subset of an abelian group with `|X + X| ≤ κ |X|`.
+Given a subset `X₁` of density `1 / 8` and a proper progression `Q₁ ⊆ 2X - 2X` with the bounds
+that `exists_model_gap` provides, the set `X` lies in a progression of dimension at most
+`changContainerExponent κ` and of size at most `exp (changContainerExponent κ) * |X|`.
 
-The dimension bound is the coarse stage's own budget `changContainerExponent κ`. Reducing it to the
-Freiman dimension of `X` — the bound the downstream result actually needs — is the job of
-`chang_coordinate_reduction`, not of this stage.
-
-No upper bound on `|X|` is assumed: the Fourier and Bohr stages run inside the model group `ZMod m`,
-whose size is controlled by `|X|` alone, so the coarse stage never needs room inside `ZMod q`. -/
-theorem exists_coarseGAP_container {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
-    (hq : Nat.Prime q) (hκ : 2 ≤ κ)
-    (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
-    (hXlower : Real.exp (changContainerExponent κ) < X.card) :
-    ∃ P : GAP (ZMod q),
+The group is arbitrary and may be infinite: the progression `Q₁` is the only input that depends on
+the group. -/
+theorem exists_coarseGAP_container_of_model_gap {G : Type*} [DecidableEq G] [AddCommGroup G]
+    {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
+    (hXX : ((X + X).card : ℝ) ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
+    (hQ₁proper : Q₁.Proper) (hQ₁dimle : (Q₁.dim : ℝ) ≤ (changGapDim κ : ℝ))
+    (hQ₁subX : Q₁.carrier ⊆ (X + X) - (X + X))
+    (hQlow : (X.card : ℝ) ≤ 8 * 2 ^ (12 * changGapDim κ ^ 2) * Q₁.carrier.card) :
+    ∃ P : GAP G,
       X ⊆ P.carrier ∧
         (∀ i, 1 < P.length i) ∧
         ((P.dim : ℝ) ≤ changContainerExponent κ) ∧
         (P.carrier.card : ℝ) ≤ Real.exp (changContainerExponent κ) * X.card := by
-  have : NeZero q := ⟨hq.pos.ne'⟩
   have hκ0 : (0 : ℝ) < κ := by linarith
-  have hXpos : (0 : ℝ) < X.card := (Real.exp_pos _).trans hXlower
-  have hXne : X.Nonempty := Finset.card_pos.1 (by exact_mod_cast hXpos)
-  obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
-    exists_model_gap X hq hκ hXX hXlower
+  have hXpos : (0 : ℝ) < X.card := Nat.cast_pos.2 hXne.card_pos
   have hX₁cardR : (X.card : ℝ) ≤ 8 * X₁.card := by exact_mod_cast hX₁card
   have hX₁pos : (0 : ℝ) < X₁.card := by linarith
   have hX₁ne : X₁.Nonempty := Finset.card_pos.1 (by exact_mod_cast hX₁pos)
   have hQ₁pos : (0 : ℝ) < Q₁.carrier.card := by
     exact_mod_cast Finset.card_pos.2 Q₁.nonempty
-  -- Stage P: batch packing inside `ZMod q`
   have hm₀κ : 3 * κ ≤ (changBatchSize κ : ℝ) := by
     rw [changBatchSize]
     exact Nat.le_ceil _
   have hm₀ : 2 ≤ changBatchSize κ := by
     have : (2 : ℝ) ≤ (changBatchSize κ : ℝ) := by linarith
     exact_mod_cast this
-  obtain ⟨batches, F, hbatches, hpacked, -, hFcard, hcover⟩ :=
-    exists_chang_batch_packing X₁ Q₁.carrier Q₁.nonempty (changBatchSize κ) hm₀
-  have hSsub : Q₁.carrier + batchSum batches ⊆ (batches.length + 2) • X - 2 • X := by
-    intro z hz
-    obtain ⟨u, hu, v, hv, rfl⟩ := Finset.mem_add.1 hz
-    obtain ⟨a, ha, b, hb, rfl⟩ := Finset.mem_sub.1 (hQ₁subX hu)
-    refine Finset.mem_sub.2 ⟨a + v, ?_, b, ?_, by abel⟩
-    · rw [show batches.length + 2 = 2 + batches.length from by ring, add_nsmul]
-      refine Finset.add_mem_add ?_
-        (batchSum_subset_nsmul batches X (fun S hS ↦ (hbatches S hS).1.trans hX₁X) hv)
-      rwa [two_nsmul]
-    · rwa [two_nsmul]
-  have hPR : (((batches.length + 2) • X - 2 • X).card : ℝ) ≤
-      κ ^ (batches.length + 4) * X.card := by
-    have hcast := (NNRat.cast_le (K := ℝ)).2
-      (Finset.pluennecke_ruzsa_inequality_nsmul_sub_nsmul_add hXne X (batches.length + 2) 2)
-    push_cast [NNRat.cast_pow] at hcast
-    apply hcast.trans
-    rw [show batches.length + 2 + 2 = batches.length + 4 from by ring]
-    gcongr
-    exact (div_le_iff₀ hXpos).2 hXX
-  have hgrow : (3 : ℝ) ^ batches.length * Q₁.carrier.card ≤ κ ^ 4 * X.card := by
+  -- the Plünnecke–Ruzsa inequality bounds the number of batches that can be packed
+  have hgrow : ∀ batches : List (Finset G),
+      (∀ S ∈ batches, S ⊆ X₁ ∧ S.card = changBatchSize κ) →
+      (Q₁.carrier + batchSum batches).card =
+        Q₁.carrier.card * changBatchSize κ ^ batches.length →
+      (3 : ℝ) ^ batches.length * Q₁.carrier.card ≤ κ ^ 4 * X.card := by
+    intro batches hbatches hpacked
+    have hSsub : Q₁.carrier + batchSum batches ⊆ (batches.length + 2) • X - 2 • X := by
+      intro z hz
+      obtain ⟨u, hu, v, hv, rfl⟩ := Finset.mem_add.1 hz
+      obtain ⟨a, ha, b, hb, rfl⟩ := Finset.mem_sub.1 (hQ₁subX hu)
+      refine Finset.mem_sub.2 ⟨a + v, ?_, b, ?_, by abel⟩
+      · rw [show batches.length + 2 = 2 + batches.length from by ring, add_nsmul]
+        refine Finset.add_mem_add ?_
+          (batchSum_subset_nsmul batches X (fun S hS ↦ (hbatches S hS).1.trans hX₁X) hv)
+        rwa [two_nsmul]
+      · rwa [two_nsmul]
+    have hPR : (((batches.length + 2) • X - 2 • X).card : ℝ) ≤
+        κ ^ (batches.length + 4) * X.card := by
+      have hcast := (NNRat.cast_le (K := ℝ)).2
+        (Finset.pluennecke_ruzsa_inequality_nsmul_sub_nsmul_add hXne X (batches.length + 2) 2)
+      push_cast [NNRat.cast_pow] at hcast
+      apply hcast.trans
+      rw [show batches.length + 2 + 2 = batches.length + 4 from by ring]
+      gcongr
+      exact (div_le_iff₀ hXpos).2 hXX
     refine le_of_mul_le_mul_right ?_ (pow_pos hκ0 batches.length)
     rw [show (3 : ℝ) ^ batches.length * Q₁.carrier.card * κ ^ batches.length =
         (Q₁.carrier.card : ℝ) * (3 * κ) ^ batches.length from by rw [mul_pow]; ring,
@@ -417,6 +419,21 @@ theorem exists_coarseGAP_container {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     refine le_trans ?_ hPR
     rw [← Nat.cast_pow, ← Nat.cast_mul, ← hpacked]
     exact Nat.cast_le.2 (Finset.card_le_card hSsub)
+  have hB : ∀ batches : List (Finset G),
+      (∀ S ∈ batches, S ⊆ X₁ ∧ S.card = changBatchSize κ) →
+      (Q₁.carrier + batchSum batches).card =
+        Q₁.carrier.card * changBatchSize κ ^ batches.length →
+      batches.length ≤ ⌈κ ^ 4 * X.card⌉₊ := by
+    intro batches hbatches hpacked
+    have h₁ : (batches.length : ℝ) ≤ 3 ^ batches.length :=
+      mod_cast (Nat.lt_pow_self (show 1 < 3 by norm_num)).le
+    have h₂ : (1 : ℝ) ≤ Q₁.carrier.card := mod_cast Q₁.nonempty.card_pos
+    exact Nat.cast_le.1 ((h₁.trans (le_mul_of_one_le_right (by positivity) h₂)).trans
+      ((hgrow batches hbatches hpacked).trans (Nat.le_ceil _)))
+  -- Stage P: batch packing
+  obtain ⟨batches, F, hbatches, hpacked, -, hFcard, hcover⟩ :=
+    exists_chang_batch_packing X₁ Q₁.carrier Q₁.nonempty (changBatchSize κ) (by grind) _ hB
+  have hgrow := hgrow batches hbatches hpacked
   have hQ₁le : (Q₁.carrier.card : ℝ) ≤ κ ^ 4 * X.card := by
     refine le_trans ?_ hgrow
     nlinarith [one_le_pow₀ (show (1 : ℝ) ≤ 3 by norm_num) (n := batches.length)]
@@ -533,6 +550,28 @@ theorem exists_coarseGAP_container {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
         (changBatchSize κ : ℝ) * changPackBound κ :=
       mul_le_mul_of_nonneg_left hlen (Nat.cast_nonneg _)
     linarith
+
+/-- The coarse-container interface consumed by the geometric part of Chang's theorem.
+
+The dimension bound is the coarse stage's own budget `changContainerExponent κ`. Reducing it to the
+Freiman dimension of `X` is the job of `exists_twoProperGAP_dim_le_freimanDim`, not of this stage.
+
+No upper bound on `|X|` is assumed: the Fourier and Bohr stages run inside the model group `ZMod m`,
+whose size is controlled by `|X|` alone, so the coarse stage never needs room inside `ZMod q`. -/
+theorem exists_coarseGAP_container {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
+    (hq : Nat.Prime q) (hκ : 2 ≤ κ)
+    (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
+    (hXlower : Real.exp (changContainerExponent κ) < X.card) :
+    ∃ P : GAP (ZMod q),
+      X ⊆ P.carrier ∧
+        (∀ i, 1 < P.length i) ∧
+        ((P.dim : ℝ) ≤ changContainerExponent κ) ∧
+        (P.carrier.card : ℝ) ≤ Real.exp (changContainerExponent κ) * X.card := by
+  obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
+    exists_model_gap X hq hκ hXX hXlower
+  exact exists_coarseGAP_container_of_model_gap
+    (Finset.card_pos.1 (by exact_mod_cast (Real.exp_pos _).trans hXlower)) hκ hXX hX₁X hX₁card
+    hQ₁proper hQ₁dimle hQ₁subX hQlow
 
 end
 

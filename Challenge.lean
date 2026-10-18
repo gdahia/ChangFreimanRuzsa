@@ -19,7 +19,7 @@ size. This is Chang's polynomial form of Freiman's theorem, with the `2`-proper 
 Green and Tao. This module imports Mathlib alone; the proofs are supplied by the companion
 `Solution` module.
 
-* `exists_twoProperGAP_subset_card_le`: the statement for finite sets of integers.
+* `exists_twoProperGAP_subset_dim_le_card_le`: the statement for finite sets of integers.
 * `exists_twoProperGAP_zmod_subset_dim_le_card_le`: the statement for subsets of `ZMod q` with `q`
   prime.
 
@@ -66,11 +66,12 @@ def GAP.TwoProper {G : Type*} [DecidableEq G] [AddCommMonoid G] (P : GAP G) : Pr
 
 /-- **Chang's theorem** for sets of integers. A finite nonempty set `X` of integers with
 `|X + X| ≤ κ * |X|`, where `κ ≥ 2`, is contained in a `2`-proper generalized arithmetic
-progression with at most `exp (10 ^ 59 * κ ^ 20) * |X| ^ 2` points. -/
-theorem exists_twoProperGAP_subset_card_le {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
+progression of dimension at most `3 * 10 ^ 14 * κ ^ 5` with at most
+`exp (10 ^ 59 * κ ^ 20) * |X|` points. -/
+theorem exists_twoProperGAP_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
-    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧
-      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 59 * κ ^ 20) * (#X : ℝ) ^ 2 :=
+    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ 3 * 10 ^ 14 * κ ^ 5 ∧
+      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 59 * κ ^ 20) * #X :=
   sorry
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`. A set `X` with `|X + X| ≤ κ * |X|`, where

@@ -28,8 +28,8 @@ The main pieces are:
 - `intBox` and `natBox`, the symmetric and the nonnegative integer boxes, with their cardinalities;
 - `card_mul_prod_le_of_separated`, the **packing bound**: a set of points of a box that are
   pairwise far apart is small;
-- `successiveMinimum`, the **successive minima** of a subgroup with respect to a box, together
-  with `exists_witness_successiveMinimum` for the attainment of the infimum defining them.
+- `IsShort` and `HasIndependentShort`, which say that a dilate of a box contains a vector, or
+  a given number of linearly independent vectors, of a subgroup.
 
 `Chang.Properization` reads all of this through the coefficient box of a progression. The Bohr
 stage, `Chang.BohrProgression`, takes its short lattice vectors from Minkowski's second theorem in
@@ -143,18 +143,18 @@ theorem card_mul_prod_le_of_separated {s : Finset (Fin d → ℤ)} {m M : Fin d 
 
 end Packing
 
-/-! ## Successive minima
+/-! ## Short independent vectors
 
-The `k`-th successive minimum of a subgroup `Λ` of `ℤ ^ d` with respect to the box of half-widths
-`L` is the least dilation factor of the box whose points contain `k` linearly independent vectors
-of `Λ`. Linear independence is taken over `ℤ`, which for integer vectors is the same as linear
-independence over `ℝ`.
+`HasIndependentShort Λ L k t` says that the `t`-dilate of the box of half-widths `L` contains `k`
+linearly independent vectors of a subgroup `Λ` of `ℤ ^ d`. Linear independence is taken over `ℤ`,
+which for integer vectors is the same as linear independence over `ℝ`.
 
-As in the literature the minima are defined as infima, and as in the literature the infimum is
-attained, `exists_witness_successiveMinimum`. Both that and the positivity of the first minimum,
-`le_successiveMinimum_one`, come from discreteness of `ℤ ^ d` rather than from compactness. -/
+The properization does not use the successive minima of `Λ`. The relation lattice of a progression
+in `ℤ` does not have full rank, so only the first few minima would be defined. The largest `k`
+with `HasIndependentShort Λ L k t` for a fixed `t` is defined for every `Λ`, and it is what
+`GAP.shortRelationRank` uses. -/
 
-section SuccessiveMinima
+section ShortVectors
 
 variable {d : ℕ}
 
@@ -180,102 +180,7 @@ lemma HasIndependentShort.of_le {Λ : AddSubgroup (Fin d → ℤ)} {L : Fin d �
   obtain ⟨v, hindep, hv⟩ := h
   exact ⟨v ∘ Fin.castLE hk, hindep.comp _ (Fin.castLE_injective hk), fun j ↦ hv _⟩
 
-/-- The `k`-th successive minimum of `Λ` with respect to the box of half-widths `L`. -/
-def successiveMinimum (Λ : AddSubgroup (Fin d → ℤ)) (L : Fin d → ℕ) (k : ℕ) : ℝ :=
-  sInf {t : ℝ | 0 ≤ t ∧ HasIndependentShort Λ L k t}
-
-lemma bddBelow_dilations (Λ : AddSubgroup (Fin d → ℤ)) (L : Fin d → ℕ) (k : ℕ) :
-    BddBelow {t : ℝ | 0 ≤ t ∧ HasIndependentShort Λ L k t} :=
-  ⟨0, fun _ ht ↦ ht.1⟩
-
-/-- Any dilation factor realizing `k` independent vectors bounds the `k`-th minimum. -/
-lemma successiveMinimum_le {Λ : AddSubgroup (Fin d → ℤ)} {L : Fin d → ℕ} {k : ℕ} {t : ℝ}
-    (ht : 0 ≤ t) (h : HasIndependentShort Λ L k t) : successiveMinimum Λ L k ≤ t :=
-  csInf_le (bddBelow_dilations Λ L k) ⟨ht, h⟩
-
-/-- The successive minima increase with the number of independent vectors required. -/
-lemma successiveMinimum_mono {Λ : AddSubgroup (Fin d → ℤ)} {L : Fin d → ℕ} {k k' : ℕ}
-    (hk : k ≤ k') (hne : ∃ t, 0 ≤ t ∧ HasIndependentShort Λ L k' t) :
-    successiveMinimum Λ L k ≤ successiveMinimum Λ L k' := by
-  exact le_csInf hne fun t ht ↦ successiveMinimum_le ht.1 (ht.2.of_le hk)
-
-/-- A dilation factor smaller than every minimum bounds it from below. -/
-lemma le_successiveMinimum {Λ : AddSubgroup (Fin d → ℤ)} {L : Fin d → ℕ} {k : ℕ} {t : ℝ}
-    (hne : ∃ s, 0 ≤ s ∧ HasIndependentShort Λ L k s)
-    (h : ∀ s, 0 ≤ s → HasIndependentShort Λ L k s → t ≤ s) : t ≤ successiveMinimum Λ L k :=
-  le_csInf hne fun s hs ↦ h s hs.1 hs.2
-
-/-! ### Attainment of the minima
-
-The ratios `|v i| / L i` that a family of integer vectors realizes all have the common denominator
-`∏ L`, so the dilation factors that carry an independent family form a set of multiples of
-`1 / ∏ L`. Such a set has a least element, which is the discrete substitute for the compactness
-argument that attains the minima of a general convex body. -/
-
-/-- The largest coefficient of a family of integer vectors, measured over the common denominator
-`∏ L`: it is the numerator of `max (j, i), |v j i| / L i`. -/
-def scaledSup (L : Fin d → ℕ) {k : ℕ} (v : Fin k → (Fin d → ℤ)) : ℕ :=
-  Finset.univ.sup fun p : Fin k × Fin d ↦ (v p.1 p.2).natAbs * ((∏ i, L i) / L p.2)
-
-lemma le_scaledSup (L : Fin d → ℕ) {k : ℕ} (v : Fin k → (Fin d → ℤ)) (j : Fin k) (i : Fin d) :
-    (v j i).natAbs * ((∏ i, L i) / L i) ≤ scaledSup L v :=
-  Finset.le_sup (f := fun p : Fin k × Fin d ↦ (v p.1 p.2).natAbs * ((∏ i, L i) / L p.2))
-    (Finset.mem_univ (j, i))
-
-lemma prod_pos_of_length_pos {L : Fin d → ℕ} (hL : ∀ i, 0 < L i) :
-    (0 : ℝ) < ((∏ i, L i : ℕ) : ℝ) := by
-  exact_mod_cast Finset.prod_pos fun i _ ↦ hL i
-
-/-- A family whose scaled supremum is at most `a` is short for the dilation factor `a / ∏ L`. -/
-lemma isShort_of_scaledSup_le {L : Fin d → ℕ} {k : ℕ} (hL : ∀ i, 0 < L i)
-    {v : Fin k → (Fin d → ℤ)} {a : ℕ} (ha : scaledSup L v ≤ a) (j : Fin k) :
-    IsShort L ((a : ℝ) / ((∏ i, L i : ℕ) : ℝ)) (v j) := by
-  intro i
-  have hnat : (v j i).natAbs * ∏ i, L i ≤ a * L i := by
-    rw [← Nat.div_mul_cancel (Finset.dvd_prod_of_mem L (Finset.mem_univ i)), ← mul_assoc]
-    exact Nat.mul_le_mul_right _ (le_trans (le_scaledSup L v j i) ha)
-  rw [div_mul_eq_mul_div, le_div_iff₀ (prod_pos_of_length_pos hL), ← Int.cast_abs,
-    ← Nat.cast_natAbs]
-  exact_mod_cast hnat
-
-/-- A family short for the dilation factor `s` has scaled supremum at most `s * ∏ L`. -/
-lemma scaledSup_le_mul {L : Fin d → ℕ} {k : ℕ} {v : Fin k → (Fin d → ℤ)} {s : ℝ} (hs : 0 ≤ s)
-    (hv : ∀ j, IsShort L s (v j)) : (scaledSup L v : ℝ) ≤ s * ((∏ i, L i : ℕ) : ℝ) := by
-  refine le_trans ?_ (Nat.floor_le (mul_nonneg hs (Nat.cast_nonneg _)))
-  apply Nat.cast_le.mpr
-  apply Finset.sup_le
-  intro p _
-  apply Nat.le_floor
-  have hcancel : ((∏ i, L i : ℕ) : ℝ) = ((L p.2 : ℕ) : ℝ) * (((∏ i, L i) / L p.2 : ℕ) : ℝ) := by
-    rw [← Nat.cast_mul, Nat.mul_div_cancel' (Finset.dvd_prod_of_mem L (Finset.mem_univ p.2))]
-  rw [Nat.cast_mul, Nat.cast_natAbs, Int.cast_abs, hcancel, ← mul_assoc]
-  exact mul_le_mul_of_nonneg_right (hv p.1 p.2) (Nat.cast_nonneg _)
-
-/-- The infimum defining a successive minimum is attained: some family of `k` independent vectors
-of `Λ` is short for the dilation factor `successiveMinimum Λ L k` itself. -/
-theorem exists_witness_successiveMinimum {Λ : AddSubgroup (Fin d → ℤ)} {L : Fin d → ℕ} {k : ℕ}
-    (hL : ∀ i, 0 < L i) (hne : ∃ t, 0 ≤ t ∧ HasIndependentShort Λ L k t) :
-    HasIndependentShort Λ L k (successiveMinimum Λ L k) := by
-  classical
-  have hQ : ∃ a : ℕ, ∃ v : Fin k → (Fin d → ℤ), LinearIndependent ℤ v ∧ (∀ j, v j ∈ Λ) ∧
-      scaledSup L v ≤ a := by
-    obtain ⟨t, -, v, hindep, hv⟩ := hne
-    exact ⟨scaledSup L v, v, hindep, fun j ↦ (hv j).1, le_rfl⟩
-  obtain ⟨v₀, hindep₀, hmem₀, hsup₀⟩ := Nat.find_spec hQ
-  have hmin : successiveMinimum Λ L k = (Nat.find hQ : ℝ) / ((∏ i, L i : ℕ) : ℝ) := by
-    apply le_antisymm (successiveMinimum_le (by positivity)
-      ⟨v₀, hindep₀, fun j ↦ ⟨hmem₀ j, isShort_of_scaledSup_le hL hsup₀ j⟩⟩)
-    apply le_successiveMinimum hne
-    intro s hs hshort
-    obtain ⟨v, hindep, hv⟩ := hshort
-    rw [div_le_iff₀ (prod_pos_of_length_pos hL)]
-    apply le_trans (Nat.cast_le.mpr (Nat.find_min' hQ
-      ⟨v, hindep, fun j ↦ (hv j).1, le_rfl⟩))
-    exact scaledSup_le_mul hs fun j ↦ (hv j).2
-  rw [hmin]
-  exact ⟨v₀, hindep₀, fun j ↦ ⟨hmem₀ j, isShort_of_scaledSup_le hL hsup₀ j⟩⟩
-
-end SuccessiveMinima
+end ShortVectors
 
 end
 

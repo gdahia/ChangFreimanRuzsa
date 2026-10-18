@@ -14,6 +14,7 @@ import Mathlib.Analysis.Complex.ExponentialBounds
 For `κ ≥ 2`, the budgets of `Cyclic.lean` and `Integers.lean` satisfy
 
 * `changContainerExponent κ ≤ 7 * 10 ^ 12 * κ ^ 5`,
+* `changContainerExponent (2 * κ) ≤ 3 * 10 ^ 14 * κ ^ 5`,
 * `changZModExponent κ ≤ 10 ^ 53 * κ ^ 20`,
 * `κ ^ 2 ≤ changIntExponent κ ≤ 10 ^ 59 * κ ^ 20`.
 -/
@@ -42,7 +43,7 @@ theorem sq_le_changIntExponent {κ : ℝ} (hκ : 2 ≤ κ) : κ ^ 2 ≤ changInt
     pow_le_pow_left₀ (by linarith) (by linarith) 2
   have h₂ : (changContainerExponent (2 * κ) + 2) ^ 2 ≤ (changContainerExponent (2 * κ) + 2) ^ 4 :=
     pow_le_pow_right₀ (by linarith) (by norm_num)
-  unfold changIntExponent properizationConstant
+  unfold changIntExponent changZModExponent properizationConstant
   linarith [sq_nonneg κ]
 
 /-! ## The upper bound -/
@@ -138,7 +139,8 @@ lemma changContainerExponent_le (hκ : 2 ≤ κ) :
   unfold changContainerExponent
   linarith
 
-private lemma changContainerExponent_add_two_pow_le (hκ : 2 ≤ κ) :
+/-- `(changContainerExponent κ + 2) ^ 4 ≤ 7.1e12 ^ 4 * κ ^ 20`. -/
+lemma changContainerExponent_add_two_pow_le (hκ : 2 ≤ κ) :
     (changContainerExponent κ + 2) ^ 4 ≤ 7.1e12 ^ 4 * κ ^ 20 := by
   have hκ₀ : 0 ≤ κ := by linarith
   have h₀ : 1 ≤ κ ^ 5 := one_le_pow₀ (by linarith)
@@ -163,9 +165,17 @@ theorem changIntExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
   have h' := changContainerExponent_add_two_pow_le hκ₂
   have h₅ : κ ^ 5 ≤ κ ^ 20 := pow_le_pow_right₀ (by linarith) (by norm_num)
   have h₁ : 1 ≤ κ ^ 20 := one_le_pow₀ (by linarith)
-  unfold changIntExponent properizationConstant
+  unfold changIntExponent changZModExponent properizationConstant
   rw [mul_pow] at h h'
   norm_num at h h' ⊢
   linarith
+
+/-- `changContainerExponent (2 * κ) ≤ 3 * 10 ^ 14 * κ ^ 5`. This is the bound for the dimension in
+`exists_twoProperGAP_of_small_sumset`. -/
+lemma changContainerExponent_two_mul_le (hκ : 2 ≤ κ) :
+    changContainerExponent (2 * κ) ≤ 3 * 10 ^ 14 * κ ^ 5 := by
+  have h := changContainerExponent_le (κ := 2 * κ) (by linarith)
+  rw [mul_pow] at h
+  linarith [pow_pos (zero_lt_two.trans_le hκ) 5]
 
 end ChangFreimanRuzsa

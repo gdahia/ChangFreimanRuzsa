@@ -6,9 +6,9 @@ project:
   description: >-
     Formalization of Chang's polynomial form of Freiman's theorem, with a 2-proper
     progression as in Green and Tao: a finite set X of integers with |X + X| <= kappa |X| is
-    contained in a 2-proper generalized arithmetic progression with at most
-    exp(10^59 kappa^20) |X|^2 points. The statement for integers is deduced from one for
-    subsets of ZMod q with q prime, where the progression has dimension at most
+    contained in a 2-proper generalized arithmetic progression of dimension at most
+    3 * 10^14 kappa^5 with at most exp(10^59 kappa^20) |X| points. There is also a statement
+    for subsets of ZMod q with q prime, where the progression has dimension at most
     7 * 10^12 kappa^5 and at most exp(10^53 kappa^20) |X| points. The bounds are weaker than
     those of Chang.
   authors:
@@ -58,7 +58,18 @@ related_formalizations:
       Source of the proof for subsets of ZMod q. The modules needed are copied from commit
       5f4b915 into ChangFreimanRuzsa/ and ported to Lean v4.35.0-rc4, in the namespace
       ChangFreimanRuzsa, without the declarations that the proof does not use, and with the
-      progression inside a Bohr set built from Minkowski's second theorem in Tau Ceti.
+      progression inside a Bohr set built from Minkowski's second theorem in Tau Ceti. The
+      modules LatticeCoordinates, Reboxing/EffectiveLattice, FreimanModel,
+      CoordinateReduction and CyclicFreimanDimension, which bound the dimension of the
+      progression by the Freiman dimension, are a rewriting of the corresponding modules of
+      that commit.
+  - id: "https://github.com/gdahia/SumOfSetsInSeveralDimensions"
+    relationship: "builds-on"
+    note: >-
+      A Lake dependency and the source of the Freiman dimension,
+      SumOfSetsInSeveralDimensions.freimanDim, and of the bound
+      freimanDim_le_two_mul_sub_one_of_card_add_le, which applies Ruzsa's lower bound for
+      sumsets to a Freiman model of a set. It is private for now.
   - id: "https://github.com/YaelDillies/apap"
     relationship: "builds-on"
     note: >-
@@ -78,7 +89,12 @@ status:
     Chang's theorem with a 2-proper progression, for subsets of ZMod q with q prime and for
     finite sets of integers, with the bounds in fidelity.divergences. Chang's lemma on large
     spectra is the one of APAP and Minkowski's second theorem the one of Tau Ceti. The
-    statement for integers has no bound on the dimension of the progression. The sorry counts
+    library also has the statements for ZMod q and for integers with a progression of
+    dimension at most the Freiman dimension of the set; they are not in Challenge.lean and
+    need a lower bound on the size of the set. It also has Ruzsa's lower bound for sets of
+    given Freiman dimension and the bound freimanDim X ≤ 2 κ - 1 for sets with
+    |X + X| ≤ κ |X|, and from it the statements with a progression of dimension at most
+    2 κ - 1, which are not in Challenge.lean either. The sorry counts
     refer to the library and Solution.lean; Challenge.lean has one placeholder for each of
     its two statements.
   sorry_count: 0
@@ -100,14 +116,24 @@ automation:
         with given doubling via dimension: one instruction to state Chang's theorem as in
         DenseSetsWithoutLargeSumsets, one to use Minkowski's second theorem from Tau Ceti and
         to import APAP, and one to move the result to this repository in a form that can be
-        imported next to PFR.
+        imported next to PFR. Later, one instruction to move the bound of the dimension by
+        the Freiman dimension from DenseSetsWithoutLargeSumsets to this repository, without
+        adding it to Challenge.lean. Later, one instruction to make the proof work for sets of
+        integers by carrying back to the integers the progression inside 2X - 2X, instead of
+        the final progression.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
     with Minkowski's second theorem, removed unused declarations, and wrote the statements
     for ZMod q and for integers, the bounds for the budgets, Challenge.lean and
     Solution.lean. The proofs in the copied modules are those of
-    DenseSetsWithoutLargeSumsets. Every proof is checked by Lean.
+    DenseSetsWithoutLargeSumsets, which were written by Codex agents. The agent also rewrote
+    the modules that bound the dimension by the Freiman dimension, keeping the argument and
+    the definition of the Freiman dimension. For the statement for integers with a bound
+    linear in |X|, the agent restated the covering argument and the properization for
+    general abelian groups, replaced the successive minima of the lattice of relations by
+    the number of independent short relations, and rewrote Integers.lean. Every proof is
+    checked by Lean.
 
 fidelity:
   divergences: >-
@@ -116,20 +142,44 @@ fidelity:
     Freiman dimension of A, where K = |A + A| / |A|.
 
     Integers. The Lean statement takes kappa >= 2 with |X + X| <= kappa |X| and gives
-    |P| <= exp(10^59 kappa^20) |X|^2. The bound is quadratic in |X|, and the dimension of P
-    is not bounded. The library form has exp(changIntExponent kappa) in place of
-    exp(10^59 kappa^20).
+    |P| <= exp(10^59 kappa^20) |X| and dimension at most 3 * 10^14 kappa^5. The library form
+    has exp(changIntExponent kappa) in place of exp(10^59 kappa^20) and
+    changContainerExponent (2 kappa) in place of 3 * 10^14 kappa^5.
 
     ZMod q. The Lean statement is for q prime and needs exp(7 * 10^12 kappa^5) < |X| and
     exp(10^53 kappa^20) |X| <= q. It gives a 2-proper progression of dimension at most
     7 * 10^12 kappa^5 with at most exp(10^53 kappa^20) |X| points. The library form is
     written with the budgets changContainerExponent and changZModExponent.
 
-    The statement for integers is deduced from the one for ZMod q. A set too small for the
-    latter is replaced by its sum with a long progression, the result is reduced modulo a
-    large prime q, and the progression Q found is lifted to the integers with q as an
-    additional step. That step has length at most 2 |Q|, which is why the bound is quadratic
-    in |X|.
+    Freiman dimension. exists_twoProperGAP_zmod_dim_le_freimanDim gives, for q prime,
+    exp(changContainerExponent kappa) < |X| and exp(changFreimanDimExponent kappa) |X| <= q,
+    a 2-proper progression of dimension at most freimanDim X with at most
+    exp(changFreimanDimExponent kappa) |X| points, where
+    changFreimanDimExponent kappa <= 10^53 kappa^20. Here freimanDim X is the largest
+    d <= |X| such that X is Freiman isomorphic of order 2 to a subset of Q^d whose affine
+    span over the reals has dimension d. The reduction of the dimension follows Appendix A
+    of Campos, Dahia and Marciano, On the independence number of sparser random Cayley
+    graphs. exists_twoProperGAP_int_dim_le_freimanDim is the same statement for a finite set
+    of integers with exp(changContainerExponent kappa) < |X|, with no upper bound on |X|.
+    exists_twoProperGAP_zmod_dim_le_two_mul_sub_one and
+    exists_twoProperGAP_int_dim_le_two_mul_sub_one deduce from these two statements a
+    progression of dimension at most 2 kappa - 1, with
+    freimanDim_le_two_mul_sub_one_of_card_add_le, which applies Ruzsa's lower bound for
+    sumsets in several dimensions to a Freiman model of X. Green and Tao get
+    floor(K - 1 + epsilon) for |A| >= C K^2 / epsilon from Freiman's lemma instead.
+
+    The statement for integers is not deduced from the one for ZMod q, because a progression
+    of ZMod q that contains the reduction of X may wrap around. The set is reduced modulo a
+    prime q > 16 max |x| for the first step only, which gives a proper progression inside
+    2X - 2X. The reduction is a Freiman isomorphism of order 8 on X, so this progression is
+    carried back to a proper progression of integers inside 2X - 2X. The covering argument
+    and the properization are stated for general abelian groups and are applied in the
+    integers. A set with at most exp(changContainerExponent kappa) elements is first replaced
+    by its sum with a long progression, which doubles kappa.
+
+    The properization does not use successive minima. It uses the largest number of linearly
+    independent relations among the steps in the 3-dilate of the coefficient box, which is
+    defined whether or not the lattice of relations has full rank.
 
     A progression is a structure GAP with a dimension, an origin, steps and lengths; its
     points are origin + sum_i w_i step_i with 0 <= w_i < length_i. It is 2-proper if the
@@ -143,7 +193,7 @@ review:
   reviewers: []
   notes: >-
     No independent mathematical or formalization review. lake comparator, run on macOS on
-    10 October 2026 with its sandbox disabled, accepts the solution with Lean's kernel, nanoda
+    13 October 2026 with its sandbox disabled, accepts the solution with Lean's kernel, nanoda
     and con-ron. scripts/verify-comparator.sh, which runs it in the sandbox and needs Linux,
     has not been run.
 
@@ -151,10 +201,10 @@ alignment:
   namespace: "ChangFreimanRuzsa"
   statements:
     - source: "Chang's theorem for sets of integers"
-      lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_card_le"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le"
       module: "Challenge"
       status: "proved"
-      note: "With at most exp(10^59 kappa^20) |X|^2 points and no bound on the dimension."
+      note: "With at most exp(10^59 kappa^20) |X| points and dimension at most 3 * 10^14 kappa^5."
     - source: "Chang's theorem in ZMod q"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le"
       module: "Challenge"
@@ -164,12 +214,35 @@ alignment:
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_of_small_sumset"
       module: "ChangFreimanRuzsa.Integers"
       status: "proved"
-      note: "With the budget changIntExponent kappa <= 10^59 kappa^20."
+      note: >-
+        With the budgets changIntExponent kappa <= 10^59 kappa^20 for the size and
+        changContainerExponent (2 kappa) for the dimension.
+    - source: "Chang's theorem for sets of integers that are not too small, library form"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_int_of_small_sumset"
+      module: "ChangFreimanRuzsa.Integers"
+      status: "proved"
+      note: >-
+        For exp(changContainerExponent kappa) < |X|, with the budgets of the statement for
+        ZMod q. Not in Challenge.lean.
     - source: "Chang's theorem in ZMod q, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_of_small_sumset"
       module: "ChangFreimanRuzsa.Cyclic"
       status: "proved"
       note: "With the budgets changContainerExponent and changZModExponent."
+    - source: "Chang's theorem in ZMod q with dimension at most the Freiman dimension"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_dim_le_freimanDim"
+      module: "ChangFreimanRuzsa.CyclicFreimanDimension"
+      status: "proved"
+      note: >-
+        With the budgets changContainerExponent and changFreimanDimExponent. Not in
+        Challenge.lean.
+    - source: "Chang's theorem for sets of integers with dimension at most the Freiman dimension"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_int_dim_le_freimanDim"
+      module: "ChangFreimanRuzsa.CyclicFreimanDimension"
+      status: "proved"
+      note: >-
+        For exp(changContainerExponent kappa) < |X|, with the budget
+        changFreimanDimExponent. Not in Challenge.lean.
 
 acknowledgements: >-
   Lean 4 and Mathlib; the APAP project of Yaël Dillies and Bhavik Mehta; the Tau Ceti
