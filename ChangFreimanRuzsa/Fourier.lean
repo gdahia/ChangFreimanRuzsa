@@ -6,7 +6,7 @@ Authors: Gabriel Dahia
 module
 
 public import AddCombi.Mathlib.Algebra.Notation.Indicator
-public import APAPCompat.Prereqs.Chang
+public import APAP.Prereqs.Chang
 public import Mathlib.Combinatorics.Additive.Energy
 import APAP.Mathlib.Analysis.Normed.Ring.Basic
 import APAP.Prereqs.Convolution.Discrete.Basic

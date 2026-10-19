@@ -81,11 +81,7 @@ related_formalizations:
   - id: "https://github.com/YaelDillies/apap"
     relationship: "builds-on"
     note: >-
-      A Lake dependency and the source of Chang's lemma on large spectra. Eight of its
-      modules, the one with Chang's lemma among them, are copied in APAPCompat/ with
-      Module.finrank of a submodule in place of APAP's Submodule.finrank, a name that PFR
-      declares too, so that this library can be imported next to PFR. The other modules
-      used are imported.
+      A Lake dependency and the source of Chang's lemma on large spectra.
   - id: "https://github.com/TauCetiProject/TauCeti"
     relationship: "builds-on"
     note: >-
@@ -130,7 +126,8 @@ automation:
         dimension at most the Freiman dimension, as in Green and Tao, and to deduce from them
         and the bound on the Freiman dimension the statements with dimension at most
         2 kappa - 1. Later, one instruction to lower the exponent of the size bound from
-        kappa^20 to kappa^7.
+        kappa^20 to kappa^7. Later, one instruction to remove the copies of APAP modules that
+        allowed importing this library next to PFR.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step

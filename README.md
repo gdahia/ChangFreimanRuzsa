@@ -61,17 +61,6 @@ The library also states the theorems with named exponents, which the explicit bo
 | `exists_twoProperGAP_zmod_dim_le_freimanDim`, exponent of the size | `freimanDimExponent κ` | at most `10 ^ 30 * κ ^ 7` |
 | `exists_twoProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
 
-The progressions before the reduction of the dimension have the following bounds:
-
-| Theorem | Named bound | Bound for `κ ≥ 2` |
-| --- | --- | --- |
-| `exists_twoProperGAP_of_small_sumset`, for integers, exponent of the size | `intExponent κ` | at least `κ ^ 2`, at most `4 * 10 ^ 31 * κ ^ 7` |
-| `exists_twoProperGAP_of_small_sumset`, for integers, dimension | `containerExponent (2 * κ)` | at most `16 * 10 ^ 8 * κ ^ 3` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, exponent of the size | `zmodExponent κ` | at most `3 * 10 ^ 29 * κ ^ 7` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, dimension | `containerExponent κ` | at most `2 * 10 ^ 8 * κ ^ 3` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
-| `exists_twoProperGAP_int_of_small_sumset` | the bounds of `exists_twoProperGAP_zmod_of_small_sumset` | for integers with `256 * bohrGAPDim κ ≤ \|X\|` |
-
 ## Files
 
 | Files in `ChangFreimanRuzsa/` | Contents |
@@ -95,11 +84,6 @@ The progressions before the reduction of the dimension have the following bounds
 | `FreimanModel.lean` | The Freiman model of a subset of a `2`-proper progression |
 | `CoordinateReduction.lean` | A `2`-proper progression of dimension at most `freimanDim X` containing `X` |
 | `CyclicFreimanDimension.lean` | Chang's theorem in `ZMod q` and for sets of integers with dimension at most `freimanDim X`, with named exponents |
-
-`APAPCompat/` contains eight modules of APAP in which the four lemmas that mention APAP's
-`Submodule.finrank` are stated with `Module.finrank` of the submodule. PFR declares
-`Submodule.finrank` too, so with these modules the library can be imported together with
-[PFR](https://github.com/teorth/pfr). The other modules of APAP are imported from the package.
 
 [formalization.yaml](formalization.yaml) records the sources, the differences from them, the
 scope, and the use of AI coding agents.

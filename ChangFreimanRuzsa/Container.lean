@@ -6,7 +6,7 @@ Authors: Gabriel Dahia
 module
 
 public import ChangFreimanRuzsa.Packing
-public import APAPCompat.Prereqs.Chang
+public import APAP.Prereqs.Chang
 import ChangFreimanRuzsa.BohrProgression
 import ChangFreimanRuzsa.Fourier
 import ChangFreimanRuzsa.FreimanRigidity

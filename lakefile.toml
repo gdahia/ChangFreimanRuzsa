@@ -1,7 +1,7 @@
 name = "ChangFreimanRuzsa"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["APAPCompat", "ChangFreimanRuzsa", "Challenge", "Solution"]
+defaultTargets = ["ChangFreimanRuzsa", "Challenge", "Solution"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -39,11 +39,6 @@ rev = "1f8da867debcce675e07cac515ea9598c1245a92"
 name = "mathlib"
 scope = "leanprover-community"
 rev = "v4.35.0"
-
-# The modules of APAP above its `Submodule.finrank`, stated without that definition.
-[[lean_lib]]
-name = "APAPCompat"
-leanOptions = { linter.style.header = false } # as in APAP's own lakefile
 
 # The proof development; `Solution.lean` imports it.
 [[lean_lib]]
