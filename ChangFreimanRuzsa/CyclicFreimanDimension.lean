@@ -40,10 +40,8 @@ progression of `exists_twoProperGAP_of_small_sumset`.
   `freimanDim X`.
 * `exists_twoProperGAP_int_dim_le_freimanDim`: Chang's theorem for sets of integers with dimension
   at most `freimanDim X`.
-* `freimanDimExponent_le`: `freimanDimExponent κ` is at most $10^{53} \kappa^{20}$ for
-  $\kappa \ge 2$.
-* `intFreimanDimExponent_le`: `intFreimanDimExponent κ` is at most $10^{59} \kappa^{20}$ for
-  $\kappa \ge 2$.
+* `freimanDimExponent_le` and `intFreimanDimExponent_le`: the exponents are at most
+  $10^{30} \kappa^7$ and $10^{32} \kappa^7$ for $\kappa \ge 2$.
 -/
 
 public section
@@ -53,16 +51,18 @@ open scoped Pointwise
 
 namespace ChangFreimanRuzsa
 
-/-- The exponent in the size bound of Chang's theorem in `ZMod q` with the dimension bounded by the
-Freiman dimension. -/
+/-- The exponent $E(c_\kappa) + E'(c_\kappa) + c_\kappa$ in the size bound of Chang's theorem in
+`ZMod q` with the dimension bounded by the Freiman dimension, where $c_\kappa$ is
+`containerExponent κ`, $E$ is `properizationExponent` and $E'$ is `coordinateReductionExponent`. -/
 @[expose] noncomputable def freimanDimExponent (κ : ℝ) : ℝ :=
-  (properizationConstant + coordinateReductionConstant) * (containerExponent κ + 2) ^ 4 +
+  properizationExponent (containerExponent κ) + coordinateReductionExponent (containerExponent κ) +
     containerExponent κ
 
-/-- The exponent in the size bound of Chang's theorem for sets of integers with the dimension
-bounded by the Freiman dimension. -/
+/-- The exponent $C + E'(c_{2 \kappa})$ in the size bound of Chang's theorem for sets of integers
+with the dimension bounded by the Freiman dimension, where $C$ is `intExponent κ`, $c_{2 \kappa}$
+is `containerExponent (2 * κ)` and $E'$ is `coordinateReductionExponent`. -/
 @[expose] noncomputable def intFreimanDimExponent (κ : ℝ) : ℝ :=
-  intExponent κ + coordinateReductionConstant * (containerExponent (2 * κ) + 2) ^ 4
+  intExponent κ + coordinateReductionExponent (containerExponent (2 * κ))
 
 /-- The second and third stages of Chang's theorem, in an abelian group in which the multiples
 $n a$ with $n < N$ of every nonzero $a$ are distinct. Write $c_\kappa$ for
@@ -78,24 +78,25 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [Decidable
     (hXN : Real.exp (freimanDimExponent κ) * #X ≤ N) :
     ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
       Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
-  have hPX : Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) * #P.carrier ≤
+  have hc : 0 ≤ containerExponent κ := (Nat.cast_nonneg _).trans hPdim
+  have hPX : Real.exp (properizationExponent P.dim) * #P.carrier ≤
       Real.exp (freimanDimExponent κ) * #X := by
     rw [freimanDimExponent, Real.exp_add, mul_assoc]
     gcongr
-    · exact add_nonneg properizationConstant_pos.le coordinateReductionConstant_pos.le
-    · exact le_add_of_nonneg_right coordinateReductionConstant_pos.le
+    exact (properizationExponent_mono (Nat.cast_nonneg _) hPdim).trans
+      (le_add_of_nonneg_right (coordinateReductionExponent_nonneg hc))
   obtain ⟨P₂, hP₂, hPP₂, -, hP₂dim, hP₂card⟩ :=
     exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P hG (hPX.trans hXN)
-  have hP₂X : Real.exp (coordinateReductionConstant * ((P₂.dim : ℝ) + 2) ^ 4) * #P₂.carrier ≤
+  have hP₂X : Real.exp (coordinateReductionExponent P₂.dim) * #P₂.carrier ≤
       Real.exp (freimanDimExponent κ) * #X := by
-    rw [freimanDimExponent, add_comm properizationConstant, add_mul, Real.exp_add,
+    rw [freimanDimExponent, add_comm (properizationExponent _), add_assoc, Real.exp_add,
       Real.exp_add, mul_assoc, mul_assoc]
     gcongr
-    · exact coordinateReductionConstant_pos.le
-    · exact (Nat.cast_le.2 hP₂dim).trans hPdim
+    · exact coordinateReductionExponent_mono (Nat.cast_nonneg _)
+        ((Nat.cast_le.2 hP₂dim).trans hPdim)
     · refine hP₂card.trans ?_
       gcongr
-      exact properizationConstant_pos.le
+      exact properizationExponent_mono (Nat.cast_nonneg _) hPdim
   obtain ⟨Q, hQ, hXQ, hlen, hQdim, hQcard⟩ :=
     exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul hG hX hP₂ (hXP.trans hPP₂)
       (hP₂X.trans hXN)
@@ -131,26 +132,23 @@ theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (h
   refine ⟨Q, hQ, hXQ, hlen, hQdim, hQcard.trans ?_⟩
   rw [intFreimanDimExponent, add_comm (intExponent κ), Real.exp_add, mul_assoc]
   gcongr
-  exact coordinateReductionConstant_pos.le
+  exact coordinateReductionExponent_mono (Nat.cast_nonneg _) hPdim
 
-/-- `freimanDimExponent κ` is at most $10^{53} \kappa^{20}$ for $\kappa \ge 2$. -/
-lemma freimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
-    freimanDimExponent κ ≤ 10 ^ 53 * κ ^ 20 := by
-  unfold freimanDimExponent coordinateReductionConstant properizationConstant
-  linarith [containerExponent_le hκ, containerExponent_add_two_pow_le hκ,
-    pow_le_pow_right₀ (one_le_two.trans hκ) (by norm_num : 5 ≤ 20),
-    pow_pos (zero_lt_two.trans_le hκ) 20]
+/-- `freimanDimExponent κ` is at most $10^{30} \kappa^7$ for $\kappa \ge 2$. -/
+lemma freimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) : freimanDimExponent κ ≤ 10 ^ 30 * κ ^ 7 := by
+  have h := containerExponent_add_two_pow_mul_log_le hκ
+  unfold freimanDimExponent properizationExponent coordinateReductionExponent
+  rw [mul_assoc 3, mul_assoc 4]
+  linarith [containerExponent_le hκ, one_le_pow₀ (n := 7) (by linarith : (1 : ℝ) ≤ κ),
+    pow_le_pow_right₀ (by linarith : (1 : ℝ) ≤ κ) (by norm_num : 3 ≤ 7)]
 
-/-- `intFreimanDimExponent κ` is at most $10^{59} \kappa^{20}$ for $\kappa \ge 2$. -/
+/-- `intFreimanDimExponent κ` is at most $10^{32} \kappa^7$ for $\kappa \ge 2$. -/
 lemma intFreimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
-    intFreimanDimExponent κ ≤ 10 ^ 59 * κ ^ 20 := by
-  have h := containerExponent_le (by linarith : 2 ≤ 2 * κ)
-  have h' := containerExponent_add_two_pow_le (by linarith : 2 ≤ 2 * κ)
-  unfold intFreimanDimExponent intExponent zmodExponent coordinateReductionConstant
-    properizationConstant
-  rw [mul_pow] at h h'
-  norm_num at h h' ⊢
-  linarith [pow_le_pow_right₀ (by linarith : 1 ≤ κ) (by norm_num : 5 ≤ 20),
-    one_le_pow₀ (n := 20) (by linarith : 1 ≤ κ)]
+    intFreimanDimExponent κ ≤ 10 ^ 32 * κ ^ 7 := by
+  have h := containerExponent_add_two_pow_mul_log_le (κ := 2 * κ) (by linarith)
+  rw [mul_pow] at h
+  unfold intFreimanDimExponent coordinateReductionExponent
+  rw [mul_assoc 4]
+  linarith [intExponent_le hκ, one_le_pow₀ (n := 7) (by linarith : (1 : ℝ) ≤ κ)]
 
 end ChangFreimanRuzsa

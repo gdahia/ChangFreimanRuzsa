@@ -161,20 +161,24 @@ lemma isShort_freqDilation {D : ℕ} (hq : 0 < q) (hD : 0 < D) (v : Fin (k + 1) 
   exact Finset.single_le_sum (f := fun i ↦ (freqWeight q D i : ℝ) * (v i : ℝ) ^ 2)
     (fun i _ ↦ by positivity) (Finset.mem_univ j)
 
-/-- The dimensional factor of Minkowski's second theorem is absorbed by $4^{(k + 3)(k + 1)}$. -/
+/-- The dimensional factor of Minkowski's second theorem is absorbed by
+$(4 (k + 1))^{2 (k + 1)}$. -/
 lemma two_pow_mul_factorial_le (k : ℕ) :
-    2 ^ (k + 1) * (k + 1)! * (2 ^ k) ^ 2 ≤ (2 ^ ((k + 3) * (k + 1))) ^ 2 := by
-  refine (Nat.mul_le_mul_right _ (Nat.mul_le_mul_left _ ((Nat.factorial_le_pow _).trans
-    (Nat.pow_le_pow_left Nat.lt_two_pow_self.le _)))).trans ?_
-  rw [← pow_mul, ← pow_mul, ← pow_mul, ← pow_add, ← pow_add]
-  exact Nat.pow_le_pow_right two_pos (by nlinarith)
+    2 ^ (k + 1) * (k + 1)! * (2 ^ k) ^ 2 ≤ ((4 * (k + 1)) ^ (k + 1)) ^ 2 := by
+  refine (Nat.mul_le_mul (Nat.mul_le_mul_left _ (Nat.factorial_le_pow _))
+    (?_ : (2 ^ k) ^ 2 ≤ 4 ^ (k + 1))).trans ?_
+  · rw [← pow_mul, (by norm_num : 4 = 2 ^ 2), ← pow_mul]
+    exact Nat.pow_le_pow_right two_pos (by grind)
+  · rw [← mul_pow, ← mul_pow, ← pow_mul, mul_comm (k + 1), pow_mul]
+    exact Nat.pow_le_pow_left (by nlinarith) _
 
 /-- Minkowski's bound for the frequency lattice, in terms of the dilations of its vectors. -/
 lemma mul_prod_freqDilation_le {D : ℕ} (hq : 0 < q) (hD : 0 < D)
     {v : Fin (k + 1) → Fin (k + 1) → ℤ}
     (h : ∏ i, ∑ j, (freqWeight q D j : ℝ) * v i j ^ 2 ≤
       2 ^ (k + 1) * (k + 1)! * (((q : ℝ) ^ k) ^ 2 * ∏ j, (freqWeight (k := k) q D j : ℝ))) :
-    q * (D + 1 : ℝ) ^ k * ∏ i, freqDilation q D (v i) ≤ 2 ^ ((k + 3) * (k + 1)) * (q : ℝ) ^ k := by
+    q * (D + 1 : ℝ) ^ k * ∏ i, freqDilation q D (v i) ≤
+      (4 * (k + 1 : ℝ)) ^ (k + 1) * (q : ℝ) ^ k := by
   have hD1 : (D + 1 : ℝ) ^ k ≤ 2 ^ k * D ^ k := by
     rw [← mul_pow]
     gcongr
@@ -191,19 +195,19 @@ lemma mul_prod_freqDilation_le {D : ℕ} (hq : 0 < q) (hD : 0 < D)
           (2 ^ (k + 1) * (k + 1)! * (((q : ℝ) ^ k) ^ 2 * (D ^ 2 * (q ^ 2) ^ k))) := by gcongr
     _ = 2 ^ (k + 1) * (k + 1)! * (2 ^ k) ^ 2 * ((q : ℝ) ^ (4 * k + 2) * (D : ℝ) ^ (2 * k + 2)) := by
         ring
-    _ ≤ (2 ^ ((k + 3) * (k + 1))) ^ 2 * ((q : ℝ) ^ (4 * k + 2) * (D : ℝ) ^ (2 * k + 2)) := by
+    _ ≤ ((4 * (k + 1 : ℝ)) ^ (k + 1)) ^ 2 * ((q : ℝ) ^ (4 * k + 2) * (D : ℝ) ^ (2 * k + 2)) := by
         gcongr
         exact_mod_cast two_pow_mul_factorial_le k
     _ = _ := by ring
 
 /-- Minkowski's second theorem for the frequency lattice: there are $k + 1$ independent lattice
 vectors $v_i$, each in the $t_i$-dilate of the box, with
-$q (D + 1)^k \prod_i t_i \le 2^{(k + 3)(k + 1)} q^k$. -/
+$q (D + 1)^k \prod_i t_i \le (4 (k + 1))^{k + 1} q^k$. -/
 lemma exists_linearIndependent_isShort_freqLattice [NeZero q] (r : Fin k → ZMod q) {D : ℕ}
     (hD : 0 < D) :
     ∃ (v : Fin (k + 1) → Fin (k + 1) → ℤ) (t : Fin (k + 1) → ℝ), LinearIndependent ℤ v ∧
       (∀ i, v i ∈ freqLattice r) ∧ (∀ i, 0 < t i) ∧ (∀ i, IsShort (freqBox q D) (t i) (v i)) ∧
-      q * (D + 1 : ℝ) ^ k * ∏ i, t i ≤ 2 ^ ((k + 3) * (k + 1)) * (q : ℝ) ^ k := by
+      q * (D + 1 : ℝ) ^ k * ∏ i, t i ≤ (4 * (k + 1 : ℝ)) ^ (k + 1) * (q : ℝ) ^ k := by
   have hq := q.pos_of_neZero
   obtain ⟨v, hv, hmem, hprod⟩ := exists_linearIndependent_prod_weightedNorm_le
     (by simp [det_freqMatrix, NeZero.ne q] : (freqMatrix r).det ≠ 0) (freqWeight_pos hq hD)
@@ -415,13 +419,12 @@ end FrequencyGAP
 /-- For frequencies $r_1, \dots, r_k$ of $\mathbb{Z}/q\mathbb{Z}$ and a width $0 < D \le q$,
 there is a proper progression of dimension $k + 1$ all of whose elements $y$ satisfy
 $r_j y \equiv a_j \pmod q$ for integers $|a_j| \le D$, and whose size is at least
-$q ((D + 1) / q)^k$ up to the factor $(2^{k + 5} (k + 1))^{k + 1}$. -/
+$q ((D + 1) / q)^k$ up to the factor $(4 (k + 1))^{2 (k + 1)}$. -/
 lemma exists_proper_gap_forall_exists_intCast_eq_mul {q k : ℕ} [NeZero q] (r : Fin k → ZMod q)
     {D : ℕ} (hD : 0 < D) (hDq : D ≤ q) :
     ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim = k + 1 ∧
       (∀ y ∈ Q.carrier, ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
-      q * (D + 1 : ℝ) ^ k ≤ 2 ^ ((k + 5) * (k + 1)) * (k + 1 : ℝ) ^ (k + 1) * q ^ k *
-        Q.carrier.card := by
+      q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * Q.carrier.card := by
   obtain ⟨v, t, hv, hmem, ht, hshort, hprod⟩ := exists_linearIndependent_isShort_freqLattice r hD
   have hQ := proper_freqGAP hDq hv hmem ht hshort
   refine ⟨freqGAP q v t, hQ, rfl,
@@ -435,16 +438,13 @@ lemma exists_proper_gap_forall_exists_intCast_eq_mul {q k : ℕ} [NeZero q] (r :
           ((4 * (k + 1 : ℝ)) ^ (k + 1) * ∏ i, (2 * coeffBound t i + 1 : ℝ)) := by
         simp [Finset.prod_mul_distrib]
         ring
-    _ ≤ 2 ^ ((k + 3) * (k + 1)) * (q : ℝ) ^ k *
+    _ ≤ (4 * (k + 1 : ℝ)) ^ (k + 1) * (q : ℝ) ^ k *
           ((4 * (k + 1 : ℝ)) ^ (k + 1) * ∏ i, (2 * coeffBound t i + 1 : ℝ)) := by gcongr
-    _ = _ := by
-        rw [mul_pow, (by norm_num : (4 : ℝ) = 2 ^ 2), ← pow_mul]
-        ring
+    _ = _ := by ring
 
 /-- The Bohr set of chord width $\varepsilon$ of a finite set $\Delta$ of characters of
 $\mathbb{Z}/q\mathbb{Z}$ contains a proper progression of dimension $|\Delta| + 1$ and density at
-least $(\varepsilon / 2\pi)^{|\Delta|}$, up to the factor
-$(2^{|\Delta| + 5} (|\Delta| + 1))^{|\Delta| + 1}$.
+least $(\varepsilon / 2\pi)^{|\Delta|}$, up to the factor $(4 (|\Delta| + 1))^{2 (|\Delta| + 1)}$.
 
 The hypothesis $2\pi \le \varepsilon q$ makes the Bohr set wider than one step of
 $\mathbb{Z}/q\mathbb{Z}$. Without it the Bohr set can be $\{0\}$. -/
@@ -453,8 +453,7 @@ lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMo
     ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim = Δ.card + 1 ∧
       (Q.carrier : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
       (q : ℝ) * (ε / (2 * Real.pi)) ^ Δ.card ≤
-        (2 : ℝ) ^ ((Δ.card + 5) * (Δ.card + 1)) * ((Δ.card : ℝ) + 1) ^ (Δ.card + 1) *
-          Q.carrier.card := by
+        (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * Q.carrier.card := by
   have hq : (0 : ℝ) < q := by exact_mod_cast q.pos_of_neZero
   have hε0 : 0 < ε := by nlinarith [Real.pi_pos]
   choose r hr using fun i : Fin Δ.card ↦
@@ -475,8 +474,7 @@ lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMo
       _ ≤ q * (⌊ε * q / (2 * Real.pi)⌋₊ + 1 : ℝ) ^ Δ.card := by
           gcongr
           exact (Nat.lt_floor_add_one _).le
-      _ ≤ 2 ^ ((Δ.card + 5) * (Δ.card + 1)) * (Δ.card + 1 : ℝ) ^ (Δ.card + 1) * q ^ Δ.card *
-          Q.carrier.card := hsize
+      _ ≤ (4 * (Δ.card + 1 : ℝ)) ^ (2 * (Δ.card + 1)) * q ^ Δ.card * Q.carrier.card := hsize
       _ = _ := by ring
 
 end

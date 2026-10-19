@@ -7,9 +7,9 @@ project:
     Formalization of Chang's polynomial form of Freiman's theorem, with a 2-proper
     progression as in Green and Tao: a finite set X of integers with |X + X| <= kappa |X| is
     contained in a 2-proper generalized arithmetic progression of dimension at most the
-    Freiman dimension of X, hence at most 2 kappa - 1, with at most exp(10^59 kappa^20) |X|
+    Freiman dimension of X, hence at most 2 kappa - 1, with at most exp(10^32 kappa^7) |X|
     points. There is also a statement for subsets of ZMod q with q prime, where the
-    progression has at most exp(10^53 kappa^20) |X| points. The bound on the size is weaker
+    progression has at most exp(10^30 kappa^7) |X| points. The bound on the size is weaker
     than that of Chang.
   authors:
     - "Gabriel Dahia"
@@ -115,7 +115,8 @@ automation:
         the final progression. Later, one instruction to state the main theorems with
         dimension at most the Freiman dimension, as in Green and Tao, and to deduce from them
         and the bound on the Freiman dimension the statements with dimension at most
-        2 kappa - 1.
+        2 kappa - 1. Later, one instruction to lower the exponent of the size bound from
+        kappa^20 to kappa^7.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -133,7 +134,10 @@ automation:
     auxiliary declarations, without changing the main statements. Later, the agent derived
     the main statements with dimension at most the Freiman dimension, for every finite set
     of integers, and replaced the bounds on the dimension in Challenge.lean by 2 kappa - 1.
-    Every proof is checked by Lean.
+    Later, agents lowered the exponent from kappa^20 to kappa^7: they sharpened the
+    estimates of the Bohr progression, of Chang's lemma and of properization, and added the
+    elements of the last packing set as steps of the progression instead of covering by
+    their differences. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -145,14 +149,14 @@ fidelity:
     to a subset of Q^d whose affine span over the reals has dimension d.
 
     Integers. exists_twoProperGAP_subset_dim_le_freimanDim_card_le takes kappa >= 2 with
-    |X + X| <= kappa |X| and gives |P| <= exp(10^59 kappa^20) |X| and dimension at most
+    |X + X| <= kappa |X| and gives |P| <= exp(10^32 kappa^7) |X| and dimension at most
     freimanDim X. The library form exists_twoProperGAP_int_dim_le_freimanDim has
-    exp(intFreimanDimExponent kappa) in place of exp(10^59 kappa^20).
+    exp(intFreimanDimExponent kappa) in place of exp(10^32 kappa^7).
 
     ZMod q. exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le is for q prime and
-    needs exp(7 * 10^12 kappa^5) < |X| and exp(10^53 kappa^20) |X| <= q. It gives a
+    needs exp(2 * 10^8 kappa^3) < |X| and exp(10^30 kappa^7) |X| <= q. It gives a
     2-proper progression of dimension at most freimanDim X with at most
-    exp(10^53 kappa^20) |X| points. The library form
+    exp(10^30 kappa^7) |X| points. The library form
     exists_twoProperGAP_zmod_dim_le_freimanDim is written with the exponents
     containerExponent and freimanDimExponent.
 
@@ -176,20 +180,20 @@ alignment:
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'"
       module: "Challenge"
       status: "proved"
-      note: "With at most exp(10^59 kappa^20) |X| points and dimension at most 2 kappa - 1."
+      note: "With at most exp(10^32 kappa^7) |X| points and dimension at most 2 kappa - 1."
     - source: "Chang's theorem in ZMod q"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'"
       module: "Challenge"
       status: "proved"
       note: >-
-        For q prime, exp(7 * 10^12 kappa^5) < |X| and exp(10^53 kappa^20) |X| <= q, with
+        For q prime, exp(2 * 10^8 kappa^3) < |X| and exp(10^30 kappa^7) |X| <= q, with
         dimension at most 2 kappa - 1.
     - source: "Chang's theorem for sets of integers with dimension at most the Freiman dimension"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_freimanDim_card_le"
       module: "ChangFreimanRuzsa.ExplicitBounds"
       status: "proved"
       note: >-
-        With at most exp(10^59 kappa^20) |X| points. Not in Challenge.lean, since Mathlib has
+        With at most exp(10^32 kappa^7) |X| points. Not in Challenge.lean, since Mathlib has
         no Freiman dimension.
     - source: "Chang's theorem in ZMod q with dimension at most the Freiman dimension"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le"
@@ -203,7 +207,7 @@ alignment:
       module: "ChangFreimanRuzsa.Integers"
       status: "proved"
       note: >-
-        With the exponents intExponent kappa <= 10^59 kappa^20 for the size and
+        With the exponents intExponent kappa <= 4 * 10^31 kappa^7 for the size and
         containerExponent (2 kappa) for the dimension.
     - source: "Chang's theorem for sets of integers that are not too small, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_int_of_small_sumset"
@@ -229,7 +233,7 @@ alignment:
       module: "ChangFreimanRuzsa.CyclicFreimanDimension"
       status: "proved"
       note: >-
-        With the exponent intFreimanDimExponent kappa <= 10^59 kappa^20. Not in
+        With the exponent intFreimanDimExponent kappa <= 10^32 kappa^7. Not in
         Challenge.lean.
 
 acknowledgements: >-

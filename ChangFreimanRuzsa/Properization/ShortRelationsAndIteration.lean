@@ -19,8 +19,9 @@ every nonzero $a$ are distinct, with $N$ large compared with $|P|$. The short re
 a maximal family of independent relations among its steps in the $3$-dilate of its coefficient box.
 Their saturated span consists of relations. Dividing the coefficient lattice by it and covering the
 image of the coefficient box by a proper progression gives a GAP of smaller dimension containing
-$P$, unless $P$ has no short relation, in which case $P$ is 2-proper. Iterating proves that $P$
-lies in a 2-proper GAP of dimension at most $d$ and of size at most $e^{14 (d + 2)^4} |P|$.
+$P$, unless $P$ has no short relation, in which case $P$ is 2-proper. One step costs a factor
+$e^{3 (d + 2)^2 \log (d + 2)}$. Iterating proves that $P$ lies in a 2-proper GAP of dimension at
+most $d$ and of size at most $e^{3 (d + 2)^3 \log (d + 2)} |P|$.
 
 ## Main definitions
 
@@ -28,6 +29,8 @@ lies in a 2-proper GAP of dimension at most $d$ and of size at most $e^{14 (d + 
   coefficient box.
 * `GAP.shortRelations` and `GAP.shortRelationSpan`: a maximal family of such relations and its
   saturated span.
+* `properizationExponent`: the exponent $3 (d + 2)^3 \log (d + 2)$ in the size bound of
+  properization.
 
 ## Main statements
 
@@ -496,13 +499,14 @@ lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
 /-- One step of properization. Suppose that the multiples $n a$, $n < N$, of every nonzero $a$ are
 distinct, that all lengths of $P$ are at least $2$ and that $(6d + 1)^d |P| < N$. Then either $P$ is
 2-proper, or dividing by the saturated span of the short relations gives a GAP of smaller dimension
-containing $P$, of size at most $e^{13 (d + 2)^3} |P|$. -/
+containing $P$, of size at most $e^{2 (d + 2)^2 \log (d + 2)} |P|$. -/
 lemma twoProper_or_exists_gap_dim_lt {N : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hlen : ∀ i, 2 ≤ P.length i)
     (hcard : (2 * (3 * P.dim) + 1) ^ P.dim * P.carrier.card < N) :
     P.TwoProper ∨ ∃ Q : GAP G, P.carrier ⊆ Q.carrier ∧ Q.dim < P.dim ∧
-      (Q.carrier.card : ℝ) ≤ Real.exp (13 * ((P.dim : ℝ) + 2) ^ 3) * P.carrier.card := by
+      (Q.carrier.card : ℝ) ≤
+        Real.exp (2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * P.carrier.card := by
   by_cases hrank : P.shortRelationRank 3 = 0
   · exact Or.inl (twoProper_of_shortRelationRank_eq_zero hlen hrank)
   obtain ⟨snf⟩ := P.nonempty_smithNormalForm_shortRelationSpan 3
@@ -517,68 +521,84 @@ lemma twoProper_or_exists_gap_dim_lt {N : ℕ} {P : GAP G}
     hQcard.trans ((mul_le_mul_of_nonneg_left hcoords (by positivity)).trans ?_)⟩
   rw [← mul_assoc]
   gcongr
-  exact latticeBoxFactor_mul_pow_le_exp_cube (P.shortRelationRank_le_dim 3)
+  exact latticeBoxFactor_mul_pow_le_exp (P.shortRelationRank_le_dim 3)
 
 end GAP
 
 /-! ## Iterated properization -/
 
-/-- The constant $14$ in the size bound $e^{14 (d + 2)^4} |P|$ of properization. -/
-def properizationConstant : ℝ := 14
+/-- The exponent $3 (d + 2)^3 \log (d + 2)$ in the size bound of properization. -/
+def properizationExponent (d : ℝ) : ℝ := 3 * (d + 2) ^ 3 * Real.log (d + 2)
 
-lemma properizationConstant_pos : 0 < properizationConstant := by
-  norm_num [properizationConstant]
+lemma properizationExponent_nonneg {d : ℝ} (hd : 0 ≤ d) : 0 ≤ properizationExponent d :=
+  mul_nonneg (mul_nonneg zero_le_three (pow_nonneg (by linarith) 3)) (log_add_two_pos hd).le
+
+lemma properizationExponent_mono {d d' : ℝ} (hd : 0 ≤ d) (hdd' : d ≤ d') :
+    properizationExponent d ≤ properizationExponent d' := by
+  rw [properizationExponent, properizationExponent, mul_assoc, mul_assoc]
+  exact mul_le_mul_of_nonneg_left (add_two_pow_three_mul_log_le hd hdd') zero_le_three
+
+/-- For $x \ge 0$, $3 (x + 2)^2 \log (x + 2)$, the exponent of one step of properization, is at
+most `properizationExponent x`. -/
+lemma mul_sq_mul_log_le_properizationExponent {x : ℝ} (hx : 0 ≤ x) :
+    3 * (x + 2) ^ 2 * Real.log (x + 2) ≤ properizationExponent x := by
+  rw [properizationExponent]
+  nlinarith [two_mul_add_two_sq_mul_log_le hx,
+    mul_nonneg (sq_nonneg (x + 2)) (log_add_two_pos hx).le]
 
 /-- Doubling the lengths of a progression of dimension $d$ multiplies its size by at most
-$2^d \le e^{(d + 2)^3}$. -/
+$2^d \le e^{(d + 2)^2 \log (d + 2)}$. -/
 lemma GAP.card_scaleLengths_two_le (P : GAP G) :
     ((P.scaleLengths 2 two_pos).carrier.card : ℝ) ≤
-      Real.exp (((P.dim : ℝ) + 2) ^ 3) * P.carrier.card := by
+      Real.exp (((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * P.carrier.card := by
   refine (Nat.cast_le.mpr (P.card_scaleLengths_le two_pos)).trans ?_
   push_cast
   gcongr
   exact two_pow_le_exp _
 
-/-- If $e^{14 (d + 2)^4} |P| \le N$, then the progression with doubled lengths satisfies the
-hypothesis $(6d + 1)^d |P'| < N$ of `GAP.twoProper_or_exists_gap_dim_lt`. -/
+/-- If $e^{E(d)} |P| \le N$, where $E$ is `properizationExponent`, then the progression with
+doubled lengths satisfies the hypothesis $(6d + 1)^d |P'| < N$ of
+`GAP.twoProper_or_exists_gap_dim_lt`. -/
 lemma GAP.mul_card_scaleLengths_two_lt {N : ℕ} {P : GAP G}
-    (hcard : Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) * P.carrier.card ≤ N) :
+    (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ N) :
     (2 * (3 * P.dim) + 1) ^ P.dim * (P.scaleLengths 2 two_pos).carrier.card < N := by
-  have hexp : Real.exp (13 * ((P.dim : ℝ) + 2) ^ 3) <
-      Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) := by
-    rw [Real.exp_lt_exp, properizationConstant]
-    nlinarith [pow_pos (by positivity : (0 : ℝ) < (P.dim : ℝ) + 2) 3,
-      Nat.cast_nonneg (α := ℝ) P.dim]
+  have hexp : Real.exp (((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) <
+      Real.exp (properizationExponent P.dim) := by
+    rw [Real.exp_lt_exp]
+    nlinarith [mul_sq_mul_log_le_properizationExponent (Nat.cast_nonneg (α := ℝ) P.dim),
+      mul_pos (pow_pos (by positivity : (0 : ℝ) < (P.dim : ℝ) + 2) 2)
+        (log_add_two_pos (Nat.cast_nonneg (α := ℝ) P.dim))]
   have hle : (((2 * (3 * P.dim) + 1) ^ P.dim * (P.scaleLengths 2 two_pos).carrier.card : ℕ) : ℝ)
-      ≤ Real.exp (13 * ((P.dim : ℝ) + 2) ^ 3) * P.carrier.card := by
+      ≤ Real.exp (((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * P.carrier.card := by
     refine (Nat.cast_le.mpr (Nat.mul_le_mul_left _ (P.card_scaleLengths_le two_pos))).trans ?_
     push_cast
     rw [← mul_assoc]
     gcongr
-    exact pow_mul_two_pow_le_exp_cube _
+    exact pow_mul_two_pow_le_exp _
   exact_mod_cast hle.trans_lt ((mul_lt_mul_of_pos_right hexp
     (mod_cast P.nonempty.card_pos)).trans_le hcard)
 
-/-- For $e < d$ and $x \ge 0$, $e^{14 (e + 2)^4} e^{14 (d + 2)^3} x \le e^{14 (d + 2)^4} x$. -/
+/-- For $e < d$ and $x \ge 0$, writing $E$ for `properizationExponent`,
+$e^{E(e)} e^{3 (d + 2)^2 \log (d + 2)} x \le e^{E(d)} x$. -/
 lemma exp_mul_exp_mul_le_of_lt {e d : ℕ} (hed : e < d) {x : ℝ} (hx : 0 ≤ x) :
-    Real.exp (properizationConstant * ((e : ℝ) + 2) ^ 4) *
-        (Real.exp (properizationConstant * ((d : ℝ) + 2) ^ 3) * x) ≤
-      Real.exp (properizationConstant * ((d : ℝ) + 2) ^ 4) * x := by
+    Real.exp (properizationExponent e) *
+        (Real.exp (3 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) * x) ≤
+      Real.exp (properizationExponent d) * x := by
   rw [← mul_assoc, ← Real.exp_add]
   gcongr
-  exact mul_pow_four_add_mul_pow_three_le_mul_pow_four properizationConstant_pos.le hed
+  exact mul_pow_three_mul_log_add_le zero_le_three hed
 
 /-- One step of the iteration. Suppose that the multiples $n a$, $n < N$, of every nonzero $a$ are
-distinct and that $e^{14 (d + 2)^4} |P| \le N$. Then $P$ lies in a GAP $Q$ with
-$|Q| \le e^{14 (d + 2)^3} |P|$ that either is 2-proper of dimension $d$ with all lengths at least
-$2$, or has dimension less than $d$. The proof doubles the lengths of $P$ and applies
-`GAP.twoProper_or_exists_gap_dim_lt`. -/
+distinct and that $e^{E(d)} |P| \le N$, where $E$ is `properizationExponent`. Then $P$ lies in a
+GAP $Q$ with $|Q| \le e^{3 (d + 2)^2 \log (d + 2)} |P|$ that either is 2-proper of dimension $d$
+with all lengths at least $2$, or has dimension less than $d$. The proof doubles the lengths of $P$
+and applies `GAP.twoProper_or_exists_gap_dim_lt`. -/
 lemma GAP.exists_carrier_subset_twoProper_or_dim_lt {N : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
-    (hcard : Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) * P.carrier.card ≤ N) :
+    (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ N) :
     ∃ Q : GAP G, P.carrier ⊆ Q.carrier ∧
       (Q.carrier.card : ℝ) ≤
-        Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 3) * P.carrier.card ∧
+        Real.exp (3 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * P.carrier.card ∧
       (Q.TwoProper ∧ (∀ i, 1 < Q.length i) ∧ Q.dim = P.dim ∨ Q.dim < P.dim) := by
   have hsub : P.carrier ⊆ (P.scaleLengths 2 two_pos).carrier :=
     P.carrier_subset_reshape _ fun i ↦ by grind
@@ -588,29 +608,28 @@ lemma GAP.exists_carrier_subset_twoProper_or_dim_lt {N : ℕ} {P : GAP G}
   rcases twoProper_or_exists_gap_dim_lt hG hlen (mul_card_scaleLengths_two_lt hcard) with
     h | ⟨Q, hQ, hdim, hQcard⟩
   · refine ⟨_, hsub, P.card_scaleLengths_two_le.trans ?_, Or.inl ⟨h, by grind, rfl⟩⟩
-    gcongr
-    exact le_mul_of_one_le_left (by positivity) (by norm_num [properizationConstant])
+    refine mul_le_mul_of_nonneg_right (Real.exp_le_exp.2 ?_) (Nat.cast_nonneg _)
+    nlinarith [mul_nonneg (sq_nonneg ((P.dim : ℝ) + 2))
+      (log_add_two_pos (Nat.cast_nonneg (α := ℝ) P.dim)).le]
   · refine ⟨Q, hsub.trans hQ, hQcard.trans ?_, Or.inr hdim⟩
-    rw [properizationConstant, (by ring : (14 : ℝ) * ((P.dim : ℝ) + 2) ^ 3 =
-      13 * ((P.dim : ℝ) + 2) ^ 3 + ((P.dim : ℝ) + 2) ^ 3), Real.exp_add, mul_assoc]
+    rw [(by ring : 3 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2) =
+      2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2) +
+        ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)), Real.exp_add,
+      mul_assoc (Real.exp _)]
     exact mul_le_mul_of_nonneg_left P.card_scaleLengths_two_le (by positivity)
 
 /-- Let $P$ be a GAP of dimension $d$ in an abelian group in which the multiples $n a$, $n < N$, of
-every nonzero $a$ are distinct, and suppose $e^{14 (d + 2)^4} |P| \le N$. Then $P$ lies in a
-2-proper GAP with all lengths at least $2$, of dimension at most $d$ and of size at most
-$e^{14 (d + 2)^4} |P|$. The proof iterates `GAP.exists_carrier_subset_twoProper_or_dim_lt`: each
-step costs a factor $e^{14 (d + 2)^3}$ and either gives a 2-proper progression or lowers the
-dimension. -/
+every nonzero $a$ are distinct. Write $E(d) = 3 (d + 2)^3 \log (d + 2)$ for
+`properizationExponent d` and suppose $e^{E(d)} |P| \le N$. Then $P$ lies in a 2-proper GAP with all
+lengths at least $2$, of dimension at most $d$ and of size at most $e^{E(d)} |P|$. The proof
+iterates `GAP.exists_carrier_subset_twoProper_or_dim_lt`: each step costs a factor
+$e^{3 (d + 2)^2 \log (d + 2)}$ and either gives a 2-proper progression or lowers the dimension. -/
 lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul {N : ℕ} (P : GAP G)
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
-    (hcard :
-      Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) *
-        P.carrier.card ≤ N) :
+    (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ N) :
     ∃ Q : GAP G, Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧
       (∀ i, 1 < Q.length i) ∧ Q.dim ≤ P.dim ∧
-      (Q.carrier.card : ℝ) ≤
-        Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) *
-          P.carrier.card := by
+      (Q.carrier.card : ℝ) ≤ Real.exp (properizationExponent P.dim) * P.carrier.card := by
   induction hd : P.dim using Nat.strong_induction_on generalizing P with
   | h d ih =>
     subst hd
@@ -618,27 +637,21 @@ lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul {N : ℕ}
       GAP.exists_carrier_subset_twoProper_or_dim_lt hG hcard
     · refine ⟨Q, hQ, hPQ, hlen, hdim.le, hQcard.trans ?_⟩
       gcongr
-      · exact properizationConstant_pos.le
-      · linarith [(Nat.cast_nonneg P.dim : (0 : ℝ) ≤ _)]
-      · norm_num
-    · have hQbound := mul_le_mul_of_nonneg_left hQcard (Real.exp_pos
-        (properizationConstant * ((Q.dim : ℝ) + 2) ^ 4)).le
+      exact mul_sq_mul_log_le_properizationExponent (Nat.cast_nonneg _)
+    · have hQbound := mul_le_mul_of_nonneg_left hQcard
+        (Real.exp_pos (properizationExponent Q.dim)).le
       obtain ⟨R, hR, hQR, hlen, hRdim, hRcard⟩ := ih Q.dim hdim Q
         (hQbound.trans ((exp_mul_exp_mul_le_of_lt hdim (by positivity)).trans hcard)) rfl
       exact ⟨R, hR, hPQ.trans hQR, hlen, hRdim.trans hdim.le,
         hRcard.trans (hQbound.trans (exp_mul_exp_mul_le_of_lt hdim (by positivity)))⟩
 
-/-- Properization in $\mathbb{Z}/q\mathbb{Z}$ for a prime $q \ge e^{14 (d + 2)^4} |P|$. -/
+/-- Properization in $\mathbb{Z}/q\mathbb{Z}$ for a prime $q \ge e^{E(d)} |P|$, where $E$ is
+`properizationExponent`. -/
 lemma exists_twoProperGAP_zmod_carrier_subset_dim_le_card_le {q : ℕ} (P : GAP (ZMod q))
-    (hq : Nat.Prime q)
-    (hcard :
-      Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) *
-        P.carrier.card ≤ q) :
+    (hq : Nat.Prime q) (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ q) :
     ∃ Q : GAP (ZMod q), Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧
       (∀ i, 1 < Q.length i) ∧ Q.dim ≤ P.dim ∧
-      (Q.carrier.card : ℝ) ≤
-        Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) *
-          P.carrier.card :=
+      (Q.carrier.card : ℝ) ≤ Real.exp (properizationExponent P.dim) * P.carrier.card :=
   exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P
     (fun _ ha ↦ GAP.injOn_nsmul_of_prime hq ha) hcard
 
@@ -647,9 +660,7 @@ lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_isAddTorsionFree [IsA
     (P : GAP G) :
     ∃ Q : GAP G, Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧
       (∀ i, 1 < Q.length i) ∧ Q.dim ≤ P.dim ∧
-      (Q.carrier.card : ℝ) ≤
-        Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) *
-          P.carrier.card :=
+      (Q.carrier.card : ℝ) ≤ Real.exp (properizationExponent P.dim) * P.carrier.card :=
   exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P
     (fun _ ha ↦ GAP.injOn_nsmul_of_isAddTorsionFree _ ha) (Nat.le_ceil _)
 

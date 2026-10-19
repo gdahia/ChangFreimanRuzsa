@@ -42,9 +42,11 @@ open scoped Pointwise
 
 namespace ChangFreimanRuzsa
 
-/-- The exponent of the bound for the size of the progression in Chang's theorem in `ZMod q`. -/
+/-- The exponent $E(c_\kappa) + c_\kappa$ of the bound for the size of the progression in Chang's
+theorem in `ZMod q`, where $c_\kappa$ is `containerExponent κ` and $E$ is
+`properizationExponent`. -/
 @[expose] noncomputable def zmodExponent (κ : ℝ) : ℝ :=
-  properizationConstant * (containerExponent κ + 2) ^ 4 + containerExponent κ
+  properizationExponent (containerExponent κ) + containerExponent κ
 
 /-- The second stage of Chang's theorem, in an abelian group in which the multiples $n a$ with
 $n < N$ of every nonzero $a$ are distinct. Write $c_\kappa$ for `containerExponent κ` and
@@ -60,11 +62,11 @@ lemma exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap {G : Type*} [Decid
     ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
       (Q.dim : ℝ) ≤ containerExponent κ ∧
       (#Q.carrier : ℝ) ≤ Real.exp (zmodExponent κ) * #X := by
-  have hP : Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) * #P.carrier ≤
+  have hP : Real.exp (properizationExponent P.dim) * #P.carrier ≤
       Real.exp (zmodExponent κ) * #X := by
     rw [zmodExponent, Real.exp_add, mul_assoc]
     gcongr
-    exact properizationConstant_pos.le
+    exact properizationExponent_mono (Nat.cast_nonneg _) hPdim
   obtain ⟨Q, hQ, hPQ, hlen, hQdim, hQcard⟩ :=
     exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P hG (hP.trans hN)
   exact ⟨Q, hQ, hXP.trans hPQ, hlen, (Nat.cast_le.2 hQdim).trans hPdim, hQcard.trans hP⟩

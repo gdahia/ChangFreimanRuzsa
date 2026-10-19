@@ -20,7 +20,7 @@ exponents in `exists_twoProperGAP_int_dim_le_freimanDim` and
 `exists_twoProperGAP_zmod_dim_le_freimanDim` replaced by the polynomial bounds of
 `ChangFreimanRuzsa.Bound` and `ChangFreimanRuzsa.CyclicFreimanDimension`. For $\kappa \ge 2$, a set
 $X$ with $|X + X| \le \kappa |X|$ lies in a $2$-proper progression of dimension at most
-`freimanDim X` with at most $\exp(O(\kappa^{20})) |X|$ points. The Freiman dimension of $X$ is at
+`freimanDim X` with at most $\exp(O(\kappa^7)) |X|$ points. The Freiman dimension of $X$ is at
 most $2\kappa - 1$, so the progression has dimension at most $2\kappa - 1$.
 
 ## Main statements
@@ -45,27 +45,27 @@ namespace ChangFreimanRuzsa
 /-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension. A
 finite nonempty set $X$ of integers with $|X + X| \le \kappa |X|$, where $\kappa \ge 2$, is
 contained in a $2$-proper generalized arithmetic progression of dimension at most `freimanDim X`
-with at most $\exp(10^{59} \kappa^{20}) |X|$ points. -/
+with at most $\exp(10^{32} \kappa^7) |X|$ points. -/
 theorem exists_twoProperGAP_subset_dim_le_freimanDim_card_le {κ : ℝ} (X : Finset ℤ)
     (hX : X.Nonempty) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ P.dim ≤ freimanDim X ∧
-      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 59 * κ ^ 20) * #X := by
+      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X := by
   obtain ⟨P, hP, hXP, -, hdim, hcard⟩ := exists_twoProperGAP_int_dim_le_freimanDim X hX hκ hXX
   refine ⟨P, hP, hXP, hdim, hcard.trans ?_⟩
   grw [intFreimanDimExponent_le hκ]
 
 /-- **Chang's theorem** in `ZMod q` for a prime $q$, with the dimension bounded by the Freiman
 dimension. A set $X$ with $|X + X| \le \kappa |X|$, where $\kappa \ge 2$, with more than
-$\exp(7 \cdot 10^{12} \kappa^5)$ elements and with $\exp(10^{53} \kappa^{20}) |X| \le q$, is
+$\exp(2 \cdot 10^8 \kappa^3)$ elements and with $\exp(10^{30} \kappa^7) |X| \le q$, is
 contained in a $2$-proper generalized arithmetic progression of dimension at most `freimanDim X`
-with at most $\exp(10^{53} \kappa^{20}) |X|$ points. -/
+with at most $\exp(10^{30} \kappa^7) |X|$ points. -/
 theorem exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le {q : ℕ} {κ : ℝ}
     (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : Real.exp (7 * 10 ^ 12 * κ ^ 5) < #X)
-    (hXupper : Real.exp (10 ^ 53 * κ ^ 20) * #X ≤ q) :
+    (hXlower : Real.exp (2 * 10 ^ 8 * κ ^ 3) < #X)
+    (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 53 * κ ^ 20) * #X := by
-  have he : Real.exp (freimanDimExponent κ) * #X ≤ Real.exp (10 ^ 53 * κ ^ 20) * #X := by
+      (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
+  have he : Real.exp (freimanDimExponent κ) * #X ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
     grw [freimanDimExponent_le hκ]
   obtain ⟨Q, hQ, hXQ, -, hdim, hcard⟩ := exists_twoProperGAP_zmod_dim_le_freimanDim X hq hκ hXX
     ((Real.exp_le_exp.2 (containerExponent_le hκ)).trans_lt hXlower) (he.trans hXupper)
@@ -74,27 +74,27 @@ theorem exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le {q : ℕ} {κ 
 /-- **Chang's theorem** for sets of integers. A finite nonempty set $X$ of integers with
 $|X + X| \le \kappa |X|$, where $\kappa \ge 2$, is contained in a $2$-proper generalized
 arithmetic progression of dimension at most $2\kappa - 1$ with at most
-$\exp(10^{59} \kappa^{20}) |X|$ points. The Freiman dimension of $X$ is at most $2\kappa - 1$. -/
+$\exp(10^{32} \kappa^7) |X|$ points. The Freiman dimension of $X$ is at most $2\kappa - 1$. -/
 theorem exists_twoProperGAP_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ 2 * κ - 1 ∧
-      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 59 * κ ^ 20) * #X := by
+      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X := by
   obtain ⟨P, hP, hXP, hdim, hcard⟩ :=
     exists_twoProperGAP_subset_dim_le_freimanDim_card_le X hX hκ hXX
   exact ⟨P, hP, hXP,
     (Nat.cast_le.2 hdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le hX hXX), hcard⟩
 
 /-- **Chang's theorem** in `ZMod q` for a prime $q$. A set $X$ with $|X + X| \le \kappa |X|$,
-where $\kappa \ge 2$, with more than $\exp(7 \cdot 10^{12} \kappa^5)$ elements and with
-$\exp(10^{53} \kappa^{20}) |X| \le q$, is contained in a $2$-proper generalized arithmetic
-progression of dimension at most $2\kappa - 1$ with at most $\exp(10^{53} \kappa^{20}) |X|$
+where $\kappa \ge 2$, with more than $\exp(2 \cdot 10^8 \kappa^3)$ elements and with
+$\exp(10^{30} \kappa^7) |X| \le q$, is contained in a $2$-proper generalized arithmetic
+progression of dimension at most $2\kappa - 1$ with at most $\exp(10^{30} \kappa^7) |X|$
 points. The Freiman dimension of $X$ is at most $2\kappa - 1$. -/
 theorem exists_twoProperGAP_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : Real.exp (7 * 10 ^ 12 * κ ^ 5) < #X)
-    (hXupper : Real.exp (10 ^ 53 * κ ^ 20) * #X ≤ q) :
+    (hXlower : Real.exp (2 * 10 ^ 8 * κ ^ 3) < #X)
+    (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ 2 * κ - 1 ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 53 * κ ^ 20) * #X := by
+      (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ :=
     exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le X hq hκ hXX hXlower hXupper
   exact ⟨Q, hQ, hXQ, (Nat.cast_le.2 hdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le

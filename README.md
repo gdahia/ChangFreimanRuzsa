@@ -26,14 +26,14 @@ dependency.
 $\kappa \ge 2$ and let $X$ be a finite nonempty set of integers with $|X + X| \le \kappa |X|$.
 Then $X$ is contained in a $2$-proper progression $P$ with
 
-$$\dim P \le \operatorname{freimanDim} X, \qquad |P| \le \exp(10^{59} \kappa^{20}) |X|.$$
+$$\dim P \le \operatorname{freimanDim} X, \qquad |P| \le \exp(10^{32} \kappa^7) |X|.$$
 
 **Theorem 2** (`ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le`).
 Let $q$ be a prime, let $\kappa \ge 2$, and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy
-$|X + X| \le \kappa |X|$, $|X| > \exp(7 \cdot 10^{12} \kappa^5)$ and
-$\exp(10^{53} \kappa^{20}) |X| \le q$. Then $X$ is contained in a $2$-proper progression $Q$ with
+$|X + X| \le \kappa |X|$, $|X| > \exp(2 \cdot 10^8 \kappa^3)$ and
+$\exp(10^{30} \kappa^7) |X| \le q$. Then $X$ is contained in a $2$-proper progression $Q$ with
 
-$$\dim Q \le \operatorname{freimanDim} X, \qquad |Q| \le \exp(10^{53} \kappa^{20}) |X|.$$
+$$\dim Q \le \operatorname{freimanDim} X, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
 
 **Corollary** (`ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le` and
 `ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le`). Under the hypotheses of
@@ -57,43 +57,48 @@ The library also states the theorems with named exponents, which the explicit bo
 
 | Theorem | Exponent | Bound for `κ ≥ 2` |
 | --- | --- | --- |
-| `exists_twoProperGAP_int_dim_le_freimanDim`, size | `intFreimanDimExponent κ` | at most `10 ^ 59 * κ ^ 20` |
-| `exists_twoProperGAP_zmod_dim_le_freimanDim`, size | `freimanDimExponent κ` | at most `10 ^ 53 * κ ^ 20` |
-| `exists_twoProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `containerExponent κ` | at most `7 * 10 ^ 12 * κ ^ 5` |
+| `exists_twoProperGAP_int_dim_le_freimanDim`, size | `intFreimanDimExponent κ` | at most `10 ^ 32 * κ ^ 7` |
+| `exists_twoProperGAP_zmod_dim_le_freimanDim`, size | `freimanDimExponent κ` | at most `10 ^ 30 * κ ^ 7` |
+| `exists_twoProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `containerExponent κ` | at most `2 * 10 ^ 8 * κ ^ 3` |
 
 The progressions before the reduction of the dimension have the following exponents:
 
 | Theorem | Exponent | Bound for `κ ≥ 2` |
 | --- | --- | --- |
-| `exists_twoProperGAP_of_small_sumset`, for integers, size | `intExponent κ` | at least `κ ^ 2`, at most `10 ^ 59 * κ ^ 20` |
-| `exists_twoProperGAP_of_small_sumset`, for integers, dimension | `containerExponent (2 * κ)` | at most `3 * 10 ^ 14 * κ ^ 5` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, size | `zmodExponent κ` | at most `10 ^ 53 * κ ^ 20` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, dimension and lower bound on `\|X\|` | `containerExponent κ` | at most `7 * 10 ^ 12 * κ ^ 5` |
+| `exists_twoProperGAP_of_small_sumset`, for integers, size | `intExponent κ` | at least `κ ^ 2`, at most `4 * 10 ^ 31 * κ ^ 7` |
+| `exists_twoProperGAP_of_small_sumset`, for integers, dimension | `containerExponent (2 * κ)` | at most `16 * 10 ^ 8 * κ ^ 3` |
+| `exists_twoProperGAP_zmod_of_small_sumset`, size | `zmodExponent κ` | at most `3 * 10 ^ 29 * κ ^ 7` |
+| `exists_twoProperGAP_zmod_of_small_sumset`, dimension and lower bound on `\|X\|` | `containerExponent κ` | at most `2 * 10 ^ 8 * κ ^ 3` |
 | `exists_twoProperGAP_int_of_small_sumset` | the exponents of `exists_twoProperGAP_zmod_of_small_sumset` | for integers with `exp (containerExponent κ) < \|X\|` |
 
 ## Proof
 
 Let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $|X + X| \le \kappa |X|$. Ruzsa's model lemma gives a
 subset $X_1 \subseteq X$ with $8|X_1| \ge |X|$ and a Freiman isomorphism of order $8$ from $X_1$
-onto a subset $Y$ of $\mathbb{Z}/m\mathbb{Z}$ with $m \le \kappa^{16} |X|$. By Chang's lemma the
-large spectrum of $Y$ is spanned by a dissociated set $\Delta$ whose size is bounded in terms of
-$\kappa$, and $2Y - 2Y$ contains the Bohr set of $\Delta$. Minkowski's second theorem, applied to
-the lattice of the frequencies of $\Delta$, gives a proper progression of dimension $|\Delta| + 1$
-inside that Bohr set. The Freiman isomorphism carries it back to a proper progression inside
-$2X_1 - 2X_1$. Chang's covering argument repeatedly adds to the progression a set of
-$\lceil 3\kappa \rceil$ elements of $X_1$ with disjoint translates until it covers $X_1$, and Ruzsa's covering lemma recovers $X$. The result
-is a progression containing $X$, not necessarily proper, of dimension at most
-`containerExponent κ`. The covering argument holds for a finite subset of any abelian group:
-the Plünnecke–Ruzsa inequality bounds the number of these steps, so the group need not be finite.
+onto a subset $Y$ of $\mathbb{Z}/m\mathbb{Z}$ with $m \le 8 \kappa^{16} |Y|$. By Chang's lemma the
+large spectrum of $Y$ is spanned by a dissociated set $\Delta$ with $|\Delta| = O(\kappa \log \kappa)$,
+and $2Y - 2Y$ contains the Bohr set of $\Delta$. Minkowski's second theorem, applied to the lattice
+of the frequencies of $\Delta$, gives a proper progression $Q$ of dimension $d = |\Delta| + 1$
+inside that Bohr set, with $m \le (8d)^{3d} |Q|$. The Freiman isomorphism carries it back to a
+proper progression inside $2X_1 - 2X_1$. Chang's covering argument repeatedly adds to the
+progression a set of $\lceil 3\kappa \rceil$ elements of $X_1$ with disjoint translates. By the
+Plünnecke–Ruzsa inequality this stops after $O(d \log d)$ steps, with $X_1 \subseteq F + (S - S)$
+for the current set $S$ and a set $F$ of at most $\lceil 3\kappa \rceil$ elements. The elements of
+$F$ become further steps, and Ruzsa's covering lemma recovers $X$ with at most $8\kappa$ more. The
+result is a progression containing $X$, not necessarily proper, of dimension at most
+`containerExponent κ` $= O(\kappa^2 \log^2 \kappa)$. The covering argument holds for a finite
+subset of any abelian group, so the group need not be finite.
 
 A progression is $2$-proper when its steps satisfy no short linear relation. If there is one, the
 progression is contained in a progression of smaller dimension whose size is larger by a factor
-bounded in terms of the dimension: the lattice of short relations is saturated, the box of
-coefficients is projected along it, and the projection is covered by a box in a basis of the
-quotient lattice. Since the dimension decreases, iterating gives a $2$-proper progression. The
-saturation step needs the multiples $n a$, for $n$ up to a bound, of every nonzero $a$ to be
-distinct. This holds in $\mathbb{Z}/q\mathbb{Z}$ when the prime $q$ is large compared with the
-progression, and in a torsion-free group.
+$e^{O(D^2 \log D)}$, where $D$ is the dimension: the lattice of short relations is saturated, the
+box of coefficients is projected along it, and the projection is covered by a box in a basis of
+the quotient lattice. Since the dimension decreases, iterating gives a $2$-proper progression, at
+the cost of a factor $e^{3 (D + 2)^3 \log (D + 2)}$ (`properizationExponent`). With
+$D = O(\kappa^2 \log^2 \kappa)$ this is $e^{O(\kappa^6 \log^7 \kappa)}$, which is at most
+$e^{C \kappa^7}$. The saturation step needs the multiples $n a$, for $n$ up to a bound, of every
+nonzero $a$ to be distinct. This holds in $\mathbb{Z}/q\mathbb{Z}$ when the prime $q$ is large
+compared with the progression, and in a torsion-free group.
 
 The dimension is reduced to the Freiman dimension as in Appendix A of Marcelo Campos, Gabriel
 Dahia and João Pedro Marciano, *On the independence number of sparser random Cayley graphs*,

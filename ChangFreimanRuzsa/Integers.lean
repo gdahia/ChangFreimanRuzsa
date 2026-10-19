@@ -163,7 +163,7 @@ private lemma card_image_intCast_add_le (q : ℕ) (X : Finset ℤ) :
 /-- Let $c_\kappa$ be `containerExponent κ` and $d_\kappa$ be `bohrGAPDim κ`. A finite set
 $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $e^{c_\kappa} < |X|$ has a subset $X_1$
 with $|X| \le 8 |X_1|$ and a proper progression $Q_1 \subseteq 2X - 2X$ of dimension at most
-$d_\kappa$ with $|X| \le 8 \cdot 2^{12 d_\kappa^2} |Q_1|$.
+$d_\kappa$ with $|X| \le 8$ `bohrLoss` $d_\kappa \cdot |Q_1|$.
 
 The progression is the one that `exists_proper_gap_zmod_subset_add_sub_add_card_le` gives for the
 reduction of `X` modulo a large prime, carried back to `ℤ` by
@@ -173,7 +173,7 @@ private lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : F
     (hXlower : Real.exp (containerExponent κ) < #X) :
     ∃ (X₁ : Finset ℤ) (Q₁ : GAP ℤ), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧ Q₁.Proper ∧
       (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧ Q₁.carrier ⊆ (X + X) - (X + X) ∧
-      (#X : ℝ) ≤ 8 * 2 ^ (12 * bohrGAPDim κ ^ 2) * #Q₁.carrier := by
+      (#X : ℝ) ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q₁.carrier := by
   obtain ⟨q, hq, hprime⟩ := Nat.exists_infinite_primes (16 * X.sup Int.natAbs + 1)
   have hiso := isAddFreimanIso_intCast (q := q) (X := X) (by grind)
   have hcard : #(X.image (Int.cast : ℤ → ZMod q)) = #X := card_image_of_injOn hiso.bijOn.injOn
