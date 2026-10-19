@@ -12,19 +12,21 @@ public import SumOfSetsInSeveralDimensions.FreimanDimensionSumsetBounds
 /-!
 # Chang's theorem with dimension at most the Freiman dimension
 
-Let `q` be a prime and let `X ⊆ ZMod q` satisfy `|X + X| ≤ κ * |X|`. If `X` is neither too small
-nor too large compared with `q`, then `X` lies in a `2`-proper generalized arithmetic progression
-of dimension at most `freimanDim X` and of size at most a constant multiple of `|X|`. The same
-holds for a finite set of integers that is not too small.
+Let $q$ be a prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$.
+Write $c_\kappa$ for `changContainerExponent κ` and $F_\kappa$ for `changFreimanDimExponent κ`. If
+$e^{c_\kappa} < |X|$ and $e^{F_\kappa} |X| \le q$, then $X$ lies in a $2$-proper generalized
+arithmetic progression of dimension at most `freimanDim X` and of size at most $e^{F_\kappa} |X|$.
+The same holds for a finite set $X \subseteq \mathbb{Z}$ with $e^{c_\kappa} < |X|$.
 
-The proof composes three stages: `exists_coarseGAP_container` puts `X` in a progression of bounded
-dimension and size, `exists_twoProperGAP_container_of_injOn_nsmul` replaces that progression by a
-`2`-proper one, and `exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul` replaces the `2`-proper
-progression by one of dimension at most `freimanDim X`. For sets of integers the first stage is
+The proof has three stages. `exists_coarseGAP_container` puts $X$ in a progression of dimension
+at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$,
+`exists_twoProperGAP_container_of_injOn_nsmul` replaces that progression by a $2$-proper one, and
+`exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul` replaces the $2$-proper progression by one
+of dimension at most `freimanDim X`. For sets of integers the first stage is
 `exists_coarseGAP_container_int`.
 
-Since `freimanDim X ≤ 2 * κ - 1` when `|X + X| ≤ κ * |X|`, the progression also has dimension at
-most `2 * κ - 1`.
+The Freiman dimension of $X$ is at most $2\kappa - 1$ when $|X + X| \le \kappa |X|$, so the
+progression also has dimension at most $2\kappa - 1$.
 
 ## Main definitions
 
@@ -37,8 +39,9 @@ most `2 * κ - 1`.
 * `exists_twoProperGAP_int_dim_le_freimanDim`: Chang's theorem for sets of integers with dimension
   at most `freimanDim X`.
 * `exists_twoProperGAP_zmod_dim_le_two_mul_sub_one` and
-  `exists_twoProperGAP_int_dim_le_two_mul_sub_one`: the same with dimension at most `2 * κ - 1`.
-* `changFreimanDimExponent_le`: `changFreimanDimExponent κ ≤ 10 ^ 53 * κ ^ 20` for `κ ≥ 2`.
+  `exists_twoProperGAP_int_dim_le_two_mul_sub_one`: the same with dimension at most $2\kappa - 1$.
+* `changFreimanDimExponent_le`: `changFreimanDimExponent κ` is at most $10^{53} \kappa^{20}$ for
+  $\kappa \ge 2$.
 -/
 
 public section
@@ -71,13 +74,13 @@ private lemma exp_mul_le_exp_add_mul_add {a b c d e x y z : ℝ} (ha : 0 ≤ a) 
   rw [add_comm a b, add_mul, Real.exp_add, Real.exp_add, mul_assoc, mul_assoc]
   gcongr
 
-/-- The second and third stages of Chang's theorem, in a group in which the multiples `n • a` with
-`n < N` of every nonzero `a` are distinct. Let a nonempty set `X` lie in a progression `P` of
-dimension at most `changContainerExponent κ` and of size at most
-`exp (changContainerExponent κ) * |X|`. If `exp (changFreimanDimExponent κ) * |X| ≤ N`, then `X`
-lies in a `2`-proper progression of dimension at most `freimanDim X` and of size at most
-`exp (changFreimanDimExponent κ) * |X|`. -/
-theorem exists_twoProperGAP_dim_le_freimanDim_of_coarseGAP {G : Type*} [DecidableEq G]
+/-- The second and third stages of Chang's theorem, in an abelian group in which the multiples
+$n a$ with $n < N$ of every nonzero $a$ are distinct. Write $c_\kappa$ for
+`changContainerExponent κ` and $F_\kappa$ for `changFreimanDimExponent κ`. Let a nonempty set $X$
+lie in a progression $P$ of dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$. If
+$e^{F_\kappa} |X| \le N$, then $X$ lies in a $2$-proper progression of dimension at most
+`freimanDim X` and of size at most $e^{F_\kappa} |X|$. -/
+lemma exists_twoProperGAP_dim_le_freimanDim_of_coarseGAP {G : Type*} [DecidableEq G]
     [AddCommGroup G] {N : ℕ} {κ : ℝ} {X : Finset G} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hX : X.Nonempty)
     (hXP : X ⊆ P.carrier) (hPdim : (P.dim : ℝ) ≤ changContainerExponent κ)
@@ -101,10 +104,11 @@ theorem exists_twoProperGAP_dim_le_freimanDim_of_coarseGAP {G : Type*} [Decidabl
       (hP₂room.trans hroom)
   exact ⟨Q, hQ, hXQ, hlen, hQdim, hQcard.trans hP₂room⟩
 
-/-- **Chang's theorem** in `ZMod q` for a prime `q`, with the dimension bounded by the Freiman
-dimension: a set `X` with `|X + X| ≤ κ * |X|`, `exp (changContainerExponent κ) < |X|` and
-`exp (changFreimanDimExponent κ) * |X| ≤ q` is contained in a `2`-proper GAP of dimension at most
-`freimanDim X` and size at most `exp (changFreimanDimExponent κ) * |X|`. -/
+/-- **Chang's theorem** in `ZMod q` for a prime $q$, with the dimension bounded by the Freiman
+dimension. Write $c_\kappa$ for `changContainerExponent κ` and $F_\kappa$ for
+`changFreimanDimExponent κ`. A set $X$ with $|X + X| \le \kappa |X|$, $e^{c_\kappa} < |X|$ and
+$e^{F_\kappa} |X| \le q$ is contained in a $2$-proper generalized arithmetic progression of
+dimension at most `freimanDim X` and of size at most $e^{F_\kappa} |X|$. -/
 theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
     (hXlower : Real.exp (changContainerExponent κ) < #X)
@@ -113,25 +117,26 @@ theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Fin
       Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (changFreimanDimExponent κ) * #X := by
   obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_coarseGAP_container X hq hκ hXX hXlower
   exact exists_twoProperGAP_dim_le_freimanDim_of_coarseGAP
-    (fun _ ha ↦ GAP.injOn_nsmul_of_prime hq ha)
-    (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hXP hPdim hPcard hXupper
+    (fun _ ↦ GAP.injOn_nsmul_of_prime hq) (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower))
+    hXP hPdim hPcard hXupper
 
-/-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension:
-a finite set `X` of integers with `|X + X| ≤ κ * |X|` and `exp (changContainerExponent κ) < |X|`
-is contained in a `2`-proper GAP of dimension at most `freimanDim X` and size at most
-`exp (changFreimanDimExponent κ) * |X|`. -/
+/-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension.
+Write $c_\kappa$ for `changContainerExponent κ` and $F_\kappa$ for `changFreimanDimExponent κ`. A
+finite set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $e^{c_\kappa} < |X|$ is
+contained in a $2$-proper generalized arithmetic progression of dimension at most `freimanDim X`
+and of size at most $e^{F_\kappa} |X|$. -/
 theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (changContainerExponent κ) < #X) :
     ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
       Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (changFreimanDimExponent κ) * #X := by
   obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_coarseGAP_container_int X hκ hXX hXlower
   exact exists_twoProperGAP_dim_le_freimanDim_of_coarseGAP
-    (fun _ ha ↦ GAP.injOn_nsmul_of_isAddTorsionFree _ ha)
+    (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _)
     (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hXP hPdim hPcard (Nat.le_ceil _)
 
-/-- **Chang's theorem** in `ZMod q` for a prime `q`, with dimension at most `2 * κ - 1`: under the
-hypotheses of `exists_twoProperGAP_zmod_dim_le_freimanDim`, the Freiman dimension of `X` is at most
-`2 * κ - 1`. -/
+/-- **Chang's theorem** in `ZMod q` for a prime $q$, with dimension at most $2\kappa - 1$. Under the
+hypotheses of `exists_twoProperGAP_zmod_dim_le_freimanDim`, the Freiman dimension of $X$ is at most
+$2\kappa - 1$. -/
 theorem exists_twoProperGAP_zmod_dim_le_two_mul_sub_one {q : ℕ} {κ : ℝ}
     (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
     (hXlower : Real.exp (changContainerExponent κ) < #X)
@@ -143,9 +148,9 @@ theorem exists_twoProperGAP_zmod_dim_le_two_mul_sub_one {q : ℕ} {κ : ℝ}
   exact ⟨Q, hQ, hXQ, hlen, (Nat.cast_le.2 hQdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le
     (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hXX), hQcard⟩
 
-/-- **Chang's theorem** for sets of integers, with dimension at most `2 * κ - 1`: under the
-hypotheses of `exists_twoProperGAP_int_dim_le_freimanDim`, the Freiman dimension of `X` is at most
-`2 * κ - 1`. -/
+/-- **Chang's theorem** for sets of integers, with dimension at most $2\kappa - 1$. Under the
+hypotheses of `exists_twoProperGAP_int_dim_le_freimanDim`, the Freiman dimension of $X$ is at most
+$2\kappa - 1$. -/
 theorem exists_twoProperGAP_int_dim_le_two_mul_sub_one {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (changContainerExponent κ) < #X) :
     ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
@@ -155,7 +160,7 @@ theorem exists_twoProperGAP_int_dim_le_two_mul_sub_one {κ : ℝ} (X : Finset �
   exact ⟨Q, hQ, hXQ, hlen, (Nat.cast_le.2 hQdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le
     (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hXX), hQcard⟩
 
-/-- `changFreimanDimExponent κ ≤ 10 ^ 53 * κ ^ 20` for `κ ≥ 2`. -/
+/-- `changFreimanDimExponent κ` is at most $10^{53} \kappa^{20}$ for $\kappa \ge 2$. -/
 lemma changFreimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
     changFreimanDimExponent κ ≤ 10 ^ 53 * κ ^ 20 := by
   unfold changFreimanDimExponent coordinateReductionConstant properizationConstant

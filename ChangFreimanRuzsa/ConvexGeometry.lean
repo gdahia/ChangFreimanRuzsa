@@ -12,25 +12,25 @@ public import Mathlib.Topology.Algebra.IsUniformGroup.DiscreteSubgroup
 /-! # Successive minima of a lattice with respect to a symmetric convex body
 
 This file develops the successive minima of a discrete subgroup of a real normed space with respect
-to a symmetric convex body, in the generality required by the reboxing step of properization. It is
-the real counterpart of `Chang.GeometryOfNumbers`, which does the same for a box of integer points.
+to a symmetric convex body $K$. It is the real counterpart of `ChangFreimanRuzsa.GeometryOfNumbers`,
+which treats a box of integer points.
 
-The main pieces are:
+## Main definitions and statements
 
-- `setOf_mem_smul_eq_Ici` and `mem_smul_iff_gauge_le`, which identify the dilation factors whose
-  dilate of `K` contains a given point with the closed half-line above its gauge. Everything else
-  rests on this: it is what makes the minima behave like minima rather than like infima;
-- `successiveMinimum`, the `k`-th successive minimum, with its basic API;
-- `le_successiveMinimum_one`, positivity of the first minimum, from discreteness of the lattice;
-- `exists_witness_successiveMinimum`, attainment of the infimum defining the minima;
-- `exists_intCast_smul_eq_of_gauge_min` and `gauge_le_two_mul_of_mem_map`, the steps of the
-  projection along a shortest lattice vector: a shortest vector is primitive, and the first minimum
-  of the lattice is at most twice the gauge of any nonzero vector of the projected lattice;
+- `setOf_mem_smul_eq_Ici` and `mem_smul_iff_gauge_le`: the dilation factors $t$ with $x \in tK$
+  form the closed half-line above the gauge of $x$.
+- `successiveMinimum`: the $k$-th successive minimum.
+- `le_successiveMinimum_one`: the first minimum of a discrete subgroup is positive.
+- `exists_witness_successiveMinimum`: the infimum defining a successive minimum is attained.
+- `exists_intCast_smul_eq_of_gauge_min` and `gauge_le_two_mul_of_mem_map`: a shortest lattice
+  vector $v$ is primitive, and its gauge is at most twice the gauge of any nonzero vector of the
+  lattice projected along $v$.
 - `convex_image`, `neg_mem_image`, `exists_pos_forall_norm_apply_lt` and
-  `discreteTopology_of_exists_pos_forall_norm_lt`, which say that the projected body is a symmetric
-  convex set and the projected lattice a discrete subgroup again.
+  `discreteTopology_of_exists_pos_forall_norm_lt`: the projected body is a symmetric convex set and
+  the projected lattice is a discrete subgroup.
 
-`Chang.Reboxing.GaugeInduction` assembles these into the shortest-direction induction.
+`ChangFreimanRuzsa.Reboxing.GaugeInduction` combines these into an induction on the dimension along
+shortest lattice vectors.
 -/
 
 @[expose] public section
@@ -57,11 +57,10 @@ of `x`. -/
 lemma setOf_mem_smul_eq_Ici (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0)
     (hbdd : Bornology.IsVonNBounded ℝ K) (x : E) :
     {t : ℝ | 0 ≤ t ∧ x ∈ t • K} = Set.Ici (gauge K x) := by
-  apply Set.ext
-  intro t
+  ext t
   constructor
-  · intro ht
-    exact gauge_le_of_mem ht.1 ht.2
+  · rintro ⟨ht₀, ht⟩
+    exact gauge_le_of_mem ht₀ ht
   · intro ht
     refine ⟨(gauge_nonneg x).trans ht, ?_⟩
     rcases eq_or_ne x 0 with rfl | hx
@@ -80,11 +79,9 @@ lemma mem_smul_iff_gauge_le (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀
     x ∈ t • K ↔ gauge K x ≤ t := by
   constructor
   · exact gauge_le_of_mem ht
-  · intro h
-    have hmem : t ∈ {t : ℝ | 0 ≤ t ∧ x ∈ t • K} := by
-      rw [setOf_mem_smul_eq_Ici hconv hclosed hK₀ hbdd]
-      exact h
-    exact hmem.2
+  · rw [← Set.mem_Ici, ← setOf_mem_smul_eq_Ici hconv hclosed hK₀ hbdd]
+    rintro ⟨-, hx⟩
+    exact hx
 
 /-- Membership in a dilate is monotone in the dilation factor. -/
 lemma mem_smul_of_le (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0)
@@ -124,7 +121,7 @@ lemma successiveMinimum_le {t : ℝ} (ht : 0 ≤ t) (h : HasIndependentShort L K
 `k`-th minimum. -/
 lemma le_successiveMinimum {t : ℝ} (hne : ∃ s, 0 ≤ s ∧ HasIndependentShort L K k s)
     (h : ∀ s, 0 ≤ s → HasIndependentShort L K k s → t ≤ s) : t ≤ successiveMinimum L K k :=
-  le_csInf hne fun s hs ↦ h s hs.1 hs.2
+  le_csInf hne fun s ⟨hs₀, hs⟩ ↦ h s hs₀ hs
 
 /-! ## Positivity of the first minimum -/
 
@@ -135,16 +132,12 @@ lemma exists_pos_forall_norm_lt (L : AddSubgroup E) [DiscreteTopology L] :
   obtain ⟨U, hUopen, hUL⟩ :=
     isOpen_inter_eq_singleton_of_mem_discrete (s := (L : Set E)) DiscreteTopology.isDiscrete
       (zero_mem L)
-  have h0U : (0 : E) ∈ U ∩ (L : Set E) := by
-    rw [hUL]
-    exact Set.mem_singleton 0
-  obtain ⟨r, hr, hball⟩ := Metric.isOpen_iff.mp hUopen 0 h0U.1
+  obtain ⟨h0U, -⟩ : (0 : E) ∈ U ∩ (L : Set E) := by simp [hUL]
+  obtain ⟨r, hr, hball⟩ := Metric.isOpen_iff.mp hUopen 0 h0U
   refine ⟨r, hr, ?_⟩
   intro x hx hnorm
-  have hxU : x ∈ U ∩ (L : Set E) :=
-    ⟨hball (by simpa only [Metric.mem_ball, dist_zero_right] using hnorm), hx⟩
-  rw [hUL] at hxU
-  exact hxU
+  rw [← Set.mem_singleton_iff, ← hUL]
+  exact ⟨hball (by simpa using hnorm), hx⟩
 
 /-- The first minimum is positive: a dilation factor whose dilate of `K` stays inside a ball that
 the lattice meets only at the origin is below it. -/
@@ -155,11 +148,10 @@ lemma le_successiveMinimum_one [DiscreteTopology L] {R r t : ℝ} (hR : K ⊆ cl
   intro s hs hshort
   by_contra! hlt
   obtain ⟨v, hindep, hv⟩ := hshort
-  obtain ⟨y, hy, hyv⟩ := (hv 0).2
-  refine hindep.ne_zero 0 (hr _ (hv 0).1 ?_)
+  obtain ⟨hv0, y, hy, hyv⟩ := hv 0
+  refine hindep.ne_zero 0 (hr _ hv0 ?_)
   rw [← hyv, norm_smul, Real.norm_eq_abs, abs_of_nonneg hs]
-  have hyR : ‖y‖ ≤ R := by simpa only [mem_closedBall, dist_zero_right] using hR hy
-  nlinarith [norm_nonneg y]
+  nlinarith [norm_nonneg y, (by simpa using hR hy : ‖y‖ ≤ R)]
 
 /-! ## Attainment of the minima -/
 
@@ -175,50 +167,48 @@ of `L` lies in the dilate of `K` by `successiveMinimum L K k` itself.
 Discreteness bounds the number of candidate families, and `setOf_mem_smul_eq_Ici` turns each
 family's set of admissible dilation factors into a closed half-line, so the infimum lies in a
 finite union of closed half-lines. -/
-theorem exists_witness_successiveMinimum [ProperSpace E] [DiscreteTopology L]
+lemma exists_witness_successiveMinimum [ProperSpace E] [DiscreteTopology L]
     (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0) (hbdd : Bornology.IsBounded K)
     (hne : ∃ t, 0 ≤ t ∧ HasIndependentShort L K k t) :
     HasIndependentShort L K k (successiveMinimum L K k) := by
   classical
   set T := {t : ℝ | 0 ≤ t ∧ HasIndependentShort L K k t} with hT
   set lam := successiveMinimum L K k with hlam
-  have hTne : T.Nonempty := by
-    obtain ⟨t, ht⟩ := hne
-    exact ⟨t, ht⟩
+  have hTne : T.Nonempty := hne
   have hvonN : Bornology.IsVonNBounded ℝ K := (NormedSpace.isVonNBounded_iff ℝ).mpr hbdd
   set Fams := {v : Fin k → E |
     (∀ j, v j ∈ (lam + 1) • K ∩ (L : Set E)) ∧ LinearIndependent ℝ v} with hFams
   have hFamsfin : Fams.Finite :=
     Set.Finite.subset (Set.Finite.pi fun _ ↦ finite_lattice_inter_smul L hbdd (lam + 1))
-      fun v hv ↦ Set.mem_univ_pi.mpr hv.1
+      fun _ ⟨hv, _⟩ ↦ Set.mem_univ_pi.mpr hv
   have hsub : T ⊆ (⋃ v ∈ Fams, ⋂ j, Set.Ici (gauge K (v j))) ∪ Set.Ici (lam + 1) := by
-    intro t ht
+    rintro t ⟨ht₀, v, hindep, hv⟩
     rcases le_or_gt (lam + 1) t with hle | hlt
     · exact Or.inr hle
-    obtain ⟨v, hindep, hv⟩ := ht.2
-    refine Or.inl (Set.mem_iUnion₂.mpr ⟨v, ?_, ?_⟩)
-    · constructor
-      · intro j
-        constructor
-        · exact mem_smul_of_le hconv hclosed hK₀ hvonN ht.1 hlt.le (hv j).2
-        · exact (hv j).1
-      · exact hindep
-    · exact Set.mem_iInter.mpr fun j ↦
-        (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN ht.1 (v j)).mp (hv j).2
+    refine Or.inl (Set.mem_iUnion₂.mpr ⟨v, ⟨fun j ↦ (hv j).symm.imp_left
+      (mem_smul_of_le hconv hclosed hK₀ hvonN ht₀ hlt.le), hindep⟩, ?_⟩)
+    rw [Set.mem_iInter]
+    intro j
+    obtain ⟨-, hvj⟩ := hv j
+    exact (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN ht₀ (v j)).mp hvj
   have hmem : lam ∈ (⋃ v ∈ Fams, ⋂ j, Set.Ici (gauge K (v j))) ∪ Set.Ici (lam + 1) :=
     ((hFamsfin.isClosed_biUnion fun _ _ ↦
       isClosed_iInter fun _ ↦ isClosed_Ici).union isClosed_Ici).closure_subset_iff.mpr hsub
       ((Real.isGLB_sInf hTne (bddBelow_dilations L K k)).mem_closure hTne)
   obtain hmem | hmem := hmem
-  · obtain ⟨v, hv, hvlam⟩ := Set.mem_iUnion₂.mp hmem
-    exact ⟨v, hv.2, fun j ↦ ⟨(hv.1 j).2, (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN
-      (successiveMinimum_nonneg L K k) (v j)).mpr (Set.mem_iInter.mp hvlam j)⟩⟩
-  · exact absurd (Set.mem_Ici.mp hmem) (not_le.mpr (by linarith))
+  · obtain ⟨v, ⟨hvK, hindep⟩, hvlam⟩ := Set.mem_iUnion₂.mp hmem
+    refine ⟨v, hindep, ?_⟩
+    intro j
+    obtain ⟨-, hvL⟩ := hvK j
+    exact ⟨hvL, (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN (successiveMinimum_nonneg L K k)
+      (v j)).mpr (Set.mem_iInter.mp hvlam j)⟩
+  · linarith [Set.mem_Ici.mp hmem]
 
 /-! ## Projecting along a shortest lattice vector
 
-The elementary steps of the shortest-direction induction of `Chang.Reboxing.GaugeInduction`. They
-use no measure theory: only the body and its gauge enter. -/
+The steps of the induction along shortest lattice vectors in
+`ChangFreimanRuzsa.Reboxing.GaugeInduction`. They use only the body and its gauge, and no measure
+theory. -/
 
 /-- The gauge of a symmetric body does not see signs. -/
 lemma gauge_smul_abs (hsymm : ∀ x ∈ K, -x ∈ K) (m : ℝ) (x : E) :
@@ -231,13 +221,12 @@ lemma gauge_smul_abs (hsymm : ∀ x ∈ K, -x ∈ K) (m : ℝ) (x : E) :
 lemma gauge_zsmul_le (hsymm : ∀ x ∈ K, -x ∈ K) (m : ℝ) (x : E) :
     gauge K (m • x) ≤ |m| * gauge K x := (gauge_smul_abs hsymm m x).le
 
-/-- Reduction along a lattice direction: a point differing from a point of gauge at most `t` by a
-real multiple of `v` can be moved by an *integer* multiple of `v` to a point of gauge at most
-`t + gauge K v / 2`.
+/-- Reduction along a lattice direction: a point differing from a point of gauge at most $t$ by a
+real multiple of $v$ can be moved by an integer multiple of $v$ to a point of gauge at most
+$t + g_K(v) / 2$.
 
-This is the step that compares the successive minima of a quotient lattice with those of the
-lattice itself: applied with `v` a shortest vector, it shows that a short vector of the quotient
-lifts to a lattice vector that is short by at most `λ₁ / 2`. -/
+Applied with $v$ a shortest vector, this shows that a short vector of the quotient lattice lifts to
+a lattice vector whose gauge is larger by at most $\lambda_1 / 2$. -/
 lemma exists_int_gauge_sub_zsmul_le (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0)
     (hsymm : ∀ x ∈ K, -x ∈ K) {t : ℝ} {y z v : E} {s : ℝ} (hz : gauge K z ≤ t)
     (hy : y = z + s • v) : ∃ m : ℤ, gauge K (y - (m : ℝ) • v) ≤ t + gauge K v / 2 := by
@@ -247,13 +236,10 @@ lemma exists_int_gauge_sub_zsmul_le (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0
   refine add_le_add hz (le_trans (gauge_zsmul_le hsymm _ _) ?_)
   rw [div_eq_inv_mul]
   refine mul_le_mul_of_nonneg_right ?_ (gauge_nonneg v)
-  simpa only [one_div] using abs_sub_round s
+  simpa using abs_sub_round s
 
 /-- A nonzero lattice vector of least gauge is primitive: every lattice point on its line is an
-integer multiple of it.
-
-This is the step of the induction that lets the projection along `v` carry the lattice to a
-lattice. -/
+integer multiple of it. -/
 lemma exists_intCast_smul_eq_of_gauge_min (hsymm : ∀ x ∈ K, -x ∈ K) {v w : E} (hv : v ∈ L)
     (hvpos : 0 < gauge K v) (hmin : ∀ y ∈ L, y ≠ 0 → gauge K v ≤ gauge K y) (hw : w ∈ L)
     {s : ℝ} (hws : w = s • v) : ∃ m : ℤ, w = (m : ℝ) • v := by
@@ -268,10 +254,9 @@ lemma exists_intCast_smul_eq_of_gauge_min (hsymm : ∀ x ∈ K, -x ∈ K) {v w :
     rw [one_div]
     linarith
 
-/-- **Lifting a single short vector.** A vector of the projected lattice inside the `t`-dilate of
-the projected body lifts to a lattice vector of gauge at most `t + gauge K v / 2`: any lift differs
-from a point of the `t`-dilate by a multiple of `v`, and rounding that multiple costs
-`gauge K v / 2`. -/
+/-- A vector of the projected lattice inside the $t$-dilate of the projected body lifts to a
+lattice vector of gauge at most $t + g_K(v) / 2$. Any lift differs from a point of the $t$-dilate
+by a multiple of $v$, and rounding that multiple adds at most $g_K(v) / 2$. -/
 lemma exists_mem_gauge_le_of_mem_map {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0) (hsymm : ∀ x ∈ K, -x ∈ K) (π : E →ₗ[ℝ] F) {v : E}
     (hv : v ∈ L) (hπv : π v = 0) (hker : ∀ x : E, π x = 0 → ∃ s : ℝ, x = s • v) {t : ℝ}
@@ -293,20 +278,20 @@ lemma exists_mem_gauge_le_of_mem_map {F : Type*} [NormedAddCommGroup F] [NormedS
     exact hyw
 
 /-- A nonzero vector of the projected lattice is at least half as long as the shortest lattice
-vector: its lift is a nonzero lattice vector of gauge at most `t + gauge K v / 2`.
-
-This compares the first minimum of the lattice with the minima of the projected lattice. -/
+vector, since its lift is a nonzero lattice vector of gauge at most $t + g_K(v) / 2$. -/
 lemma gauge_le_two_mul_of_mem_map {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0) (hsymm : ∀ x ∈ K, -x ∈ K) (π : E →ₗ[ℝ] F) {v : E}
     (hv : v ∈ L) (hπv : π v = 0) (hker : ∀ x : E, π x = 0 → ∃ s : ℝ, x = s • v)
     (hmin : ∀ y ∈ L, y ≠ 0 → gauge K v ≤ gauge K y) {t : ℝ} (ht : 0 ≤ t)
     (h : HasIndependentShort (L.map (π : E →+ F)) (π '' K) 1 t) : gauge K v ≤ 2 * t := by
   obtain ⟨w, hwindep, hw⟩ := h
+  obtain ⟨hwL, hwK⟩ := hw 0
   obtain ⟨y, hyL, hyπ, hygauge⟩ :=
-    exists_mem_gauge_le_of_mem_map hconv hK₀ hsymm π hv hπv hker ht (hw 0).1 (hw 0).2
-  have hyne : y ≠ 0 := fun hzero ↦ hwindep.ne_zero 0 (by rw [← hyπ, hzero, map_zero])
-  have := hmin y hyL hyne
-  linarith
+    exists_mem_gauge_le_of_mem_map hconv hK₀ hsymm π hv hπv hker ht hwL hwK
+  have hyne : y ≠ 0 := by
+    rintro rfl
+    exact hwindep.ne_zero 0 (hyπ.symm.trans (map_zero π))
+  linarith [hmin y hyL hyne]
 
 /-! ### The projected body
 
@@ -323,13 +308,12 @@ lemma neg_mem_image (hsymm : ∀ x ∈ K, -x ∈ K) (π : E →ₗ[ℝ] F) :
   rintro y ⟨x, hx, rfl⟩
   exact ⟨-x, hsymm x hx, map_neg π x⟩
 
-/-- **Discreteness of the projected lattice.** If a projection `p` kills a lattice vector `v` and
-splits every vector as its image plus a multiple of `v`, then the images of the lattice avoid a ball
-around the origin.
+/-- If a projection $p$ kills a lattice vector $v$ and splits every vector as its image plus a
+multiple of $v$, then the nonzero images of the lattice avoid a ball around the origin.
 
-Reducing modulo `ℤv` moves a lattice vector with small image into a fixed bounded set, which meets
-the lattice in finitely many points, so only finitely many images are in play. -/
-theorem exists_pos_forall_norm_apply_lt [ProperSpace E] [DiscreteTopology L] (p : E →ₗ[ℝ] E)
+Reducing modulo $\mathbb{Z} v$ moves a lattice vector with small image into a fixed bounded set,
+which meets the lattice in finitely many points, so only finitely many images occur. -/
+lemma exists_pos_forall_norm_apply_lt [ProperSpace E] [DiscreteTopology L] (p : E →ₗ[ℝ] E)
     {v : E} (hv : v ∈ L) (hpv : p v = 0) (hsplit : ∀ y : E, ∃ s : ℝ, y - p y = s • v) :
     ∃ r : ℝ, 0 < r ∧ ∀ y ∈ L, ‖p y‖ < r → p y = 0 := by
   classical
@@ -339,7 +323,8 @@ theorem exists_pos_forall_norm_apply_lt [ProperSpace E] [DiscreteTopology L] (p 
   set N := (hAfin.toFinset.image fun y ↦ ‖p y‖).filter (0 < ·) with hN
   refine ⟨if hne : N.Nonempty then min (N.min' hne) 1 else 1, ?_, ?_⟩
   · split
-    · exact lt_min (Finset.mem_filter.mp (N.min'_mem _)).2 one_pos
+    · obtain ⟨-, hpos⟩ := Finset.mem_filter.mp (N.min'_mem _)
+      exact lt_min hpos one_pos
     · exact one_pos
   · intro y hy hylt
     by_contra hpy
@@ -352,13 +337,12 @@ theorem exists_pos_forall_norm_apply_lt [ProperSpace E] [DiscreteTopology L] (p 
         rw [mem_closedBall, dist_zero_right, hrw]
         apply le_trans (norm_add_le _ _)
         rw [norm_smul, Real.norm_eq_abs]
-        have hround := abs_sub_round s
         have hrle : ‖p y‖ ≤ 1 := by
           apply le_trans hylt.le
           split
           · exact min_le_right _ _
           · exact le_rfl
-        nlinarith [norm_nonneg v, norm_nonneg (p y)]
+        nlinarith [norm_nonneg v, norm_nonneg (p y), abs_sub_round s]
       · rw [Int.cast_smul_eq_zsmul]
         exact L.sub_mem hy (L.zsmul_mem hv _)
     have hpeq : p (y - (round s : ℝ) • v) = p y := by
@@ -372,22 +356,19 @@ theorem exists_pos_forall_norm_apply_lt [ProperSpace E] [DiscreteTopology L] (p 
     exact min_le_of_left_le (N.min'_le _ hmemN)
 
 omit [NormedSpace ℝ E] in
-/-- Conversely, a subgroup that avoids a ball around the origin is discrete. Together with
-`exists_pos_forall_norm_apply_lt` this feeds the projected lattice back into the induction, whose
-hypotheses are stated with `DiscreteTopology`. -/
+/-- Conversely, a subgroup that meets a ball around the origin only at the origin is discrete. -/
 lemma discreteTopology_of_exists_pos_forall_norm_lt {G : AddSubgroup E}
     (h : ∃ r : ℝ, 0 < r ∧ ∀ x ∈ G, ‖x‖ < r → x = 0) : DiscreteTopology G := by
   obtain ⟨r, hr, hG⟩ := h
   rw [discreteTopology_iff_isOpen_singleton_zero]
   refine isOpen_induced_iff.mpr ⟨Metric.ball (0 : E) r, Metric.isOpen_ball, ?_⟩
-  apply Set.ext
-  intro x
+  ext ⟨x, hxG⟩
   simp only [Set.mem_preimage, Metric.mem_ball, dist_zero_right, Set.mem_singleton_iff]
   constructor
   · intro hx
-    exact Subtype.ext (hG x x.2 hx)
+    exact Subtype.ext (hG x hxG hx)
   · intro hx
-    rw [hx]
+    obtain rfl : x = 0 := congrArg Subtype.val hx
     simpa using hr
 
 end

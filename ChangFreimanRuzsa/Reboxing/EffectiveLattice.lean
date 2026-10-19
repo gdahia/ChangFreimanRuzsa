@@ -11,23 +11,26 @@ public import ChangFreimanRuzsa.LatticeCoordinates
 /-!
 # Integer coordinates of the integer points of a span
 
-Let `S` be a finite subset of `ℤ^d`, let `H` be its real span and let `r = dim H`. The integer
-points of `H` form a subgroup `Λ` of `ℤ^d`. This file defines the map `ℤ^d → ℤ^r` that sends a
-point of `Λ` to its coordinates in the basis `integerGeneratedLatticeBasis S`, and is zero outside
-`Λ`. On `Λ` it is additive and it is the inverse of `ofLatticeCoordinates S`. The coordinates of
-the points of `S` span `ℝ^r`, so in these coordinates `S` is not contained in a proper subspace.
+Let $S$ be a finite subset of $\mathbb{Z}^d$, let $H$ be its real span and let $r = \dim H$. The
+integer points of $H$ form a subgroup $\Lambda$ of $\mathbb{Z}^d$. This file defines the map
+$\mathbb{Z}^d \to \mathbb{Z}^r$ that sends a point of $\Lambda$ to its coordinates in the basis
+`integerGeneratedLatticeBasis S`, and is zero outside $\Lambda$. On $\Lambda$ it is additive and
+it is the inverse of `ofLatticeCoordinates S`. The coordinates of the points of $S$ span
+$\mathbb{R}^r$, so in these coordinates $S$ is not contained in a proper subspace.
 
 ## Main definitions
 
-* `integerGeneratedLattice S`: the subgroup `Λ` of `ℤ^d`.
-* `latticeCoordinates S`: the coordinate map `ℤ^d → ℤ^r`.
+* `integerGeneratedLattice S`: the subgroup $\Lambda$ of $\mathbb{Z}^d$.
+* `latticeCoordinates S`: the coordinate map $\mathbb{Z}^d \to \mathbb{Z}^r$.
 
 ## Main statements
 
 * `ofLatticeCoordinates_latticeCoordinates`, `latticeCoordinates_ofLatticeCoordinates`: the maps
-  `latticeCoordinates S` and `ofLatticeCoordinates S` are inverse bijections between `Λ` and `ℤ^r`.
-* `latticeCoordinates_add`: the coordinate map is additive on `Λ`.
-* `span_image_intVectorToReal_latticeCoordinates`: the coordinates of the points of `S` span `ℝ^r`.
+  `latticeCoordinates S` and `ofLatticeCoordinates S` are inverse bijections between $\Lambda$ and
+  $\mathbb{Z}^r$.
+* `latticeCoordinates_add`: the coordinate map is additive on $\Lambda$.
+* `span_image_intVectorToReal_latticeCoordinates`: the coordinates of the points of $S$ span
+  $\mathbb{R}^r$.
 -/
 
 @[expose] public section
@@ -38,7 +41,7 @@ noncomputable section
 
 variable {d : ℕ} (S : Finset (Fin d → ℤ))
 
-/-- The subgroup of `ℤ^d` of the integer points of the real span of `S`. -/
+/-- The subgroup of $\mathbb{Z}^d$ of the integer points of the real span of `S`. -/
 def integerGeneratedLattice : AddSubgroup (Fin d → ℤ) :=
   (integerGeneratedSubspace S).toAddSubgroup.comap BoxLattice.intCastHom
 
@@ -127,8 +130,8 @@ lemma latticeCoordinates_add_eq_add_iff {a b c e : Fin d → ℤ}
 
 variable (S)
 
-/-- The real casts of the coordinates of the points of `S` span `ℝ^r`. -/
-theorem span_image_intVectorToReal_latticeCoordinates :
+/-- The real casts of the coordinates of the points of `S` span $\mathbb{R}^r$. -/
+lemma span_image_intVectorToReal_latticeCoordinates :
     Submodule.span ℝ (intVectorToReal '' (latticeCoordinates S '' (S : Set (Fin d → ℤ)))) = ⊤ := by
   apply Submodule.map_injective_of_injective (realOfLatticeCoordinates_injective S)
   rw [Submodule.map_span, Set.image_image, Set.image_image, Submodule.map_top,

@@ -10,11 +10,11 @@ public import ChangFreimanRuzsa.GapToolkit
 
 /-! # Adapted lattice boxes and their GAPs
 
-An `AdaptedLatticeBox` is the common algebraic output sought from the specialized projection and
-slice arguments: a basis of `ℤ^s` together with coordinate half-widths containing the relevant
-lattice points. This module packages such data as a proper centered GAP with an exact cardinality
-formula. Quantitative product estimates belong to the shape-specific construction of the adapted
-box rather than to this neutral packaging layer.
+An `AdaptedLatticeBox E` for a finite set $E \subseteq \mathbb{Z}^s$ consists of vectors
+$b_1, \dots, b_s \in \mathbb{Z}^s$, independent over $\mathbb{Z}$, and half-widths
+$m_1, \dots, m_s \in \mathbb{N}$ such that every point of $E$ is $\sum_i c_i b_i$ with
+$|c_i| \le m_i$. The centered GAP `centeredBoxGAP b m` with steps $b_i$ and coefficients
+$c_i \in [-m_i, m_i]$ is then proper, contains $E$, and has $\prod_i (2 m_i + 1)$ elements.
 -/
 
 @[expose] public section
@@ -53,13 +53,7 @@ lemma centeredBoxGAP_gapMap (step : Fin s → (Fin s → ℤ)) (m : Fin s → �
   change
     -∑ i, m i • step i + ∑ i, (w i : ℕ) • step i =
       ∑ i, ((w i : ℤ) - (m i : ℤ)) • step i
-  have hsum :
-      (∑ i, ((w i : ℤ) - (m i : ℤ)) • step i) =
-        ∑ i, ((w i : ℕ) • step i - m i • step i) := by
-    apply Finset.sum_congr rfl
-    intro i _
-    rw [sub_zsmul, natCast_zsmul, natCast_zsmul, sub_eq_add_neg]
-  rw [hsum, Finset.sum_sub_distrib]
+  simp only [sub_zsmul, natCast_zsmul, Finset.sum_add_distrib, Finset.sum_neg_distrib]
   abel
 
 lemma centeredBoxGAP_proper (step : Fin s → (Fin s → ℤ)) (m : Fin s → ℕ)
@@ -67,31 +61,20 @@ lemma centeredBoxGAP_proper (step : Fin s → (Fin s → ℤ)) (m : Fin s → �
     (centeredBoxGAP step m).Proper := by
   intro w₁ w₂ hw
   rw [centeredBoxGAP_gapMap step m w₁, centeredBoxGAP_gapMap step m w₂] at hw
-  have hcoords := hinj hw
   funext i
   apply Fin.ext
-  have hi := congr_fun hcoords i
-  exact_mod_cast sub_left_inj.mp hi
+  exact_mod_cast sub_left_inj.mp (congr_fun (hinj hw) i)
 
 lemma mem_centeredBoxGAP_of_mem_intBox (step : Fin s → (Fin s → ℤ)) (m : Fin s → ℕ)
     {v : Fin s → ℤ} (hv : v ∈ intBox m) :
     stepsHom step v ∈ (centeredBoxGAP step m).carrier := by
   have hvbox := mem_intBox.mp hv
-  let w : (i : Fin s) → Fin (2 * m i + 1) := fun i ↦
-    ⟨(v i + m i).toNat, by
-      have hi := abs_le.mp (hvbox i)
-      rw [Int.toNat_lt]
-      · omega
-      · linarith⟩
+  let w : (i : Fin s) → Fin (2 * m i + 1) := fun i ↦ ⟨(v i + m i).toNat, by grind [abs_le]⟩
   rw [(centeredBoxGAP step m).carrier_eq, Finset.mem_image]
   refine ⟨w, Finset.mem_univ _, ?_⟩
   rw [centeredBoxGAP_gapMap]
-  congr 1
-  funext i
-  dsimp only [w]
-  have hi := abs_le.mp (hvbox i)
-  rw [Int.toNat_of_nonneg (by omega)]
-  omega
+  congr with i
+  grind [abs_le]
 
 lemma centeredBoxGAP_card (step : Fin s → (Fin s → ℤ)) (m : Fin s → ℕ)
     (hinj : Function.Injective (stepsHom step)) :
@@ -101,16 +84,16 @@ lemma centeredBoxGAP_card (step : Fin s → (Fin s → ℤ)) (m : Fin s → ℕ)
   rfl
 
 /-- An adapted lattice box gives a proper centered GAP with the same coordinate-box cardinality. -/
-theorem AdaptedLatticeBox.exists_proper_centeredBoxGAP {E : Finset (Fin s → ℤ)}
+lemma AdaptedLatticeBox.exists_proper_centeredBoxGAP {E : Finset (Fin s → ℤ)}
     (B : AdaptedLatticeBox E) :
     ∃ P : GAP (Fin s → ℤ), P.Proper ∧ E ⊆ P.carrier ∧ P.dim = s ∧
       P.carrier.card = ∏ i, (2 * B.halfWidth i + 1) := by
   refine ⟨centeredBoxGAP B.step B.halfWidth,
-    centeredBoxGAP_proper B.step B.halfWidth B.stepHom_injective, ?_, rfl, ?_⟩
-  · intro x hxE
-    obtain ⟨v, hvbox, rfl⟩ := B.mem_stepBox x hxE
-    exact mem_centeredBoxGAP_of_mem_intBox B.step B.halfWidth hvbox
-  · exact centeredBoxGAP_card B.step B.halfWidth B.stepHom_injective
+    centeredBoxGAP_proper B.step B.halfWidth B.stepHom_injective, ?_, rfl,
+    centeredBoxGAP_card B.step B.halfWidth B.stepHom_injective⟩
+  intro x hxE
+  obtain ⟨v, hvbox, rfl⟩ := B.mem_stepBox x hxE
+  exact mem_centeredBoxGAP_of_mem_intBox B.step B.halfWidth hvbox
 
 end
 

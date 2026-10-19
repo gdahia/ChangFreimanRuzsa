@@ -17,20 +17,22 @@ import Mathlib.Data.Rat.Floor
 /-! # Generalized arithmetic progressions (proper and non-proper)
 
 This file develops the basic theory of (not necessarily proper) generalized arithmetic progressions
-(GAPs) and their interaction with Freiman isomorphisms. It is used for the formalization of
-Appendix A of Campos–Dahia–Marciano, which proves a version of Chang's theorem for prime cyclic
-groups.
+(GAPs) and their interaction with Freiman isomorphisms.
 
-The main pieces are:
+## Main definitions
 
-- `GAP G`: a (not necessarily proper) GAP with ℕ-coefficients `0 ≤ wᵢ < ℓᵢ`;
-- `GAP.Proper` and `GAP.TwoProper`: injectivity on the carrier and on the doubled box;
-- the coordinate map of a 2-proper GAP is a Freiman 2-isomorphism onto its box in ℤᵈ;
-- affine images of GAPs, including the linear map ℤᵈ → ℤ/q used in Appendix A;
-- a cardinality bound `|P - P| ≤ 2ᵈ |P|` for 2-proper GAPs.
+* `GAP G`: a GAP $\{x_0 + \sum_i w_i v_i : 0 \le w_i < \ell_i\}$ with natural coefficients.
+* `GAP.Proper` and `GAP.TwoProper`: injectivity of the coefficient map on the box and on the
+  doubled box.
+* `GAP.map` and `GAP.shift`: images of a GAP under additive homomorphisms and translations.
+* `stepsHom`, `stepHom` and `symBox`: the homomorphism $\mathbb{Z}^d \to G$ given by the steps,
+  and the symmetric box of differences of coefficient vectors.
 
-All results are stated in a single ambient `noncomputable section` because the coordinate map is
-defined via choice.
+## Main statements
+
+* `GAP.coordinateMap_isAddFreimanIso`: the coordinate map of a 2-proper GAP is a Freiman
+  2-isomorphism onto its box in $\mathbb{Z}^d$.
+* `GAP.card_eq_prod_length`: a proper GAP has $\prod_i \ell_i$ elements.
 -/
 
 @[expose] public section
@@ -73,8 +75,8 @@ lemma coefficientsFin_spec {x : G} (hx : x ∈ P.carrier) :
     gapMap P.origin P.step P.length (P.coefficientsFin x) = x := by
   unfold coefficientsFin
   rw [dite_eq_left hx]
-  exact Classical.choose_spec (show ∃ w, gapMap P.origin P.step P.length w = x from by
-    simpa [P.carrier_eq] using hx)
+  generalize_proofs hw
+  exact Classical.choose_spec hw
 
 /-- A GAP is *proper* if every choice of coefficients gives a distinct element. -/
 def Proper : Prop :=
@@ -111,31 +113,21 @@ lemma coefficientsFin_eq_of_proper (h : P.Proper) {x : G}
 lemma coordinateMap_injective_on (_h : P.Proper) :
     Set.InjOn P.coordinateMap P.carrier := by
   intro x hx y hy hxy
-  have hcoeff : P.coefficientsFin x = P.coefficientsFin y := by
-    funext i
-    apply Fin.ext
-    have hi := congr_fun hxy i
-    change (P.coefficientsFin x i : ℤ) = (P.coefficientsFin y i : ℤ) at hi
-    exact_mod_cast hi
-  rw [← P.coefficientsFin_spec hx, hcoeff, P.coefficientsFin_spec hy]
+  rw [← P.coefficientsFin_spec hx, ← P.coefficientsFin_spec hy]
+  congr 1
+  ext i
+  simpa [coordinateMap] using congr_fun hxy i
 
 lemma coordinateMap_bijOn (h : P.Proper) :
     Set.BijOn P.coordinateMap P.carrier P.box := by
-  refine ⟨?_, P.coordinateMap_injective_on h, ?_⟩
-  · intro x hx
-    exact P.coordinateMap_mem_box hx
-  · intro y hy
-    change y ∈ P.box at hy
-    rw [box, Finset.mem_image] at hy
-    obtain ⟨w, _, hwy⟩ := hy
-    subst y
-    let x := gapMap P.origin P.step P.length w
-    have hx : x ∈ P.carrier := by
-      rw [P.carrier_eq, Finset.mem_image]
-      exact ⟨w, Finset.mem_univ _, by simp [x]⟩
-    refine ⟨x, hx, ?_⟩
-    unfold coordinateMap
-    rw [P.coefficientsFin_eq_of_proper h hx (w := w) (by simp [x])]
+  refine ⟨fun x hx ↦ P.coordinateMap_mem_box hx, P.coordinateMap_injective_on h, ?_⟩
+  intro y hy
+  obtain ⟨w, -, rfl⟩ := Finset.mem_image.1 hy
+  have hx : gapMap P.origin P.step P.length w ∈ P.carrier := by
+    simp [P.carrier_eq]
+  refine ⟨_, hx, ?_⟩
+  unfold coordinateMap
+  rw [P.coefficientsFin_eq_of_proper h hx rfl]
 
 /-- Add two coefficient vectors inside the doubled box. -/
 def sumCoefficients (w₁ w₂ : (i : Fin P.dim) → Fin (P.length i)) :
@@ -154,27 +146,17 @@ lemma gapMap_add_eq (w₁ w₂ : (i : Fin P.dim) → Fin (P.length i)) :
 lemma sumCoefficients_eq_iff {w₁ w₂ w₃ w₄ : (i : Fin P.dim) → Fin (P.length i)} :
     P.sumCoefficients w₁ w₂ = P.sumCoefficients w₃ w₄ ↔
       (fun i ↦ (w₁ i : ℤ) + w₂ i) = fun i ↦ (w₃ i : ℤ) + w₄ i := by
-  constructor
-  · intro h
-    funext i
-    have hi := congr_fun h i
-    have hinat := congr_arg Fin.val hi
-    exact_mod_cast hinat
-  · intro h
-    funext i
-    apply Fin.ext
-    have hi := congr_fun h i
-    exact_mod_cast hi
+  simp only [funext_iff, Fin.ext_iff, sumCoefficients]
+  norm_cast
 
 lemma coordinateMap_add_eq_iff (h : P.TwoProper) {a b c d : G}
     (ha : a ∈ P.carrier) (hb : b ∈ P.carrier) (hc : c ∈ P.carrier)
     (hd : d ∈ P.carrier) :
     P.coordinateMap a + P.coordinateMap b = P.coordinateMap c + P.coordinateMap d ↔
       a + b = c + d := by
-  rw [show P.coordinateMap a + P.coordinateMap b = P.coordinateMap c + P.coordinateMap d ↔
-      (fun i ↦ (P.coefficientsFin a i : ℤ) + P.coefficientsFin b i) =
-        fun i ↦ (P.coefficientsFin c i : ℤ) + P.coefficientsFin d i by rfl,
-    ← P.sumCoefficients_eq_iff]
+  change (fun i ↦ (P.coefficientsFin a i : ℤ) + P.coefficientsFin b i) =
+      (fun i ↦ (P.coefficientsFin c i : ℤ) + P.coefficientsFin d i) ↔ a + b = c + d
+  rw [← P.sumCoefficients_eq_iff]
   constructor
   · intro hsum
     rw [← P.coefficientsFin_spec ha, ← P.coefficientsFin_spec hb,
@@ -190,38 +172,12 @@ lemma coordinateMap_add_eq_iff (h : P.TwoProper) {a b c d : G}
 
 lemma twoProper_proper (h : P.TwoProper) : P.Proper := by
   intro w₁ w₂ heq
-  let u₁ : (i : Fin P.dim) → Fin (2 * P.length i) :=
-    fun i ↦ ⟨2 * (w₁ i : ℕ), by omega⟩
-  let u₂ : (i : Fin P.dim) → Fin (2 * P.length i) :=
-    fun i ↦ ⟨2 * (w₂ i : ℕ), by omega⟩
-  have key : gapMap (2 • P.origin) P.step (fun i ↦ 2 * P.length i) u₁ =
-      gapMap (2 • P.origin) P.step (fun i ↦ 2 * P.length i) u₂ := by
-    simp only [gapMap, u₁, u₂]
-    have h1 : ∑ i : Fin P.dim, (2 * (w₁ i : ℕ)) • P.step i =
-        2 • ∑ i : Fin P.dim, (w₁ i : ℕ) • P.step i := by
-      simp_rw [two_mul, add_nsmul]
-      rw [Finset.sum_add_distrib, ← Finset.sum_nsmul, ← Finset.sum_add_distrib]
-      apply Finset.sum_congr rfl
-      intro i hi
-      rw [two_nsmul]
-    have h2 : ∑ i : Fin P.dim, (2 * (w₂ i : ℕ)) • P.step i =
-        2 • ∑ i : Fin P.dim, (w₂ i : ℕ) • P.step i := by
-      simp_rw [two_mul, add_nsmul]
-      rw [Finset.sum_add_distrib, ← Finset.sum_nsmul, ← Finset.sum_add_distrib]
-      apply Finset.sum_congr rfl
-      intro i hi
-      rw [two_nsmul]
-    rw [h1, h2]
-    rw [← nsmul_add, ← nsmul_add]
-    change 2 • gapMap P.origin P.step P.length w₁ =
-      2 • gapMap P.origin P.step P.length w₂
-    rw [heq]
-  have hu : u₁ = u₂ := h key
-  funext i
-  apply Fin.ext
-  have hi := congr_arg (fun w ↦ (w i : ℕ)) hu
-  dsimp [u₁, u₂] at hi
-  omega
+  have hsum : P.sumCoefficients w₁ w₁ = P.sumCoefficients w₂ w₂ :=
+    h (by simp [← P.gapMap_add_eq, heq])
+  ext i
+  have hi := congr_arg (fun w ↦ (w i : ℕ)) hsum
+  simp only [sumCoefficients] at hi
+  grind
 
 lemma coordinateMap_isAddFreimanIso (h : P.TwoProper) :
     IsAddFreimanIso 2 P.carrier P.box P.coordinateMap := by
@@ -242,9 +198,7 @@ lemma card_le_prod_length : P.carrier.card ≤ ∏ i, P.length i := by
 
 lemma nonempty (P : GAP G) : P.carrier.Nonempty := by
   rw [P.carrier_eq]
-  apply Finset.image_nonempty.mpr
-  let w : (i : Fin P.dim) → Fin (P.length i) := fun i ↦ ⟨0, P.length_pos i⟩
-  exact ⟨w, Finset.mem_univ w⟩
+  exact Finset.image_nonempty.mpr ⟨fun i ↦ ⟨0, P.length_pos i⟩, Finset.mem_univ _⟩
 
 /-- The image of a GAP under an additive homomorphism. -/
 def map {H : Type*} [DecidableEq H] [AddCommMonoid H] (f : G →+ H) (P : GAP G) : GAP H where
@@ -268,8 +222,8 @@ def map {H : Type*} [DecidableEq H] [AddCommMonoid H] (f : G →+ H) (P : GAP G)
       simp [gapMap, map_sum]
 
 lemma card_map_le {H : Type*} [DecidableEq H] [AddCommMonoid H]
-    (f : G →+ H) : (P.map f).carrier.card ≤ P.carrier.card := by
-  exact Finset.card_image_le
+    (f : G →+ H) : (P.map f).carrier.card ≤ P.carrier.card :=
+  Finset.card_image_le
 
 /-- Translate a GAP by a constant. -/
 def shift (c : G) : GAP G where
@@ -298,7 +252,7 @@ end GAP
 
 /-! ## The step homomorphism and the symmetric coefficient box
 
-Both are defined for a GAP in an ambient abelian group, where coefficients may be taken in `ℤ`.
+Both are defined for a GAP in an abelian group, where coefficients may be taken in $\mathbb{Z}$.
 -/
 
 section Steps
@@ -319,8 +273,7 @@ lemma stepsHom_apply {d : ℕ} (step : Fin d → G) (v : Fin d → ℤ) :
 /-- On nonnegative coefficients the step homomorphism agrees with the `ℕ`-linear combination. -/
 lemma stepsHom_natCast {d : ℕ} (step : Fin d → G) (w : (i : Fin d) → ℕ) :
     stepsHom step (fun i ↦ (w i : ℤ)) = ∑ i, w i • step i := by
-  rw [stepsHom_apply]
-  exact Finset.sum_congr rfl fun i _ ↦ natCast_zsmul (step i) (w i)
+  simp [stepsHom_apply]
 
 end Steps
 
@@ -332,8 +285,7 @@ def stepHom (P : GAP G) : (Fin P.dim → ℤ) →+ G := stepsHom P.step
 lemma stepHom_coordinateMap (P : GAP G) {x : G} (hx : x ∈ P.carrier) :
     stepHom P (P.coordinateMap x) = x - P.origin := by
   rw [eq_sub_iff_add_eq, add_comm]
-  simpa only [gapMap, stepHom, stepsHom, GAP.coordinateMap, AddMonoidHom.coe_mk, ZeroHom.coe_mk,
-    natCast_zsmul] using P.coefficientsFin_spec hx
+  simpa [gapMap, stepHom, stepsHom, GAP.coordinateMap] using P.coefficientsFin_spec hx
 
 /-- The symmetric box of differences of coefficient vectors of a GAP. -/
 def symBox (P : GAP G) : Finset (Fin P.dim → ℤ) :=
@@ -342,7 +294,9 @@ def symBox (P : GAP G) : Finset (Fin P.dim → ℤ) :=
 lemma mem_symBox {P : GAP G} {v : Fin P.dim → ℤ} :
     v ∈ symBox P ↔ ∀ i, |v i| < (P.length i : ℤ) := by
   simp only [symBox, Finset.mem_Icc, Pi.le_def, abs_lt, ← forall_and]
-  exact forall_congr' fun i ↦ by omega
+  apply forall_congr'
+  intro i
+  grind
 
 end
 

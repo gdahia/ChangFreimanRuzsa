@@ -12,15 +12,17 @@ import Mathlib.Analysis.RCLike.Lemmas
 
 /-! # The real box of a box of integer points
 
-The reboxing step of properization works in a real normed space, with the successive minima of
-`Chang.ConvexGeometry`. This file supplies the passage from a subgroup `Λ` of `ℤ ^ d` and the box
-of half-widths `L`, along the coordinatewise inclusion `intCastHom : ℤ ^ d → ℝ ^ d`:
+The reboxing step of properization uses the successive minima of
+`ChangFreimanRuzsa.ConvexGeometry`, which are defined for a discrete subgroup of a real normed space
+and a symmetric convex body. This file passes from a subgroup $\Lambda$ of $\mathbb{Z}^d$ and the
+box of half-widths $L$ to these objects, along the coordinatewise inclusion
+`intCastHom` of $\mathbb{Z}^d$ into $\mathbb{R}^d$.
 
-- `realBox` is the real box of half-widths `L`, and `convex_realBox`, `isClosed_realBox`,
-  `isBounded_realBox`, `neg_mem_realBox` and `realBox_mem_nhds` say that it is a symmetric convex
-  body;
-- `discreteTopology_map` says that the image of a subgroup of `ℤ ^ d` is a discrete subgroup of
-  `ℝ ^ d`, because a nonzero integer vector has sup norm at least one.
+* `realBox L` is the set of $x \in \mathbb{R}^d$ with $|x_i| \le L_i$ for all $i$. The lemmas
+  `convex_realBox`, `isClosed_realBox`, `isBounded_realBox`, `neg_mem_realBox` and
+  `realBox_mem_nhds` show that it is a symmetric convex body.
+* `discreteTopology_map` shows that the image of a subgroup of $\mathbb{Z}^d$ is a discrete
+  subgroup of $\mathbb{R}^d$.
 -/
 
 @[expose] public section
@@ -56,9 +58,7 @@ def intCastHom : (Fin d → ℤ) →+ (Fin d → ℝ) where
 lemma intCastHom_injective : Function.Injective (intCastHom : (Fin d → ℤ) → (Fin d → ℝ)) := by
   intro u v huv
   funext i
-  have := congr_fun huv i
-  rw [intCastHom_apply, intCastHom_apply] at this
-  exact_mod_cast this
+  simpa using congr_fun huv i
 
 lemma intCastHom_zsmul (c : ℤ) (v : Fin d → ℤ) :
     intCastHom (c • v) = (c : ℝ) • intCastHom v := by
@@ -66,7 +66,8 @@ lemma intCastHom_zsmul (c : ℤ) (v : Fin d → ℤ) :
 
 /-! ## The real box is a symmetric convex body -/
 
-/-- The real box of half-widths `L`. -/
+/-- The real box $\{x \in \mathbb{R}^d : |x_i| \le L_i \text{ for all } i\}$ of half-widths
+$L$. -/
 def realBox (L : Fin d → ℕ) : Set (Fin d → ℝ) := {x | ∀ i, |x i| ≤ (L i : ℝ)}
 
 lemma mem_realBox {L : Fin d → ℕ} {x : Fin d → ℝ} :
@@ -85,11 +86,10 @@ lemma neg_mem_realBox (L : Fin d → ℕ) : ∀ x ∈ realBox L, -x ∈ realBox 
   simpa using hx i
 
 lemma isClosed_realBox (L : Fin d → ℕ) : IsClosed (realBox L) := by
-  have hinter : realBox L = ⋂ i, {x : Fin d → ℝ | |x i| ≤ (L i : ℝ)} := by
-    ext x
-    simp only [mem_realBox, Set.mem_iInter, Set.mem_ofPred_eq]
-  rw [hinter]
-  exact isClosed_iInter fun i ↦ isClosed_le ((continuous_apply i).abs) continuous_const
+  rw [realBox, Set.ofPred_forall]
+  apply isClosed_iInter
+  intro i
+  exact isClosed_le (continuous_apply i).abs continuous_const
 
 lemma isBounded_realBox (L : Fin d → ℕ) : Bornology.IsBounded (realBox L) := by
   apply Bornology.IsBounded.subset (Metric.isBounded_closedBall
@@ -98,23 +98,21 @@ lemma isBounded_realBox (L : Fin d → ℕ) : Bornology.IsBounded (realBox L) :=
   rw [mem_closedBall, dist_zero_right]
   apply (pi_norm_le_iff_of_nonneg (Nat.cast_nonneg _)).mpr
   intro i
-  refine le_trans (le_of_eq (Real.norm_eq_abs _)) (le_trans (hx i) (Nat.cast_le.mpr ?_))
-  exact Finset.le_sup (Finset.mem_univ i)
+  rw [Real.norm_eq_abs]
+  exact (hx i).trans (Nat.cast_le.mpr (Finset.le_sup (Finset.mem_univ i)))
 
 lemma realBox_mem_nhds {L : Fin d → ℕ} (hL : ∀ i, 0 < L i) :
     realBox L ∈ 𝓝 (0 : Fin d → ℝ) := by
   apply Filter.mem_of_superset (Metric.ball_mem_nhds 0 zero_lt_one)
   intro x hx i
   rw [mem_ball_zero_iff] at hx
-  have hxi : ‖x i‖ ≤ ‖x‖ := norm_le_pi_norm x i
-  have hLi : (1 : ℝ) ≤ (L i : ℝ) := by exact_mod_cast hL i
-  rw [Real.norm_eq_abs] at hxi
-  linarith
+  linarith [norm_le_pi_norm x i, Real.norm_eq_abs (x i),
+    (Nat.one_le_cast.2 (hL i) : (1 : ℝ) ≤ L i)]
 
 /-! ## The image of a subgroup of `ℤ ^ d` is discrete -/
 
-/-- A nonzero integer vector has sup norm at least one, so the image of any subgroup of `ℤ ^ d`
-avoids the unit ball around the origin. -/
+/-- The image in $\mathbb{R}^d$ of a subgroup of $\mathbb{Z}^d$ is discrete, because a nonzero
+integer vector has sup norm at least $1$. -/
 lemma discreteTopology_map (Λ : AddSubgroup (Fin d → ℤ)) :
     DiscreteTopology (Λ.map (intCastHom : (Fin d → ℤ) →+ (Fin d → ℝ))) := by
   refine ConvexGeometry.discreteTopology_of_exists_pos_forall_norm_lt ⟨1, one_pos, ?_⟩
@@ -122,15 +120,10 @@ lemma discreteTopology_map (Λ : AddSubgroup (Fin d → ℤ)) :
   obtain ⟨v, hvΛ, rfl⟩ := AddSubgroup.mem_map.mp hx
   have hv : v = 0 := by
     funext i
-    have hi : ‖(intCastHom v : Fin d → ℝ) i‖ ≤ ‖(intCastHom v : Fin d → ℝ)‖ :=
-      norm_le_pi_norm _ i
+    have hi := norm_le_pi_norm (intCastHom v) i
     rw [intCastHom_apply, Real.norm_eq_abs] at hi
-    have hint : |v i| < 1 := by
-      rw [← Int.cast_lt (R := ℝ), Int.cast_abs, Int.cast_one]
-      linarith
-    have := abs_lt.mp hint
-    rw [Pi.zero_apply]
-    omega
+    rw [Pi.zero_apply, ← Int.abs_lt_one_iff, ← Int.cast_lt (R := ℝ), Int.cast_abs, Int.cast_one]
+    linarith
   rw [hv, map_zero]
 
 end

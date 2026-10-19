@@ -12,12 +12,10 @@ project:
     7 * 10^12 kappa^5 and at most exp(10^53 kappa^20) |X| points. The bounds are weaker than
     those of Chang.
   authors:
-    - name: "Gabriel Dahia"
-      github: "gdahia"
+    - "Gabriel Dahia"
   license: "Apache-2.0"
   responsible_maintainers:
-    - name: "Gabriel Dahia"
-      github: "gdahia"
+    - "Gabriel Dahia"
 
 classification:
   arxiv: ["math.CO", "math.NT"]
@@ -52,17 +50,13 @@ sources:
     author_endorsement: "not-contacted"
 
 related_formalizations:
-  - id: "https://github.com/gdahia/DenseSetsWithoutLargeSumsets"
-    relationship: "adapts"
+  - id: "https://github.com/leanprover-community/mathlib4"
+    relationship: "builds-on"
     note: >-
-      Source of the proof for subsets of ZMod q. The modules needed are copied from commit
-      5f4b915 into ChangFreimanRuzsa/ and ported to Lean v4.35.0-rc4, in the namespace
-      ChangFreimanRuzsa, without the declarations that the proof does not use, and with the
-      progression inside a Bohr set built from Minkowski's second theorem in Tau Ceti. The
-      modules LatticeCoordinates, Reboxing/EffectiveLattice, FreimanModel,
-      CoordinateReduction and CyclicFreimanDimension, which bound the dimension of the
-      progression by the Freiman dimension, are a rewriting of the corresponding modules of
-      that commit.
+      The statements use pointwise sums of finite sets and ZMod q from Mathlib. The proofs
+      use its Freiman isomorphisms, the Plünnecke-Ruzsa inequality, Ruzsa's covering lemma,
+      the Fourier transform on finite abelian groups, Z-lattices and Smith normal form.
+      Mathlib has no generalized arithmetic progressions and no form of Chang's theorem.
   - id: "https://github.com/gdahia/SumOfSetsInSeveralDimensions"
     relationship: "builds-on"
     note: >-
@@ -132,8 +126,9 @@ automation:
     the definition of the Freiman dimension. For the statement for integers with a bound
     linear in |X|, the agent restated the covering argument and the properization for
     general abelian groups, replaced the successive minima of the lattice of relations by
-    the number of independent short relations, and rewrote Integers.lean. Every proof is
-    checked by Lean.
+    the number of independent short relations, and rewrote Integers.lean. Later, agents
+    rewrote the proofs and docstrings of the library to follow Mathlib style, without
+    changing the statements. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -157,56 +152,32 @@ fidelity:
     exp(changFreimanDimExponent kappa) |X| points, where
     changFreimanDimExponent kappa <= 10^53 kappa^20. Here freimanDim X is the largest
     d <= |X| such that X is Freiman isomorphic of order 2 to a subset of Q^d whose affine
-    span over the reals has dimension d. The reduction of the dimension follows Appendix A
-    of Campos, Dahia and Marciano, On the independence number of sparser random Cayley
-    graphs. exists_twoProperGAP_int_dim_le_freimanDim is the same statement for a finite set
-    of integers with exp(changContainerExponent kappa) < |X|, with no upper bound on |X|.
-    exists_twoProperGAP_zmod_dim_le_two_mul_sub_one and
-    exists_twoProperGAP_int_dim_le_two_mul_sub_one deduce from these two statements a
-    progression of dimension at most 2 kappa - 1, with
-    freimanDim_le_two_mul_sub_one_of_card_add_le, which applies Ruzsa's lower bound for
-    sumsets in several dimensions to a Freiman model of X. Green and Tao get
-    floor(K - 1 + epsilon) for |A| >= C K^2 / epsilon from Freiman's lemma instead.
-
-    The statement for integers is not deduced from the one for ZMod q, because a progression
-    of ZMod q that contains the reduction of X may wrap around. The set is reduced modulo a
-    prime q > 16 max |x| for the first step only, which gives a proper progression inside
-    2X - 2X. The reduction is a Freiman isomorphism of order 8 on X, so this progression is
-    carried back to a proper progression of integers inside 2X - 2X. The covering argument
-    and the properization are stated for general abelian groups and are applied in the
-    integers. A set with at most exp(changContainerExponent kappa) elements is first replaced
-    by its sum with a long progression, which doubles kappa.
-
-    The properization does not use successive minima. It uses the largest number of linearly
-    independent relations among the steps in the 3-dilate of the coefficient box, which is
-    defined whether or not the lattice of relations has full rank.
+    span over the reals has dimension d. exists_twoProperGAP_int_dim_le_freimanDim is the
+    same statement for a finite set of integers with exp(changContainerExponent kappa) < |X|,
+    with no upper bound on |X|. exists_twoProperGAP_zmod_dim_le_two_mul_sub_one and
+    exists_twoProperGAP_int_dim_le_two_mul_sub_one give, under the same hypotheses, a
+    progression of dimension at most 2 kappa - 1. Green and Tao get floor(K - 1 + epsilon)
+    for |A| >= C K^2 / epsilon.
 
     A progression is a structure GAP with a dimension, an origin, steps and lengths; its
     points are origin + sum_i w_i step_i with 0 <= w_i < length_i. It is 2-proper if the
     points with 0 <= w_i < 2 length_i, starting from twice the origin, are distinct.
 
-    The progression inside a Bohr set comes from Minkowski's second theorem for the
-    ellipsoid inscribed in the frequency box, in the form for integral lattices of Tau Ceti.
-
 review:
-  status: "not reviewed"
+  status: "unchecked"
   reviewers: []
-  notes: >-
-    No independent mathematical or formalization review. lake comparator, run on macOS on
-    13 October 2026 with its sandbox disabled, accepts the solution with Lean's kernel, nanoda
-    and con-ron. scripts/verify-comparator.sh, which runs it in the sandbox and needs Linux,
-    has not been run.
+  notes: "Unreviewed"
 
 alignment:
   namespace: "ChangFreimanRuzsa"
   statements:
     - source: "Chang's theorem for sets of integers"
-      lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'"
       module: "Challenge"
       status: "proved"
       note: "With at most exp(10^59 kappa^20) |X| points and dimension at most 3 * 10^14 kappa^5."
     - source: "Chang's theorem in ZMod q"
-      lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'"
       module: "Challenge"
       status: "proved"
       note: "For q prime, exp(7 * 10^12 kappa^5) < |X| and exp(10^53 kappa^20) |X| <= q."

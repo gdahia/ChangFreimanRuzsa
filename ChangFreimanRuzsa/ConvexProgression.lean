@@ -11,10 +11,10 @@ import Mathlib.Algebra.Order.Archimedean.Real.Basic
 import Mathlib.Data.Finset.Attr
 import Mathlib.Tactic.ContinuousFunctionalCalculus
 
-/-! # Symmetric convex progressions
+/-! # Integer vectors as real vectors
 
-This module contains the elementary interface for finite sets of lattice points in symmetric convex
-bodies, used to describe the concrete box projections and slices constructed by its callers.
+This file defines the coordinatewise inclusion `intVectorToReal` of $\mathbb{Z}^d$ into
+$\mathbb{R}^d$ and proves that it is an injective additive map.
 -/
 
 @[expose] public section
@@ -30,9 +30,7 @@ lemma intVectorToReal_injective {d : ℕ} :
     Function.Injective (intVectorToReal (d := d)) := by
   intro a b h
   funext i
-  have hi := congr_fun h i
-  change (a i : ℝ) = (b i : ℝ) at hi
-  exact_mod_cast hi
+  simpa [intVectorToReal] using congr_fun h i
 
 @[simp] lemma intVectorToReal_zero {d : ℕ} :
     intVectorToReal (0 : Fin d → ℤ) = 0 := by

@@ -12,12 +12,12 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-! # Cardinality control for dilates of convex lattice sets
 
-This file proves the elementary residue-class estimate used in box reboxing. If the integer
-points of a symmetric convex body are `E`, then any finite set of integer points in its `n`-fold
-dilate has cardinality at most `(2 * n + 1) ^ s * E.card`.
+Let $K \subseteq \mathbb{R}^s$ be a symmetric convex set containing $0$, and let $E$ be the set
+of integer points of $K$. Then every finite set of integer points of $n K$ has at most
+$(2n + 1)^s |E|$ elements.
 
-The proof reduces coordinates modulo `2 * n + 1`. Two points in the same residue class have a
-normalized difference which is again an integer point of the original body.
+The proof reduces coordinates modulo $2n + 1$. If two integer points $x, y \in n K$ are congruent
+modulo $2n + 1$, then $(x - y) / (2n + 1)$ is an integer point of $K$.
 -/
 
 @[expose] public section
@@ -50,11 +50,9 @@ lemma natCast_smul_sub_div_mem_of_mem_smul {K : Set (Fin s → ℝ)}
         (by positivity : 0 ≤ (2 : ℝ)⁻¹) (by positivity : 0 ≤ (2 : ℝ)⁻¹)
         (by norm_num : (2 : ℝ)⁻¹ + (2 : ℝ)⁻¹ = 1) using 1
     module
-  have hscale : (0 : ℝ) ≤ 2 * n / (2 * n + 1) := by positivity
-  have hscaleOne : (2 : ℝ) * n / (2 * n + 1) ≤ 1 := by
-    rw [div_le_one (by positivity)]
-    linarith
-  convert hconv.smul_mem_of_zero_mem h0 hmid ⟨hscale, hscaleOne⟩ using 1
+  have hscale : (2 * n / (2 * n + 1) : ℝ) ∈ Set.Icc 0 1 :=
+    ⟨by positivity, div_le_one_of_le₀ (by linarith) (by positivity)⟩
+  convert hconv.smul_mem_of_zero_mem h0 hmid hscale using 1
   ext i
   simp only [Pi.smul_apply, Pi.sub_apply, Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat,
     Nat.cast_one]
@@ -63,21 +61,18 @@ lemma natCast_smul_sub_div_mem_of_mem_smul {K : Set (Fin s → ℝ)}
 
 lemma residueVector_eq_dvd_sub {N : ℕ} {x y : Fin s → ℤ}
     (hxy : residueVector N x = residueVector N y) (i : Fin s) :
-    (N : ℤ) ∣ x i - y i := by
-  exact (ZMod.intCast_eq_intCast_iff_dvd_sub (y i) (x i) N).mp
-    (congr_fun hxy i).symm
+    (N : ℤ) ∣ x i - y i :=
+  (ZMod.intCast_eq_intCast_iff_dvd_sub (y i) (x i) N).mp (congr_fun hxy i).symm
 
 lemma quotientDifference_mul {N : ℕ} {x y : Fin s → ℤ}
     (hxy : residueVector N x = residueVector N y) :
     (fun i ↦ (N : ℤ) * quotientDifference N x y i) = x - y := by
   funext i
-  change (N : ℤ) * ((x i - y i).ediv N) = x i - y i
-  rw [mul_comm]
-  exact Int.ediv_mul_cancel (residueVector_eq_dvd_sub hxy i)
+  exact Int.mul_ediv_cancel' (residueVector_eq_dvd_sub hxy i)
 
 /-- A finite set of lattice points in an integral dilate of a symmetric convex body has at most
 `(2 * n + 1) ^ s` times as many points as the original body. -/
-theorem card_le_pow_mul_card_of_mem_convex_dilate
+lemma card_le_pow_mul_card_of_mem_convex_dilate
     (E T : Finset (Fin s → ℤ)) {K : Set (Fin s → ℝ)}
     (hconv : Convex ℝ K) (h0 : (0 : Fin s → ℝ) ∈ K)
     (hsymm : ∀ x, x ∈ K ↔ -x ∈ K)
@@ -85,51 +80,33 @@ theorem card_le_pow_mul_card_of_mem_convex_dilate
     {n : ℕ} (hT : ∀ v ∈ T, intVectorToReal v ∈ (n : ℝ) • K) :
     T.card ≤ (2 * n + 1) ^ s * E.card := by
   let N := 2 * n + 1
-  let R : Finset (Fin s → ZMod N) := Finset.univ
   refine Finset.card_le_mul_card_image_of_maps_to
-    (f := residueVector N) (s := T) (t := R) (fun _ _ ↦ Finset.mem_univ _)
+    (f := residueVector N) (s := T) (t := Finset.univ) (fun _ _ ↦ Finset.mem_univ _)
       E.card ?_ |>.trans ?_
   · intro b _
-    by_cases hfiber :
-        ({a ∈ T | residueVector N a = b} : Finset (Fin s → ℤ)).Nonempty
-    swap
-    · simp only [Finset.not_nonempty_iff_eq_empty.mp hfiber, Finset.card_empty,
-        Nat.zero_le]
-    let y := hfiber.choose
-    have hy := Finset.mem_filter.mp hfiber.choose_spec
-    have hyT : y ∈ T := hy.1
-    have hyres : residueVector N y = b := hy.2
+    obtain hfiber | ⟨y, hy⟩ := ({a ∈ T | residueVector N a = b}).eq_empty_or_nonempty
+    · simp [hfiber]
+    obtain ⟨hyT, rfl⟩ := Finset.mem_filter.mp hy
     apply Finset.card_le_card_of_injOn (quotientDifference N · y)
     · intro x hx
-      rw [Finset.mem_coe, Finset.mem_filter] at hx
+      obtain ⟨hxT, hres⟩ := Finset.mem_filter.mp hx
       rw [Finset.mem_coe, hE]
-      have hres : residueVector N x = residueVector N y := hx.2.trans hyres.symm
       have hreal :
           intVectorToReal (quotientDifference N x y) =
-            ((N : ℕ) : ℝ)⁻¹ •
-              (intVectorToReal x - intVectorToReal y) := by
+            ((N : ℕ) : ℝ)⁻¹ • (intVectorToReal x - intVectorToReal y) := by
         ext i
-        change (quotientDifference N x y i : ℝ) =
-          (N : ℝ)⁻¹ * ((x i : ℝ) - (y i : ℝ))
-        rw [inv_mul_eq_div, eq_div_iff (by positivity : (N : ℝ) ≠ 0)]
-        have hi : (N : ℝ) * (quotientDifference N x y i : ℝ) =
-            (x i : ℝ) - (y i : ℝ) := by
-          exact_mod_cast congr_fun (quotientDifference_mul hres) i
-        simpa only [mul_comm] using hi
+        change (quotientDifference N x y i : ℝ) = (N : ℝ)⁻¹ * ((x i : ℝ) - (y i : ℝ))
+        rw [inv_mul_eq_div, eq_div_iff (by positivity), mul_comm]
+        exact_mod_cast congr_fun (quotientDifference_mul hres) i
       rw [hreal]
-      exact natCast_smul_sub_div_mem_of_mem_smul hconv h0 hsymm
-        (hT x hx.1) (hT y hyT)
+      exact natCast_smul_sub_div_mem_of_mem_smul hconv h0 hsymm (hT x hxT) (hT y hyT)
     · intro x hx z hz hxz
-      rw [Finset.mem_coe, Finset.mem_filter] at hx hz
-      have hxres : residueVector N x = residueVector N y := hx.2.trans hyres.symm
-      have hzres : residueVector N z = residueVector N y := hz.2.trans hyres.symm
+      obtain ⟨-, hxres⟩ := Finset.mem_filter.mp hx
+      obtain ⟨-, hzres⟩ := Finset.mem_filter.mp hz
       have hmul := congr_arg (fun w ↦ fun i ↦ (N : ℤ) * w i) hxz
       rw [quotientDifference_mul hxres, quotientDifference_mul hzres] at hmul
-      have := congr_arg (· + y) hmul
-      simpa only [sub_add_cancel] using this
-  · change E.card * Fintype.card (Fin s → ZMod N) ≤ _
-    simp only [Fintype.card_fun, ZMod.card, Fintype.card_fin, N]
-    rw [mul_comm]
+      exact sub_left_inj.mp hmul
+  · simp [N, mul_comm]
 
 end
 

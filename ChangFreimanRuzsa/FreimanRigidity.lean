@@ -9,26 +9,27 @@ public import Mathlib.Algebra.Group.Pointwise.Finset.Basic
 public import ChangFreimanRuzsa.GapToolkit
 import Mathlib.Data.Rat.Floor
 
-/-! # Stage T of Chang's theorem: transport across a Freiman isomorphism
+/-! # Transport of a progression across a Freiman isomorphism
 
-Stage M models `X₁ ⊆ ZMod q` inside a small group `ZMod m` through a Freiman `8`-isomorphism, and
-Stages F and B build a proper progression inside `2X'' - 2X''`, where `X''` is the model of `X₁`.
-This file transports that progression back to `ZMod q`. Both halves are group-generic.
+In the proof of Chang's theorem for $X \subseteq \mathbb{Z}/q\mathbb{Z}$,
+`ChangFreimanRuzsa.RuzsaModel` gives a Freiman $8$-isomorphism from a subset $X_1 \subseteq X$
+onto a set $Y \subseteq \mathbb{Z}/m\mathbb{Z}$, and `ChangFreimanRuzsa.Fourier` and
+`ChangFreimanRuzsa.BohrProgression` give a proper progression inside $2Y - 2Y$. This file
+transports that progression back to $2X_1 - 2X_1$. The statements hold in arbitrary abelian
+groups.
 
 ## Main results
 
-* `GAP.exists_map_of_isAddFreimanIso`: **rigidity.** A Freiman `2`-isomorphism defined on the
-  carrier of a proper GAP maps it onto a GAP of the same dimension and the same lengths. The steps
-  of the image are the images of the one-step displacements, and properness of the image is a
-  cardinality count.
-* `exists_transported_gap`: **Stage T.** A Freiman `8`-isomorphism `φ` from `A` onto `B` transports
-  a proper GAP contained in `(B + B) - (B + B)` to a proper GAP of the same dimension and
-  cardinality contained in `(A + A) - (A + A)`.
+* `GAP.exists_map_of_isAddFreimanIso`: a Freiman $2$-isomorphism defined on the carrier of a proper
+  GAP maps it onto a proper GAP of the same dimension and the same lengths. The steps of the image
+  are the images of the one-step displacements, and the image is proper because it has as many
+  elements as the original progression.
+* `exists_transported_gap`: a Freiman $8$-isomorphism $\varphi$ from $A$ onto $B$ transports a
+  proper GAP contained in $(B + B) - (B + B)$ to a proper GAP of the same dimension and cardinality
+  contained in $(A + A) - (A + A)$.
 
-The isomorphism budget is `8`: a relation `z₁ + z₂ = z₃ + z₄` between elements of
-`(B + B) - (B + B)` unfolds into eight terms of `B` on each side, and the `8`-isomorphism is exactly
-what turns it into the corresponding relation between the transported elements. Nothing of
-unbounded additive length crosses the isomorphism.
+The order $8$ is needed because a relation $z_1 + z_2 = z_3 + z_4$ between elements of
+$(B + B) - (B + B)$ unfolds into a relation between eight elements of $B$ on each side.
 -/
 
 @[expose] public section
@@ -39,8 +40,7 @@ open scoped Pointwise
 
 noncomputable section
 
-/-- Two equations with the same difference are equivalent. This is the shape in which the eight-term
-relation of Stage T is compared with the quadruple relation it encodes. -/
+/-- Two equations with the same difference are equivalent. -/
 private lemma eq_iff_eq_of_sub_eq_sub {M : Type*} [AddCommGroup M] {u v u' v' : M}
     (h : u - v = u' - v') : u = v ↔ u' = v' := by
   rw [← sub_eq_zero, ← sub_eq_zero (a := u'), h]
@@ -52,23 +52,17 @@ private lemma sum_nsmul_eq_update_add_single {d : ℕ} {M : Type*} [AddCommMonoi
       (∑ j, Function.update w i (w i - 1) j • σ j) +
         ∑ j, (Pi.single i 1 : Fin d → ℕ) j • σ j := by
   rw [← Finset.sum_add_distrib]
-  apply Finset.sum_congr rfl
-  intro j _
+  congr with j
   by_cases hj : j = i
   · subst hj
     rw [Function.update_self, Pi.single_eq_same, ← add_nsmul]
     congr 1
-    omega
+    grind
   · rw [Function.update_of_ne hj, Pi.single_eq_of_ne hj, zero_smul, add_zero]
 
 private lemma sum_single_nsmul {d : ℕ} {M : Type*} [AddCommMonoid M] (σ : Fin d → M) (i : Fin d) :
     ∑ j, (Pi.single i 1 : Fin d → ℕ) j • σ j = σ i := by
-  rw [Finset.sum_eq_single i]
-  · rw [Pi.single_eq_same, one_nsmul]
-  · intro j _ hj
-    rw [Pi.single_eq_of_ne hj, zero_smul]
-  · intro h
-    exact absurd (Finset.mem_univ i) h
+  simp [Pi.single_apply, one_nsmul]
 
 namespace GAP
 
@@ -93,7 +87,7 @@ lemma natPoint_mem (Q : GAP H) {w : Fin Q.dim → ℕ} (hw : ∀ i, w i < Q.leng
   exact ⟨fun i ↦ ⟨w i, hw i⟩, Finset.mem_univ _, rfl⟩
 
 lemma origin_mem (Q : GAP H) : Q.origin ∈ Q.carrier := by
-  simpa only [Q.natPoint_zero] using Q.natPoint_mem (w := 0) fun j ↦ Q.length_pos j
+  simpa [Q.natPoint_zero] using Q.natPoint_mem (w := 0) fun j ↦ Q.length_pos j
 
 lemma single_lt_length (Q : GAP H) (i : Fin Q.dim) {k : ℕ} (hk : k < Q.length i) (j : Fin Q.dim) :
     (Pi.single i k : Fin Q.dim → ℕ) j < Q.length j := by
@@ -113,7 +107,7 @@ def transportStep (Q : GAP H) (f : H → G) (i : Fin Q.dim) : G :=
 omit [DecidableEq G] in
 lemma transportStep_of_one_lt (Q : GAP H) (f : H → G) {i : Fin Q.dim} (hi : 1 < Q.length i) :
     Q.transportStep f i = f (Q.natPoint (Pi.single i 1)) - f Q.origin := by
-  rw [transportStep, min_eq_left (by omega)]
+  rw [transportStep, min_eq_left (by grind)]
 
 /-- One unit of the `i`-th coefficient is an additive quadruple inside the coefficient box. -/
 lemma natPoint_add_origin (Q : GAP H) (w : Fin Q.dim → ℕ) {i : Fin Q.dim} (hi : w i ≠ 0) :
@@ -131,55 +125,41 @@ lemma apply_natPoint (Q : GAP H) {f : H → G}
     f (Q.natPoint w) = f Q.origin + ∑ i, w i • Q.transportStep f i := by
   induction hn : ∑ i, w i generalizing w with
   | zero =>
-    have hw0 : w = 0 := funext fun i ↦ (Finset.sum_eq_zero_iff.1 hn) i (Finset.mem_univ i)
-    subst hw0
+    obtain rfl : w = 0 := funext fun i ↦ Finset.sum_eq_zero_iff.1 hn i (Finset.mem_univ i)
     simp [Q.natPoint_zero]
   | succ n ih =>
-    obtain ⟨i, -, hi⟩ : ∃ i ∈ Finset.univ, w i ≠ 0 := by
-      by_contra hcon
-      simp only [not_exists, not_and, not_ne_iff] at hcon
-      rw [Finset.sum_eq_zero fun i hi ↦ hcon i hi] at hn
-      omega
-    have hilen : 1 < Q.length i := by
-      have := hw i
-      omega
+    obtain ⟨i, hi⟩ : ∃ i, w i ≠ 0 := by
+      by_contra! hcon
+      simp [hcon] at hn
+    have hilen : 1 < Q.length i := by grind [hw i]
     have hupdlt : ∀ j, Function.update w i (w i - 1) j < Q.length j := by
       intro j
-      by_cases hj : j = i
-      · rw [hj, Function.update_self]
-        have := hw i
-        omega
-      · rw [Function.update_of_ne hj]
-        exact hw j
-    have hkey := (hf.add_eq_add (Finset.mem_coe.2 (Q.natPoint_mem hw))
-      (Finset.mem_coe.2 Q.origin_mem) (Finset.mem_coe.2 (Q.natPoint_mem hupdlt))
-      (Finset.mem_coe.2 (Q.natPoint_mem (Q.single_lt_length i hilen)))).2
-      (Q.natPoint_add_origin w hi)
-    have hupd := ih hupdlt
-      (by
-        rw [Finset.sum_eq_add_sum_sdiff_singleton_of_mem (Finset.mem_univ i) w] at hn
-        rw [Finset.sum_update_of_mem (Finset.mem_univ i)]
-        omega)
+      rw [Function.update_apply]
+      grind [hw j]
     have hβ : f (Q.natPoint w) - f (Q.natPoint (Function.update w i (w i - 1))) =
         Q.transportStep f i := by
       rw [Q.transportStep_of_one_lt f hilen, sub_eq_sub_iff_add_eq_add]
-      exact hkey.trans (add_comm _ _)
+      exact ((hf.add_eq_add (Q.natPoint_mem hw) Q.origin_mem (Q.natPoint_mem hupdlt)
+        (Q.natPoint_mem (Q.single_lt_length i hilen))).2 (Q.natPoint_add_origin w hi)).trans
+        (add_comm _ _)
     rw [sub_eq_iff_eq_add] at hβ
-    rw [hβ, hupd, sum_nsmul_eq_update_add_single w (Q.transportStep f) hi, sum_single_nsmul]
-    abel
+    rw [hβ, ih hupdlt, sum_nsmul_eq_update_add_single w (Q.transportStep f) hi, sum_single_nsmul]
+    · abel
+    rw [Finset.sum_eq_add_sum_sdiff_singleton_of_mem (Finset.mem_univ i) w] at hn
+    rw [Finset.sum_update_of_mem (Finset.mem_univ i)]
+    grind
 
-/-- **Rigidity of a GAP under a Freiman 2-isomorphism.** A Freiman `2`-isomorphism defined on the
+/-- **Rigidity of a GAP under a Freiman 2-isomorphism.** A Freiman $2$-isomorphism defined on the
 carrier of a proper GAP sends it to a proper GAP of the same dimension and the same lengths.
 
-Properness of the image is free: it has `∏ length i` elements, so its coefficient map cannot
-identify two coefficient vectors. -/
-theorem exists_map_of_isAddFreimanIso (Q : GAP H) (hQ : Q.Proper) {f : H → G}
+The image is proper because it has $\prod_i \ell_i$ elements, so its coefficient map is
+injective. -/
+lemma exists_map_of_isAddFreimanIso (Q : GAP H) (hQ : Q.Proper) {f : H → G}
     (hf : IsAddFreimanIso 2 (Q.carrier : Set H) ((Q.carrier.image f : Finset G) : Set G) f) :
     ∃ R : GAP G, R.Proper ∧ R.dim = Q.dim ∧ R.carrier = Q.carrier.image f := by
   have himage : Finset.univ.image (gapMap (f Q.origin) (Q.transportStep f) Q.length) =
       Q.carrier.image f := by
-    apply Finset.ext
-    intro y
+    ext y
     simp only [Finset.mem_image, Q.carrier_eq]
     constructor
     · rintro ⟨w, -, rfl⟩
@@ -206,9 +186,7 @@ end GAP
 variable {G H : Type*} [DecidableEq G] [AddCommGroup G] [DecidableEq H] [AddCommGroup H]
 
 open scoped Classical in
-/-- A quadruple of elements of `B` representing `z` as a signed sum. Choosing one for every element
-of the progression replaces the well-definedness argument for the induced map by an application of
-the `8`-isomorphism to the eight terms of a relation. -/
+/-- A quadruple $(a, b, c, d)$ of elements of $B$ with $z = a + b - c - d$, when one exists. -/
 private def signedRep (B : Finset H) (z : H) : H × H × H × H :=
   if h : ∃ p : H × H × H × H, (p.1 ∈ B ∧ p.2.1 ∈ B ∧ p.2.2.1 ∈ B ∧ p.2.2.2 ∈ B) ∧
       z = p.1 + p.2.1 - p.2.2.1 - p.2.2.2 then h.choose else (z, z, z, z)
@@ -226,22 +204,16 @@ private lemma signedTransport_spec {B : Finset H} (ψ : H → G) {z : H}
       z = a + b - c - d ∧ signedTransport B ψ z = ψ a + ψ b - ψ c - ψ d := by
   have hex : ∃ p : H × H × H × H, (p.1 ∈ B ∧ p.2.1 ∈ B ∧ p.2.2.1 ∈ B ∧ p.2.2.2 ∈ B) ∧
       z = p.1 + p.2.1 - p.2.2.1 - p.2.2.2 := by
-    rw [Finset.mem_sub] at hz
-    obtain ⟨u, hu, v, hv, rfl⟩ := hz
-    rw [Finset.mem_add] at hu hv
-    obtain ⟨a, ha, b, hb, rfl⟩ := hu
-    obtain ⟨c, hc, d, hd, rfl⟩ := hv
+    obtain ⟨u, hu, v, hv, rfl⟩ := Finset.mem_sub.1 hz
+    obtain ⟨a, ha, b, hb, rfl⟩ := Finset.mem_add.1 hu
+    obtain ⟨c, hc, d, hd, rfl⟩ := Finset.mem_add.1 hv
     exact ⟨(a, b, c, d), ⟨ha, hb, hc, hd⟩, by abel⟩
-  obtain ⟨⟨ha, hb, hc, hd⟩, he⟩ : ((signedRep B z).1 ∈ B ∧ (signedRep B z).2.1 ∈ B ∧
-      (signedRep B z).2.2.1 ∈ B ∧ (signedRep B z).2.2.2 ∈ B) ∧
-      z = (signedRep B z).1 + (signedRep B z).2.1 - (signedRep B z).2.2.1 -
-        (signedRep B z).2.2.2 := by
-    rw [signedRep, dite_eq_left hex]
-    exact hex.choose_spec
+  rw [signedTransport, signedRep, dite_eq_left hex]
+  obtain ⟨⟨ha, hb, hc, hd⟩, he⟩ := hex.choose_spec
   exact ⟨_, ha, _, hb, _, hc, _, hd, he, rfl⟩
 
 open scoped Classical in
-/-- A pair of elements of `B` representing `z` as a sum. -/
+/-- A pair $(a, b)$ of elements of $B$ with $z = a + b$, when one exists. -/
 private def pairRep (B : Finset H) (z : H) : H × H :=
   if h : ∃ p : H × H, (p.1 ∈ B ∧ p.2 ∈ B) ∧ z = p.1 + p.2 then h.choose else (z, z)
 
@@ -256,27 +228,25 @@ private lemma pairRep_spec {B : Finset H} {z : H} (hz : z ∈ B + B) :
 
 /-- A Freiman `2`-isomorphism does not increase the size of the sumset: the induced map on sums of
 two elements is injective, because a relation between two sums is reflected by the isomorphism. -/
-theorem card_add_le_of_isAddFreimanIso {A : Finset G} {B : Finset H} {ψ : H → G}
+lemma card_add_le_of_isAddFreimanIso {A : Finset G} {B : Finset H} {ψ : H → G}
     (hψ : IsAddFreimanIso 2 (B : Set H) (A : Set G) ψ) : (B + B).card ≤ (A + A).card := by
   apply Finset.card_le_card_of_injOn (fun z ↦ ψ (pairRep B z).1 + ψ (pairRep B z).2)
   · intro z hz
     obtain ⟨⟨h1, h2⟩, -⟩ := pairRep_spec (B := B) hz
-    exact Finset.add_mem_add (Finset.mem_coe.1 (hψ.bijOn.mapsTo (Finset.mem_coe.2 h1)))
-      (Finset.mem_coe.1 (hψ.bijOn.mapsTo (Finset.mem_coe.2 h2)))
+    exact Finset.add_mem_add (hψ.bijOn.mapsTo h1) (hψ.bijOn.mapsTo h2)
   · intro z hz z' hz' hzz
-    obtain ⟨⟨h1, h2⟩, he⟩ := pairRep_spec (B := B) (Finset.mem_coe.1 hz)
-    obtain ⟨⟨h1', h2'⟩, he'⟩ := pairRep_spec (B := B) (Finset.mem_coe.1 hz')
+    obtain ⟨⟨h1, h2⟩, he⟩ := pairRep_spec (B := B) hz
+    obtain ⟨⟨h1', h2'⟩, he'⟩ := pairRep_spec (B := B) hz'
     rw [he, he']
-    exact (hψ.add_eq_add (Finset.mem_coe.2 h1) (Finset.mem_coe.2 h2) (Finset.mem_coe.2 h1')
-      (Finset.mem_coe.2 h2')).1 hzz
+    exact (hψ.add_eq_add h1 h2 h1' h2').1 hzz
 
-/-- **Stage T.** A Freiman `8`-isomorphism from `A` onto `B` transports a proper progression
-contained in `(B + B) - (B + B)` to a proper progression of the same dimension and cardinality
-contained in `(A + A) - (A + A)`.
+/-- A Freiman $8$-isomorphism from $A$ onto $B$ transports a proper progression contained in
+$(B + B) - (B + B)$ to a proper progression of the same dimension and cardinality contained in
+$(A + A) - (A + A)$.
 
-The relation `z₁ + z₂ = z₃ + z₄` between signed sums of elements of `B` has eight terms on each
-side, which is exactly the isomorphism's budget. -/
-theorem exists_transported_gap {A : Finset G} {B : Finset H} {φ : G → H}
+A relation $z_1 + z_2 = z_3 + z_4$ between signed sums of elements of $B$ has eight terms on each
+side, so the $8$-isomorphism carries it to the corresponding relation in $A$. -/
+lemma exists_transported_gap {A : Finset G} {B : Finset H} {φ : G → H}
     (hφ : IsAddFreimanIso 8 (A : Set G) (B : Set H) φ)
     (Q : GAP H) (hQ : Q.Proper) (hQsub : Q.carrier ⊆ (B + B) - (B + B)) :
     ∃ R : GAP G, R.Proper ∧ R.dim = Q.dim ∧ R.carrier.card = Q.carrier.card ∧
@@ -300,17 +270,7 @@ theorem exists_transported_gap {A : Finset G} {B : Finset H} {φ : G → H}
     have hiso := hψ.map_sum_eq_map_sum
       (s := a₁ ::ₘ b₁ ::ₘ a₂ ::ₘ b₂ ::ₘ c₃ ::ₘ d₃ ::ₘ c₄ ::ₘ {d₄})
       (t := a₃ ::ₘ b₃ ::ₘ a₄ ::ₘ b₄ ::ₘ c₁ ::ₘ d₁ ::ₘ c₂ ::ₘ {d₂})
-      (by
-        intro x hx
-        simp only [Multiset.mem_cons, Multiset.mem_singleton] at hx
-        rw [Finset.mem_coe]
-        rcases hx with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> assumption)
-      (by
-        intro x hx
-        simp only [Multiset.mem_cons, Multiset.mem_singleton] at hx
-        rw [Finset.mem_coe]
-        rcases hx with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> assumption)
-      (by simp) (by simp)
+      (by simp [*]) (by simp [*]) (by simp) (by simp)
     refine (eq_iff_eq_of_sub_eq_sub ?_).trans (hiso.trans (eq_iff_eq_of_sub_eq_sub ?_))
     · rw [hgdef, hg₁, hg₂, hg₃, hg₄]
       simp only [Multiset.map_cons, Multiset.map_singleton, Multiset.sum_cons,
@@ -330,17 +290,12 @@ theorem exists_transported_gap {A : Finset G} {B : Finset H} {φ : G → H}
   obtain ⟨R, hRproper, hRdim, hRcarrier⟩ := Q.exists_map_of_isAddFreimanIso hQ hf
   refine ⟨R, hRproper, hRdim, ?_, ?_⟩
   · rw [hRcarrier, Finset.card_image_of_injOn hinj]
-  · rw [hRcarrier]
-    intro y hy
-    obtain ⟨z, hz, rfl⟩ := Finset.mem_image.1 hy
+  · rw [hRcarrier, Finset.image_subset_iff]
+    intro z hz
     obtain ⟨a, ha, b, hb, c, hc, d, hd, -, hgz⟩ := signedTransport_spec ψ (hQsub hz)
     rw [hgdef, hgz, sub_sub]
-    refine Finset.mem_sub.2 ⟨ψ a + ψ b, Finset.add_mem_add ?_ ?_, ψ c + ψ d,
-      Finset.add_mem_add ?_ ?_, rfl⟩
-    · exact Finset.mem_coe.1 (hψ.bijOn.mapsTo (Finset.mem_coe.2 ha))
-    · exact Finset.mem_coe.1 (hψ.bijOn.mapsTo (Finset.mem_coe.2 hb))
-    · exact Finset.mem_coe.1 (hψ.bijOn.mapsTo (Finset.mem_coe.2 hc))
-    · exact Finset.mem_coe.1 (hψ.bijOn.mapsTo (Finset.mem_coe.2 hd))
+    exact Finset.sub_mem_sub (Finset.add_mem_add (hψ.bijOn.mapsTo ha) (hψ.bijOn.mapsTo hb))
+      (Finset.add_mem_add (hψ.bijOn.mapsTo hc) (hψ.bijOn.mapsTo hd))
 
 end
 

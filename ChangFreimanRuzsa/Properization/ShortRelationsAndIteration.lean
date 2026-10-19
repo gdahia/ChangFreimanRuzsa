@@ -12,8 +12,21 @@ import Mathlib.LinearAlgebra.LinearIndependent.BaseChange
 /-!
 # Short relations and iterated properization
 
-This submodule develops the successive-minimum argument, saturated quotient reduction, and the
-iteration producing a two-proper generalized arithmetic progression.
+Let $P$ be a GAP of dimension $d$ in an abelian group in which the multiples $n a$, $n < N$, of
+every nonzero $a$ are distinct, with $N$ large compared with $|P|$. The short relations of $P$ are
+the relations among its steps in the $3$-dilate of its coefficient box. Their saturated span
+consists of relations, and dividing the coefficient lattice by it and reboxing the quotient gives a
+GAP of smaller dimension containing $P$, unless $P$ has no short relation, in which case $P$ is
+2-proper.
+Iterating proves that $P$ lies in a 2-proper GAP of dimension at most $d$ and of size at most
+$e^{14 (d + 2)^4} |P|$.
+
+## Main statements
+
+* `GAP.twoProper_or_exists_GAP_dim_lt`: one step of the iteration.
+* `exists_twoProperGAP_container_of_injOn_nsmul`: the iterated statement.
+* `exists_twoProperGAP_container` and `exists_twoProperGAP_container_of_isAddTorsionFree`: the
+  statements in $\mathbb{Z}/q\mathbb{Z}$ for prime $q$ and in torsion-free groups.
 -/
 
 @[expose] public section
@@ -34,9 +47,8 @@ def halfWidth (P : GAP G) (i : Fin P.dim) : ℕ := P.length i - 1
 
 lemma halfWidth_pos {P : GAP G} (hlen : ∀ i, 2 ≤ P.length i) (i : Fin P.dim) :
     0 < P.halfWidth i := by
-  have := hlen i
   rw [halfWidth]
-  omega
+  grind [hlen i]
 
 lemma cast_halfWidth (P : GAP G) (i : Fin P.dim) :
     ((P.halfWidth i : ℕ) : ℝ) = (P.length i : ℝ) - 1 := by
@@ -44,10 +56,10 @@ lemma cast_halfWidth (P : GAP G) (i : Fin P.dim) :
 
 /-! ### The rank of the short relations
 
-The relation lattice of a progression in `ZMod q` has full rank, since it contains `q ℤ ^ dim`,
-but that of a progression in `ℤ` does not. The rank reduction therefore does not use the
-successive minima of the relation lattice. It uses the largest number of linearly independent
-relations in a fixed dilate of the coefficient box, which is defined in every group. -/
+The relation lattice of a progression in $\mathbb{Z}/q\mathbb{Z}$ has full rank, since it contains
+$q \mathbb{Z}^d$, but that of a progression in $\mathbb{Z}$ does not. The rank reduction therefore
+does not use the successive minima of the relation lattice. It uses the largest number of linearly
+independent relations in a fixed dilate of the coefficient box, which is defined in every group. -/
 
 open Classical in
 /-- The largest `k ≤ dim` such that the `t`-dilate of the coefficient box of `P` contains `k`
@@ -74,9 +86,9 @@ lemma hasIndependentShort_shortRelationRank (P : GAP G) (t : ℝ) :
   Nat.findGreatest_spec (P := fun k ↦ HasIndependentShort P.relations P.halfWidth k t)
     (Nat.zero_le _) ⟨Fin.elim0, linearIndependent_empty_type, fun j ↦ j.elim0⟩
 
-/-- Smith normal form for the saturated span of a maximal independent family below the cutoff.
-The eliminated Smith rank is exactly `shortRelationRank`. -/
-theorem exists_smithNormalForm_shortRelations (P : GAP G) (t : ℝ) :
+/-- A maximal independent family $v$ of relations in the $t$-dilate of the coefficient box, together
+with a Smith normal form of the saturated span of $v$ whose rank is `shortRelationRank`. -/
+lemma exists_smithNormalForm_shortRelations (P : GAP G) (t : ℝ) :
     ∃ (v : Fin (P.shortRelationRank t) → (Fin P.dim → ℤ))
       (S : Finset (Fin P.dim → ℤ))
       (_snf : Module.Basis.SmithNormalForm
@@ -89,11 +101,15 @@ theorem exists_smithNormalForm_shortRelations (P : GAP G) (t : ℝ) :
   obtain ⟨n, snf⟩ := (saturatedSpan S).smithNormalForm (Pi.basisFun ℤ (Fin P.dim))
   have hrank : Module.finrank ℤ (saturatedSpan S) = P.shortRelationRank t := by
     rw [finrank_saturatedSpan, hS, finrank_integerGeneratedSubspace_image v hindep]
-  have hn : n = P.shortRelationRank t := by
-    rw [Module.finrank_eq_card_basis snf.bN, Fintype.card_fin] at hrank
-    exact hrank
+  rw [Module.finrank_eq_card_basis snf.bN, Fintype.card_fin] at hrank
   subst n
-  exact ⟨v, S, snf, hS, hindep, fun j ↦ (hv j).1, fun j ↦ (hv j).2⟩
+  refine ⟨v, S, snf, hS, hindep, ?_, ?_⟩
+  · intro j
+    obtain ⟨hrel, -⟩ := hv j
+    exact hrel
+  · intro j
+    obtain ⟨-, hshort⟩ := hv j
+    exact hshort
 
 /-- A maximal independent family below the cutoff spans every relation below that cutoff. -/
 lemma mem_saturatedSpan_shortRelations (P : GAP G)
@@ -106,35 +122,21 @@ lemma mem_saturatedSpan_shortRelations (P : GAP G)
     (hwshort : IsShort P.halfWidth 3 w) :
     w ∈ saturatedSpan (Finset.univ.image v) := by
   by_contra hwspan
-  have hvR : LinearIndependent ℝ (fun j ↦ intVectorToReal (v j)) := by
-    change LinearIndependent ℝ (fun j i ↦ (v j i : ℝ))
-    have h := (linearIndependent_algebraMap_comp_iff
-      (R := ℤ) (S := ℝ) (ι' := Fin P.dim)).mpr hindep
-    change LinearIndependent ℝ (fun j i ↦ algebraMap ℤ ℝ (v j i)) at h
-    exact h
+  have hvR : LinearIndependent ℝ (fun j ↦ intVectorToReal (v j)) :=
+    (linearIndependent_algebraMap_comp_iff (R := ℤ) (S := ℝ) (ι' := Fin P.dim)).mpr hindep
   have hwR : intVectorToReal w ∉
       Submodule.span ℝ (Set.range fun j ↦ intVectorToReal (v j)) := by
     intro hw
     apply hwspan
-    change intVectorToReal w ∈ integerGeneratedSubspace (Finset.univ.image v)
     change intVectorToReal w ∈
       Submodule.span ℝ
         (intVectorToReal '' (↑(Finset.univ.image v) : Set (Fin P.dim → ℤ)))
     have hset :
         intVectorToReal '' (↑(Finset.univ.image v) : Set (Fin P.dim → ℤ)) =
           Set.range fun j ↦ intVectorToReal (v j) := by
-      ext z
-      constructor
-      · rintro ⟨u, hu, rfl⟩
-        rw [Finset.mem_coe, Finset.mem_image] at hu
-        obtain ⟨j, -, rfl⟩ := hu
-        exact ⟨j, rfl⟩
-      · rintro ⟨j, rfl⟩
-        exact ⟨v j, by simp, rfl⟩
+      ext
+      simp
     rwa [hset]
-  have hconsR : LinearIndependent ℝ
-      (Fin.cons (intVectorToReal w) fun j ↦ intVectorToReal (v j)) :=
-    linearIndependent_finCons.mpr ⟨hvR, hwR⟩
   have hcons : LinearIndependent ℤ (Fin.cons w v) := by
     apply (linearIndependent_algebraMap_comp_iff
       (R := ℤ) (S := ℝ) (ι' := Fin P.dim)).mp
@@ -145,27 +147,23 @@ lemma mem_saturatedSpan_shortRelations (P : GAP G)
           Fin.cons (intVectorToReal w) (fun j ↦ intVectorToReal (v j)) := by
       funext i
       refine Fin.cases ?_ ?_ i
-      · funext k
-        rfl
+      · rfl
       · intro j
-        funext k
         rfl
     rw [heq]
-    exact hconsR
+    exact linearIndependent_finCons.mpr ⟨hvR, hwR⟩
   have hrd : r < P.dim := by
     have hcard := hcons.fintype_card_le_finrank
     rw [Module.finrank_fin_fun] at hcard
     simp only [Fintype.card_fin] at hcard
-    omega
+    grind
   have hfamily : HasIndependentShort P.relations P.halfWidth (r + 1) 3 := by
     refine ⟨Fin.cons w v, hcons, ?_⟩
     apply Fin.cases
     · exact ⟨hwrel, hwshort⟩
     · intro j
       exact ⟨hvrel j, hvshort j⟩
-  have := P.le_shortRelationRank (Nat.succ_le_of_lt hrd) hfamily
-  rw [← hr] at this
-  omega
+  grind [P.le_shortRelationRank (Nat.succ_le_of_lt hrd) hfamily]
 
 /-- Multiples of a nonzero element of a prime cyclic group are distinct below the modulus. -/
 lemma injOn_nsmul_of_prime {q : ℕ} (hq : Nat.Prime q) {a : ZMod q} (ha : a ≠ 0) :
@@ -181,16 +179,15 @@ lemma injOn_nsmul_of_isAddTorsionFree [IsAddTorsionFree G] (N : ℕ) {a : G} (ha
     Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N) := by
   intro m _ n _ h
   have h' : ((m : ℤ) - n) • a = 0 := by
-    rw [sub_smul, natCast_zsmul, natCast_zsmul, sub_eq_zero]
-    exact h
+    rwa [sub_smul, natCast_zsmul, natCast_zsmul, sub_eq_zero]
   exact_mod_cast sub_eq_zero.1 ((IsAddTorsionFree.zsmul_eq_zero_iff_left ha).1 h')
 
-/-- Suppose that the multiples `n • a` with `n < N` of every nonzero `a` are distinct, as in a
-cyclic group of prime order `N` or in a torsion-free group. The real span of a short independent
-family is already made of relations when `N` is large compared with the progression. Otherwise
-the first `N` multiples of a nonrelation, reduced into a fundamental parallelepiped, would give
-`N` distinct elements in a bounded dilate of the coefficient box. -/
-theorem saturatedSpan_shortRelations_le_relations {N r : ℕ} (P : GAP G)
+/-- Suppose that the multiples $n a$, $n < N$, of every nonzero $a$ are distinct, as in a cyclic
+group of prime order $N$ or in a torsion-free group, and that $(6d + 1)^d |P| < N$. Then the
+saturated span of a family of relations of $P$ in the $3$-dilate of its coefficient box consists of
+relations. Otherwise the first $N$ multiples of a vector in the span that is not a relation, reduced
+modulo the family, would give $N$ distinct elements in a bounded dilate of $P$. -/
+lemma saturatedSpan_shortRelations_le_relations {N r : ℕ} (P : GAP G)
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (v : Fin r → (Fin P.dim → ℤ))
     (hrel : ∀ j, v j ∈ P.relations)
@@ -217,60 +214,49 @@ theorem saturatedSpan_shortRelations_le_relations {N r : ℕ} (P : GAP G)
       rw [map_sub, sub_eq_zero, map_zsmul] at hzero
       rw [← hzero]
       exact natCast_zsmul (stepHom P x) a
-    · refine mem_intBox.mpr ?_
+    · rw [mem_intBox]
       intro i
-      have hyi := hy i
-      have hL : (0 : ℝ) ≤ (P.halfWidth i : ℝ) := Nat.cast_nonneg _
       have hrdR : (r : ℝ) ≤ P.dim := by exact_mod_cast hrd
-      have hmul := mul_le_mul_of_nonneg_right hrdR
-        (mul_nonneg (by norm_num : (0 : ℝ) ≤ 3) hL)
-      have hyr : |(y i : ℝ)| ≤
-          (3 * P.dim * P.halfWidth i : ℕ) := by
+      have hyr : |(y i : ℝ)| ≤ (3 * P.dim * P.halfWidth i : ℕ) := by
         push_cast
-        nlinarith
+        nlinarith [hy i, mul_le_mul_of_nonneg_right hrdR
+          (by positivity : (0 : ℝ) ≤ 3 * P.halfWidth i)]
       rw [← Int.cast_abs] at hyr
       exact_mod_cast hyr
-  choose y hy using hreduce
+  choose y hstep hbox using hreduce
   let f : Fin N → P.boundedStepImage (3 * P.dim) :=
-    fun a ↦ ⟨stepHom P (y a), by
-      rw [boundedStepImage, Finset.mem_image]
-      exact ⟨y a, hy a |>.2, rfl⟩⟩
+    fun a ↦ ⟨stepHom P (y a), Finset.mem_image.mpr ⟨y a, hbox a, rfl⟩⟩
   have hf : Function.Injective f := by
     intro a b hab
     have hmap : (a : ℕ) • stepHom P x = (b : ℕ) • stepHom P x := by
-      rw [← (hy a).1, ← (hy b).1]
+      rw [← hstep a, ← hstep b]
       exact congr_arg Subtype.val hab
     exact Fin.ext (hG _ hxne a.isLt b.isLt hmap)
   have hcard : N ≤ (P.boundedStepImage (3 * P.dim)).card := by
-    simpa only [Fintype.card_fin, Fintype.card_coe] using
-      Fintype.card_le_of_injective f hf
+    simpa using Fintype.card_le_of_injective f hf
   exact (not_lt_of_ge (hcard.trans (P.card_boundedStepImage_le (3 * P.dim)))) hroom
 
 /-! ### Properness through the short rank -/
 
-/-- A progression with no nonzero relation in the `3`-dilate of its coefficient box is 2-proper: a
-relation inside the doubled box has `|vᵢ| ≤ 2 ℓᵢ - 1 ≤ 3 (ℓᵢ - 1)` once every length is at least
-two, so it is short for the dilation factor `3`. -/
-theorem twoProper_of_shortRelationRank_eq_zero (P : GAP G) (hlen : ∀ i, 2 ≤ P.length i)
+/-- A progression with all lengths $\ell_i \ge 2$ and no nonzero relation in the $3$-dilate of its
+coefficient box is 2-proper. Indeed a relation $v$ in the doubled box has
+$|v_i| \le 2 \ell_i - 1 \le 3 (\ell_i - 1)$. -/
+lemma twoProper_of_shortRelationRank_eq_zero (P : GAP G) (hlen : ∀ i, 2 ≤ P.length i)
     (hrank : P.shortRelationRank 3 = 0) : P.TwoProper := by
   apply P.twoProper_iff.mpr
   intro v hv hlt
   by_contra hne
   obtain ⟨i₀, -⟩ := Function.ne_iff.1 hne
-  refine absurd (P.le_shortRelationRank (t := 3) (Nat.succ_le_of_lt i₀.pos)
-    ⟨fun _ ↦ v, linearIndependent_unique_iff.mpr hne, fun _ ↦ ⟨hv, ?_⟩⟩) (by grind)
-  intro i
-  have hlen' : (2 : ℤ) ≤ (P.length i : ℤ) := by exact_mod_cast hlen i
-  have hint : |v i| ≤ 3 * ((P.length i : ℤ) - 1) := by
-    have := Int.lt_iff_add_one_le.mp (hlt i)
-    linarith
-  have hcast : ((3 * ((P.length i : ℤ) - 1) : ℤ) : ℝ) = 3 * (P.halfWidth i : ℝ) := by
-    rw [P.cast_halfWidth]
-    push_cast
-    ring
-  calc |(v i : ℝ)| = ((|v i| : ℤ) : ℝ) := by rw [Int.cast_abs]
-    _ ≤ ((3 * ((P.length i : ℤ) - 1) : ℤ) : ℝ) := by exact_mod_cast hint
-    _ = 3 * (P.halfWidth i : ℝ) := hcast
+  have hshort : IsShort P.halfWidth 3 v := by
+    intro i
+    have hlen' : (2 : ℤ) ≤ P.length i := by exact_mod_cast hlen i
+    have hint : |v i| ≤ 3 * ((P.length i : ℤ) - 1) := by
+      linarith [Int.lt_iff_add_one_le.mp (hlt i)]
+    rw [← Int.cast_abs, P.cast_halfWidth]
+    exact_mod_cast hint
+  have := P.le_shortRelationRank (t := 3) (Nat.succ_le_of_lt i₀.pos)
+    ⟨fun _ ↦ v, linearIndependent_unique_iff.mpr hne, fun _ ↦ ⟨hv, hshort⟩⟩
+  grind
 
 /-! ### Projecting by a saturated family -/
 
@@ -336,9 +322,9 @@ lemma mem_smithQuotientCoords {P : GAP G} {n : ℕ}
   rw [smithQuotientCoords, Set.Finite.mem_toFinset]
   rfl
 
-/-- The integer points of a saturated projected coefficient box admit a proper centered
-reboxing, with the explicit loss produced by the shortest-direction induction. -/
-theorem exists_proper_GAP_reboxing_smithQuotientCoords
+/-- The integer points of the projected coefficient box lie in a proper GAP of dimension
+$d - n$ with at most `boxReboxingFactor (P.dim - n)` times as many elements. -/
+lemma exists_proper_GAP_reboxing_smithQuotientCoords
     (P : GAP G) (hlen : ∀ i, 2 ≤ P.length i) {n : ℕ}
     {S : Finset (Fin P.dim → ℤ)}
     (snf : Module.Basis.SmithNormalForm (saturatedSpan S) (Fin P.dim) n) :
@@ -364,11 +350,11 @@ lemma smithQuotientMap_mem_smithQuotientCoords {P : GAP G} {n : ℕ}
   refine ⟨BoxLattice.intCastHom v, ?_, rfl⟩
   intro i
   have hi := mem_symBox.mp hv i
-  have hlen := P.length_pos i
-  rw [BoxLattice.intCastHom_apply, ← Int.cast_abs]
-  exact_mod_cast (show |v i| ≤ (P.halfWidth i : ℤ) by
+  have hvi : |v i| ≤ (P.halfWidth i : ℤ) := by
     rw [halfWidth]
-    omega)
+    grind [P.length_pos i]
+  rw [BoxLattice.intCastHom_apply, ← Int.cast_abs]
+  exact_mod_cast hvi
 
 /-- Every lattice point of the projected body has an integral lift in a controlled dilate of the
 original coefficient box when the quotient directions are `3`-short. -/
@@ -393,14 +379,8 @@ lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {r : ℕ}
     have hset :
         intVectorToReal '' (↑(Finset.univ.image v) : Set (Fin P.dim → ℤ)) =
           Set.range fun j ↦ intVectorToReal (v j) := by
-      ext x
-      constructor
-      · rintro ⟨w, hw, rfl⟩
-        rw [Finset.mem_coe, Finset.mem_image] at hw
-        obtain ⟨j, -, rfl⟩ := hw
-        exact ⟨j, rfl⟩
-      · rintro ⟨j, rfl⟩
-        exact ⟨v j, by simp, rfl⟩
+      ext
+      simp
     rwa [hset] at hker
   obtain ⟨z, hcongr, hz⟩ := exists_congr_close_isShort v hshort z₀ b hspan
   refine ⟨z, ?_, ?_⟩
@@ -408,19 +388,16 @@ lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {r : ℕ}
       apply Submodule.span_le.mpr
       rintro w ⟨j, rfl⟩
       apply subset_saturatedSpan S
-      rw [hS, Finset.mem_coe, Finset.mem_image]
-      exact ⟨j, Finset.mem_univ _, rfl⟩
+      simp [hS]
     have hmaps := (smithQuotientMap_eq_iff snf z₀ z).mpr (hspanSat hcongr)
     rw [smithQuotientMap_lift] at hmaps
     exact hmaps.symm
-  · refine mem_intBox.mpr ?_
+  · rw [mem_intBox]
     intro i
     have hb' : |b i| ≤ (P.halfWidth i : ℝ) := hb i
-    have hz' := hz i
-    have hL : (0 : ℝ) ≤ (P.halfWidth i : ℝ) := Nat.cast_nonneg _
     have hreal : |(z i : ℝ)| ≤ ((3 * r + 1) * P.halfWidth i : ℕ) := by
       push_cast
-      nlinarith
+      nlinarith [hz i, Nat.cast_nonneg (α := ℝ) (P.halfWidth i)]
     rw [← Int.cast_abs] at hreal
     exact_mod_cast hreal
 
@@ -474,14 +451,8 @@ lemma exists_bounded_relation_of_same_smithImage {P : GAP G} {r : ℕ}
     have hset :
         intVectorToReal '' (↑(Finset.univ.image v) : Set (Fin P.dim → ℤ)) =
           Set.range fun j ↦ intVectorToReal (v j) := by
-      ext x
-      constructor
-      · rintro ⟨w, hw, rfl⟩
-        rw [Finset.mem_coe, Finset.mem_image] at hw
-        obtain ⟨j, -, rfl⟩ := hw
-        exact ⟨j, rfl⟩
-      · rintro ⟨j, rfl⟩
-        exact ⟨v j, by simp, rfl⟩
+      ext
+      simp
     rwa [hset] at hker
   obtain ⟨z, hcongr, hz⟩ :=
     exists_congr_close_isShort v hshort z₀ (b - b₀) hspan
@@ -489,8 +460,7 @@ lemma exists_bounded_relation_of_same_smithImage {P : GAP G} {r : ℕ}
     apply Submodule.span_le.mpr
     rintro w ⟨j, rfl⟩
     apply subset_saturatedSpan S
-    rw [hS, Finset.mem_coe, Finset.mem_image]
-    exact ⟨j, Finset.mem_univ _, rfl⟩
+    simp [hS]
   have hzmap : smithQuotientMap snf z = y - y₀ := by
     have hmaps := (smithQuotientMap_eq_iff snf z₀ z).mpr (hspanSat hcongr)
     rw [smithQuotientMap_lift] at hmaps
@@ -498,24 +468,22 @@ lemma exists_bounded_relation_of_same_smithImage {P : GAP G} {r : ℕ}
   refine ⟨z, ?_, hzmap, ?_⟩
   · change stepHom P z = 0
     rw [← P.stepHom_smithQuotientMap snf hrel z, hzmap, map_sub, himage, sub_self]
-  · refine mem_intBox.mpr ?_
+  · rw [mem_intBox]
     intro i
     have hb' : |b i| ≤ (P.halfWidth i : ℝ) := hb i
     have hb₀' : |b₀ i| ≤ (P.halfWidth i : ℝ) := hb₀ i
-    have hz' := hz i
-    have hbb₀ : |b i - b₀ i| ≤ 2 * (P.halfWidth i : ℝ) :=
+    have hbb₀ : |(b - b₀) i| ≤ 2 * (P.halfWidth i : ℝ) :=
       (abs_sub _ _).trans (by linarith)
-    have hbb₀' : |(b - b₀) i| ≤ 2 * (P.halfWidth i : ℝ) := by
-      simpa only [Pi.sub_apply] using hbb₀
     have hreal : |(z i : ℝ)| ≤ ((3 * r + 2) * P.halfWidth i : ℕ) := by
       push_cast
-      nlinarith [Nat.cast_nonneg (α := ℝ) (P.halfWidth i)]
+      nlinarith [hz i, Nat.cast_nonneg (α := ℝ) (P.halfWidth i)]
     rw [← Int.cast_abs] at hreal
     exact_mod_cast hreal
 
-/-- Fibres of the quotient step map on the projected body have dimension-only size. Distinct
-representatives are separated by the `3`-box, since every `3`-short relation belongs to the
-maximal saturated short span. -/
+/-- Each fibre of the quotient step map on the projected lattice points has at most
+$(2r + 4)^d$ elements. Distinct points of a fibre lift to relations separated by the $3$-dilate of
+the coefficient box, since every relation in that dilate lies in the saturated span of the short
+relations. -/
 lemma card_smithQuotientCoords_fiber_le (P : GAP G)
     {r : ℕ} (hr : r = P.shortRelationRank 3)
     (v : Fin r → (Fin P.dim → ℤ)) (hindep : LinearIndependent ℤ v)
@@ -534,26 +502,23 @@ lemma card_smithQuotientCoords_fiber_le (P : GAP G)
   rcases Finset.eq_empty_or_nonempty F with hFempty | ⟨y₀, hy₀F⟩
   · rw [hFempty, Finset.card_empty]
     positivity
-  have hy₀ := (Finset.mem_filter.mp (hF ▸ hy₀F)).1
+  obtain ⟨hy₀, hy₀g⟩ := Finset.mem_filter.mp (hF ▸ hy₀F)
   have hlift : ∀ y, ∃ z : Fin P.dim → ℤ, y ∈ F →
       z ∈ P.relations ∧ smithQuotientMap snf z = y - y₀ ∧
         z ∈ intBox (fun i ↦ (3 * r + 2) * P.halfWidth i) := by
     intro y
     by_cases hyF : y ∈ F
-    swap
+    · obtain ⟨hy, hyg⟩ := Finset.mem_filter.mp (hF ▸ hyF)
+      obtain ⟨z, hzrel, hzmap, hzbox⟩ :=
+        P.exists_bounded_relation_of_same_smithImage v hS hvshort snf hrel hy hy₀
+          (hyg.trans hy₀g.symm)
+      exact ⟨z, fun _ ↦ ⟨hzrel, hzmap, hzbox⟩⟩
     · exact ⟨0, fun h ↦ absurd h hyF⟩
-    have hyfilter := Finset.mem_filter.mp (hF ▸ hyF)
-    have hy₀filter := Finset.mem_filter.mp (hF ▸ hy₀F)
-    obtain ⟨z, hzrel, hzmap, hzbox⟩ :=
-      P.exists_bounded_relation_of_same_smithImage v hS hvshort snf hrel
-        hyfilter.1 hy₀filter.1 (hyfilter.2.trans hy₀filter.2.symm)
-    exact ⟨z, fun _ ↦ ⟨hzrel, hzmap, hzbox⟩⟩
-  choose z hz using hlift
+  choose z hzrel hzmap hzbox using hlift
   have hzinj : Set.InjOn z F := by
     intro a ha b hb hab
     have hmaps := congr_arg (smithQuotientMap snf) hab
-    rw [(hz a ha).2.1, (hz b hb).2.1, sub_left_inj] at hmaps
-    exact hmaps
+    rwa [hzmap a ha, hzmap b hb, sub_left_inj] at hmaps
   set Z := F.image z with hZ
   have hZcard : Z.card = F.card := by
     rw [hZ, Finset.card_image_of_injOn hzinj]
@@ -562,7 +527,7 @@ lemma card_smithQuotientCoords_fiber_le (P : GAP G)
     intro u hu i
     rw [hZ, Finset.mem_image] at hu
     obtain ⟨y, hyF, rfl⟩ := hu
-    exact mem_intBox.mp (hz y hyF).2.2 i
+    exact mem_intBox.mp (hzbox y hyF) i
   have hsep : ∀ u ∈ Z, ∀ w ∈ Z, u ≠ w →
       ∃ i, ((3 * P.halfWidth i : ℕ) : ℤ) < |u i - w i| := by
     intro u hu w hw huw
@@ -571,7 +536,7 @@ lemma card_smithQuotientCoords_fiber_le (P : GAP G)
     obtain ⟨b, hbF, rfl⟩ := hw
     by_contra! hcon
     have hdiffrel : z a - z b ∈ P.relations :=
-      P.relations.sub_mem (hz a haF).1 (hz b hbF).1
+      P.relations.sub_mem (hzrel a haF) (hzrel b hbF)
     have hdiffshort : IsShort P.halfWidth 3 (z a - z b) := by
       intro i
       have hi := hcon i
@@ -583,7 +548,7 @@ lemma card_smithQuotientCoords_fiber_le (P : GAP G)
       exact P.mem_saturatedSpan_shortRelations hr v hindep hvrel hvshort
         hdiffrel hdiffshort
     have hmaps := (smithQuotientMap_eq_iff snf (z a) (z b)).mpr hdiffSat
-    rw [(hz a haF).2.1, (hz b hbF).2.1, sub_left_inj] at hmaps
+    rw [hzmap a haF, hzmap b hbF, sub_left_inj] at hmaps
     exact huw (congr_arg z hmaps)
   have hpack := card_mul_prod_le_of_separated hbox hsep
   have hfactor : ∏ i : Fin P.dim,
@@ -602,8 +567,8 @@ lemma card_smithQuotientCoords_fiber_le (P : GAP G)
   have hden : 0 < ∏ i : Fin P.dim, (3 * P.halfWidth i + 1) := by positivity
   exact (Nat.mul_le_mul_right_iff hden).mp hmul
 
-/-- The full projected lattice-point set is bounded by a dimension-only factor times the original
-progression. This combines the bounded image estimate with the separated-fibre estimate. -/
+/-- The projected lattice points number at most $((2r + 4)(2(3r + 1) + 1))^d |P|$, by the bound
+on their image in the group and the bound on each fibre. -/
 lemma card_smithQuotientCoords_le (P : GAP G)
     {r : ℕ} (hr : r = P.shortRelationRank 3)
     (v : Fin r → (Fin P.dim → ℤ)) (hindep : LinearIndependent ℤ v)
@@ -624,13 +589,14 @@ lemma card_smithQuotientCoords_le (P : GAP G)
     exact P.card_smithQuotientCoords_fiber_le hr v hindep hvrel hvshort
       hS snf hrel g
   apply hcard.trans
-  have himage := P.card_image_smithQuotientCoords_le v hS hvshort snf hrel
-  apply (Nat.mul_le_mul_left ((2 * r + 4) ^ P.dim) himage).trans
+  apply (Nat.mul_le_mul_left ((2 * r + 4) ^ P.dim)
+    (P.card_image_smithQuotientCoords_le v hS hvshort snf hrel)).trans
   rw [← mul_assoc, ← mul_pow]
 
-/-- Reboxing after quotienting by a saturated family of relations gives a
-progression whose dimension is the complementary Smith rank. -/
-theorem exists_container_of_saturated_relations (P : GAP G) {n : ℕ}
+/-- If the saturated span of $S$ consists of relations and has rank $n$, then $P$ lies in a GAP of
+dimension at most $d - n$ whose size is at most `boxReboxingFactor (P.dim - n)` times the number of
+projected lattice points. -/
+lemma exists_container_of_saturated_relations (P : GAP G) {n : ℕ}
     {S : Finset (Fin P.dim → ℤ)}
     (snf : Module.Basis.SmithNormalForm (saturatedSpan S) (Fin P.dim) n)
     (hlen : ∀ i, 2 ≤ P.length i)
@@ -649,9 +615,8 @@ theorem exists_container_of_saturated_relations (P : GAP G) {n : ℕ}
     have hcsym : c ∈ symBox P := by
       rw [mem_symBox]
       intro i
-      have := hc i
-      rw [abs_of_nonneg this.1]
-      omega
+      obtain ⟨h0, hlt⟩ := hc i
+      rwa [abs_of_nonneg h0]
     have hcP' : smithQuotientMap snf c ∈ P'.carrier :=
       hDP' (smithQuotientMap_mem_smithQuotientCoords hcsym)
     have hcmap : stepsHom (P.smithQuotientStep snf) (smithQuotientMap snf c) ∈
@@ -667,10 +632,10 @@ theorem exists_container_of_saturated_relations (P : GAP G) {n : ℕ}
     Finset.card_image_le.trans (P'.card_map_le (stepsHom (P.smithQuotientStep snf)))
   exact ((Nat.cast_le (α := ℝ)).mpr hQcard).trans (by exact_mod_cast hP'card)
 
-/-- The simultaneous quotient rank-reduction step. All relations below the cutoff are removed at
-once, their saturation consists of genuine relations by the room hypothesis, and the projected
-body has dimension-only size by `card_smithQuotientCoords_le`. -/
-theorem twoProper_or_exists_GAP_dim_lt {N : ℕ} (P : GAP G)
+/-- One step of properization. Either $P$ is 2-proper, or dividing by the saturated span of its
+short relations, which consists of relations by the hypothesis on $N$, and reboxing gives a GAP of
+smaller dimension containing $P$, of the size bounded by `card_smithQuotientCoords_le`. -/
+lemma twoProper_or_exists_GAP_dim_lt {N : ℕ} (P : GAP G)
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hlen : ∀ i, 2 ≤ P.length i)
     (hroom : (2 * (3 * P.dim) + 1) ^ P.dim * P.carrier.card < N) :
@@ -691,7 +656,7 @@ theorem twoProper_or_exists_GAP_dim_lt {N : ℕ} (P : GAP G)
     exact P.saturatedSpan_shortRelations_le_relations hG v hvrel hvshort hrd hroom
   obtain ⟨Q, hsub, hQdim, hQcard⟩ :=
     P.exists_container_of_saturated_relations snf hlen hsat
-  refine Or.inr ⟨Q, hsub, hQdim.trans_lt (by omega), ?_⟩
+  refine Or.inr ⟨Q, hsub, hQdim.trans_lt (by grind), ?_⟩
   have hcoords := P.card_smithQuotientCoords_le rfl
     v hindep hvrel hvshort hS snf hsat
   have hcoordsR : ((P.smithQuotientCoords snf).card : ℝ) ≤
@@ -708,18 +673,18 @@ end GAP
 
 /-! ## Iterated simultaneous properization -/
 
-/-- The universal cost constant for iterated properization. -/
+/-- The constant $14$ in the size bound $e^{14 (d + 2)^4} |P|$ of properization. -/
 def properizationConstant : ℝ := 14
 
 lemma properizationConstant_pos : 0 < properizationConstant := by
   norm_num [properizationConstant]
 
-/-- Iterating the saturated quotient step properizes a progression. The cubic cost of each step
-telescopes into a quartic exponent because the dimension decreases strictly.
-
-The group enters through one hypothesis: the multiples `n • a` with `n < N` of every nonzero `a`
-are distinct, for some `N` that is large compared with the progression. -/
-theorem exists_twoProperGAP_container_of_injOn_nsmul {N : ℕ} (P : GAP G)
+/-- Let $P$ be a GAP of dimension $d$ in an abelian group in which the multiples $n a$, $n < N$, of
+every nonzero $a$ are distinct, and suppose $e^{14 (d + 2)^4} |P| \le N$. Then $P$ lies in a
+2-proper GAP with all lengths at least $2$, of dimension at most $d$ and of size at most
+$e^{14 (d + 2)^4} |P|$. The proof iterates `GAP.twoProper_or_exists_GAP_dim_lt`: each step costs a
+factor $e^{O((d + 2)^3)}$ and lowers the dimension. -/
+lemma exists_twoProperGAP_container_of_injOn_nsmul {N : ℕ} (P : GAP G)
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hroom :
       Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) *
@@ -731,19 +696,18 @@ theorem exists_twoProperGAP_container_of_injOn_nsmul {N : ℕ} (P : GAP G)
           P.carrier.card := by
   induction hdimP : P.dim using Nat.strong_induction_on generalizing P with
   | h d ih =>
-      let P₂ := P.scaleLengths 2 (by omega)
+      let P₂ := P.scaleLengths 2 (by grind)
       have hdim : P₂.dim = d := hdimP
       have hPsub : P.carrier ⊆ P₂.carrier := by
-        exact P.carrier_subset_reshape _ (fun i ↦ Nat.mul_pos (by omega) (P.length_pos i))
-          fun i ↦ by omega
+        apply P.carrier_subset_reshape
+        intro i
+        grind
       have hP₂len : ∀ i, 2 ≤ P₂.length i := by
         intro i
-        have hi := P₂.length_pos i
         simp only [P₂, GAP.scaleLengths_length]
-        simp only [P₂, GAP.scaleLengths_length] at hi
-        omega
+        grind [P.length_pos i]
       have hP₂cardNat : P₂.carrier.card ≤ 2 ^ d * P.carrier.card := by
-        simpa only [P₂, hdimP] using P.card_scaleLengths_le 2 (by omega)
+        simpa [P₂, hdimP] using P.card_scaleLengths_le 2 (by grind)
       have hP₂card :
           (P₂.carrier.card : ℝ) ≤ Real.exp (((d : ℝ) + 2) ^ 3) * P.carrier.card := by
         apply (Nat.cast_le.mpr hP₂cardNat).trans
@@ -759,40 +723,39 @@ theorem exists_twoProperGAP_container_of_injOn_nsmul {N : ℕ} (P : GAP G)
             (Nat.cast_nonneg _)).trans
           rw [Nat.cast_mul, Nat.cast_pow, Nat.cast_pow, ← mul_assoc]
           refine mul_le_mul_of_nonneg_right ?_ (Nat.cast_nonneg _)
-          simpa only [Nat.cast_add, Nat.cast_mul, Nat.cast_ofNat, Nat.cast_one] using hfactor
+          exact_mod_cast hfactor
         have hexp :
             Real.exp (13 * ((d : ℝ) + 2) ^ 3) <
               Real.exp (properizationConstant * ((d : ℝ) + 2) ^ 4) := by
           apply Real.exp_lt_exp.mpr
-          have hd0 : (0 : ℝ) ≤ d := Nat.cast_nonneg d
-          have hx : (1 : ℝ) < (d : ℝ) + 2 := by linarith
+          have hx : (1 : ℝ) < (d : ℝ) + 2 := by linarith [Nat.cast_nonneg (α := ℝ) d]
           have hpow : ((d : ℝ) + 2) ^ 3 < ((d : ℝ) + 2) ^ 4 := by
             rw [pow_succ]
-            nlinarith [pow_pos (show (0 : ℝ) < (d : ℝ) + 2 by positivity) 3]
+            nlinarith [pow_pos (by positivity : (0 : ℝ) < (d : ℝ) + 2) 3]
           rw [properizationConstant]
-          nlinarith [pow_pos (show (0 : ℝ) < (d : ℝ) + 2 by positivity) 4]
+          nlinarith [pow_pos (by positivity : (0 : ℝ) < (d : ℝ) + 2) 4]
         have hstrict :
             Real.exp (13 * ((d : ℝ) + 2) ^ 3) * P.carrier.card <
               Real.exp (properizationConstant * ((d : ℝ) + 2) ^ 4) *
-                P.carrier.card := by
-          exact mul_lt_mul_of_pos_right hexp (by exact_mod_cast P.nonempty.card_pos)
+                P.carrier.card :=
+          mul_lt_mul_of_pos_right hexp (by exact_mod_cast P.nonempty.card_pos)
         have hreal :
             (((2 * (3 * d) + 1) ^ d * P₂.carrier.card : ℕ) : ℝ) < (N : ℝ) :=
-          hfactorCard.trans_lt (hstrict.trans_le (by simpa only [hdimP] using hroom))
-        simpa only [hdim] using (show
-          (2 * (3 * d) + 1) ^ d * P₂.carrier.card < N by exact_mod_cast hreal)
+          hfactorCard.trans_lt (hstrict.trans_le (by rwa [hdimP] at hroom))
+        rw [hdim]
+        exact_mod_cast hreal
       rcases P₂.twoProper_or_exists_GAP_dim_lt hG hP₂len hstepRoom with
         hproper | ⟨Q, hP₂sub, hQdim, hQcard⟩
       · refine ⟨P₂, hproper, hPsub, ?_, hdim.le, ?_⟩
         · intro i
-          exact lt_of_lt_of_le (by omega) (hP₂len i)
+          grind [hP₂len i]
         · refine hP₂card.trans ?_
           refine mul_le_mul_of_nonneg_right (Real.exp_le_exp.mpr ?_) (Nat.cast_nonneg _)
           have hA1 : 1 ≤ properizationConstant := by
             norm_num [properizationConstant]
           have hpow : ((d : ℝ) + 2) ^ 3 ≤ ((d : ℝ) + 2) ^ 4 := by
             rw [pow_succ]
-            nlinarith [pow_nonneg (show (0 : ℝ) ≤ (d : ℝ) + 2 by positivity) 3]
+            nlinarith [pow_nonneg (by positivity : (0 : ℝ) ≤ (d : ℝ) + 2) 3]
           exact (le_mul_of_one_le_left (by positivity) hA1).trans
             (mul_le_mul_of_nonneg_left hpow properizationConstant_pos.le)
       · have hrank := P₂.shortRelationRank_le_dim 3
@@ -805,8 +768,7 @@ theorem exists_twoProperGAP_container_of_injOn_nsmul {N : ℕ} (P : GAP G)
           apply hQcard.trans
           have hmul := mul_le_mul hfactor hP₂card (by positivity) (by positivity)
           apply hmul.trans_eq
-          rw [hdim, ← mul_assoc, ← Real.exp_add]
-          rw [properizationConstant]
+          rw [hdim, ← mul_assoc, ← Real.exp_add, properizationConstant]
           congr 1
           ring_nf
         have hQroom :
@@ -816,21 +778,21 @@ theorem exists_twoProperGAP_container_of_injOn_nsmul {N : ℕ} (P : GAP G)
           rw [← mul_assoc, ← Real.exp_add]
           refine (mul_le_mul_of_nonneg_right (Real.exp_le_exp.mpr ?_)
             (Nat.cast_nonneg _)).trans hroom
-          simpa only [hdim, hdimP] using
+          simpa [hdim, hdimP] using
             cube_step_le_fourth_difference properizationConstant_pos.le hQdim
         obtain ⟨R, hRproper, hQRsub, hRlen, hRdim, hRcard⟩ :=
-          ih Q.dim (by simpa only [hdim] using hQdim) Q hQroom rfl
+          ih Q.dim (by simpa [hdim] using hQdim) Q hQroom rfl
         refine ⟨R, hRproper, hPsub.trans (hP₂sub.trans hQRsub), hRlen,
-          hRdim.trans (Nat.le_of_lt (by simpa only [hdim] using hQdim)), ?_⟩
+          hRdim.trans (Nat.le_of_lt (by simpa [hdim] using hQdim)), ?_⟩
         apply hRcard.trans
         apply (mul_le_mul_of_nonneg_left hQcard' (by positivity)).trans
         rw [← mul_assoc, ← Real.exp_add]
         refine mul_le_mul_of_nonneg_right (Real.exp_le_exp.mpr ?_) (Nat.cast_nonneg _)
-        simpa only [hdim, hdimP] using
+        simpa [hdim, hdimP] using
           cube_step_le_fourth_difference properizationConstant_pos.le hQdim
 
-/-- Properization in `ZMod q` for a prime `q` that is large compared with the progression. -/
-theorem exists_twoProperGAP_container {q : ℕ} (P : GAP (ZMod q))
+/-- Properization in $\mathbb{Z}/q\mathbb{Z}$ for a prime $q \ge e^{14 (d + 2)^4} |P|$. -/
+lemma exists_twoProperGAP_container {q : ℕ} (P : GAP (ZMod q))
     (hq : Nat.Prime q)
     (hroom :
       Real.exp (properizationConstant * ((P.dim : ℝ) + 2) ^ 4) *
@@ -842,8 +804,8 @@ theorem exists_twoProperGAP_container {q : ℕ} (P : GAP (ZMod q))
           P.carrier.card :=
   exists_twoProperGAP_container_of_injOn_nsmul P (fun _ ha ↦ GAP.injOn_nsmul_of_prime hq ha) hroom
 
-/-- Properization in a torsion-free group, for instance in `ℤ`. No room is needed. -/
-theorem exists_twoProperGAP_container_of_isAddTorsionFree [IsAddTorsionFree G] (P : GAP G) :
+/-- Properization in a torsion-free group, such as $\mathbb{Z}$, with no condition on $|P|$. -/
+lemma exists_twoProperGAP_container_of_isAddTorsionFree [IsAddTorsionFree G] (P : GAP G) :
     ∃ Q : GAP G, Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧
       (∀ i, 1 < Q.length i) ∧ Q.dim ≤ P.dim ∧
       (Q.carrier.card : ℝ) ≤

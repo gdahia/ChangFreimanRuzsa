@@ -17,16 +17,24 @@ import APAP.Prereqs.LpNorm.Discrete.Basic
 import Mathlib.Analysis.SpecialFunctions.Complex.CircleAddChar
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
 
-/-! # Fourier input for Chang's theorem
+/-! # Fourier analysis for Chang's theorem
 
-This module is the adapter boundary between the APAP Fourier conventions and the direct cyclic
-Chang argument in this repository.
+Let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$ with $\kappa \ge 2$.
 
-APAP supplies the discrete Fourier transform, Fourier inversion, convolution identities,
-Parseval--Plancherel, indicator-function energy identities, large spectra, Rudin's inequality,
-Chang's dissociated-spectrum bound, and chord-width Bohr sets. Chang-specific statements below
-this boundary should be phrased for `Finset (ZMod q)` and should absorb normalization changes here
-rather than propagate APAP's analytic conventions through the geometric development.
+## Main statements
+
+* `fourthEnergy_lower_bound`: $|X|^3 \le \kappa E(X)$, where $E(X)$ is the additive energy.
+* `changLargeSpectrum_chord_subset_fourfold`: the set of $x$ with $|1 - \psi(x)| \le 1/4$ for every
+  $\psi$ in the large spectrum of $1_X$ at threshold $\eta = (8\kappa)^{-1/2}$ lies in
+  $2X - 2X$.
+* `exists_changLargeSpectrum_generators`: Chang's lemma, which puts the large spectrum in the span
+  of a small set $\Delta$ of characters.
+* `changGenerators_chord_subset_fourfold`: the same inclusion with the large spectrum replaced by
+  $\Delta$ and the chord width $1/4$ by $(4(|\Delta| + 1))^{-1}$.
+* `exists_frequency_chord_le`: $|1 - \psi_r(x)| \le 2\pi |a| / q$ for every integer $a$ with
+  $a \equiv r x \pmod q$.
+
+The discrete Fourier transform, large spectra and Chang's lemma come from the APAP library.
 -/
 
 @[expose] public section
@@ -71,9 +79,10 @@ private lemma sum_changPairCount_add
     {G : Type*} [AddCommGroup G] [Fintype G] [DecidableEq G] (X : Finset G) :
     ∑ a ∈ X + X, changPairCount X a = (X.card : ℝ) ^ 2 := by
   rw [← sum_changPairCount]
-  exact Fintype.sum_subset fun a ha ↦ by
-    by_contra hmem
-    exact ha (changPairCount_eq_zero_of_not_mem_add hmem)
+  apply Fintype.sum_subset
+  intro a ha
+  by_contra hmem
+  exact ha (changPairCount_eq_zero_of_not_mem_add hmem)
 
 private lemma boringEnergy_two_eq_sum_changPairCount_sq
     {G : Type*} [AddCommGroup G] [Fintype G] [DecidableEq G] (X : Finset G) :
@@ -81,32 +90,29 @@ private lemma boringEnergy_two_eq_sum_changPairCount_sq
   rw [boringEnergy_eq]
   rfl
 
-/-- Small doubling gives the fourth-energy lower bound in APAP's unnormalized Fourier
-convention. -/
+/-- If $|X + X| \le \kappa |X|$, then $|X|^3 \le \kappa E(X)$, where $E(X)$ = `boringEnergy 2 X`
+is the number of additive quadruples in $X$. -/
 lemma fourthEnergy_lower_bound {q : ℕ} [NeZero q] {κ : ℝ} (X : Finset (ZMod q))
     (hX : X.Nonempty) (hXX : ((X + X).card : ℝ) ≤ κ * X.card) :
     (X.card : ℝ) ^ 3 ≤ κ * boringEnergy 2 X := by
   have hcauchy :
-      (X.card : ℝ) ^ 4 ≤ ((X + X).card : ℝ) * boringEnergy 2 X := by
-    rw [boringEnergy_two_eq_sum_changPairCount_sq,
-      show (X.card : ℝ) ^ 4 = ((X.card : ℝ) ^ 2) ^ 2 by ring,
-      ← sum_changPairCount_add]
+      ((X.card : ℝ) ^ 2) ^ 2 ≤ ((X + X).card : ℝ) * boringEnergy 2 X := by
+    rw [boringEnergy_two_eq_sum_changPairCount_sq, ← sum_changPairCount_add]
     apply (sq_sum_le_card_mul_sum_sq
       (s := X + X) (f := changPairCount X)).trans_eq
     congr 1
-    exact Fintype.sum_subset fun a ha ↦ by
-      by_contra hmem
-      apply ha
-      simp [changPairCount_eq_zero_of_not_mem_add hmem]
-  have hcombined :
-      (X.card : ℝ) ^ 4 ≤ (κ * X.card) * boringEnergy 2 X :=
-    hcauchy.trans (mul_le_mul_of_nonneg_right hXX (energy_nonneg 2 X trivChar))
-  have hXpos : (0 : ℝ) < X.card := by
-    exact_mod_cast hX.card_pos
-  nlinarith [sq_nonneg ((X.card : ℝ) ^ 2 - κ * boringEnergy 2 X)]
+    apply Fintype.sum_subset
+    intro a ha
+    by_contra hmem
+    apply ha
+    simp [changPairCount_eq_zero_of_not_mem_add hmem]
+  nlinarith [sq_nonneg ((X.card : ℝ) ^ 2 - κ * boringEnergy 2 X),
+    hcauchy.trans (mul_le_mul_of_nonneg_right hXX (energy_nonneg 2 X trivChar)),
+    (by exact_mod_cast hX.card_pos : (0 : ℝ) < X.card)]
 
 /-! ## Large spectrum -/
 
+/-- The indicator function of `X`, with complex values. -/
 def changIndicatorComplex {G : Type*} (X : Finset G) : G → ℂ :=
   𝟭_[(X : Set G)]
 
@@ -120,14 +126,8 @@ private lemma dft_changFourfoldCorrelation
     (X : Finset G) (ψ : AddChar G ℂ) :
     dft (changFourfoldCorrelation X) ψ =
       (‖dft (changIndicatorComplex X) ψ‖ ^ 4 : ℝ) := by
-  rw [changFourfoldCorrelation, dft_dddconv_apply, dft_iterConv]
-  simp only [Pi.pow_apply, pow_two, map_mul]
-  rw [show dft (changIndicatorComplex X) ψ * dft (changIndicatorComplex X) ψ *
-      (starRingEnd ℂ (dft (changIndicatorComplex X) ψ) *
-        starRingEnd ℂ (dft (changIndicatorComplex X) ψ)) =
-      (dft (changIndicatorComplex X) ψ *
-        starRingEnd ℂ (dft (changIndicatorComplex X) ψ)) ^ 2 by ring,
-    Complex.mul_conj']
+  rw [changFourfoldCorrelation, dft_dddconv_apply, dft_iterConv, Pi.pow_apply, map_pow,
+    ← mul_pow, Complex.mul_conj']
   push_cast
   ring
 
@@ -175,10 +175,10 @@ private lemma changFourfoldCorrelation_ne_zero_mem_sub
   change x ∈ Function.support (changFourfoldCorrelation X) at hx
   apply Set.mem_of_mem_of_subset hx
   rw [changFourfoldCorrelation]
-  simpa only [Finset.coe_sub] using (support_dddconv_subset _ _).trans
-    (Set.sub_subset_sub hsupport hsupport)
+  simpa using (support_dddconv_subset _ _).trans (Set.sub_subset_sub hsupport hsupport)
 
-/-- The APAP large spectrum of the indicator of a finset. -/
+/-- The large spectrum of the indicator of `X` at threshold $\eta$: the characters $\psi$ with
+$|\hat{1}_X(\psi)| \ge \eta |X|$. -/
 def changLargeSpectrum {q : ℕ} [NeZero q] (X : Finset (ZMod q)) (η : ℝ) :
     Finset (AddChar (ZMod q) ℂ) :=
   largeSpec (changIndicatorComplex X) η
@@ -207,20 +207,12 @@ private lemma weighted_chord_error_le
         rw [largeSpec, Finset.mem_filter, not_and_or, not_le] at hψ
         simpa [changIndicatorComplex] using
           hψ.resolve_left fun h ↦ h (Finset.mem_univ ψ)
-      have hhat_sq :
-          ‖dft (changIndicatorComplex X) ψ‖ ^ 2 ≤ (η * X.card) ^ 2 := by
-        nlinarith [mul_nonneg (sub_nonneg.mpr hhat.le)
-          (by linarith [norm_nonneg (dft (changIndicatorComplex X) ψ)] :
-            0 ≤ η * X.card + ‖dft (changIndicatorComplex X) ψ‖)]
-      have hchord : ‖1 - ψ x‖ ≤ 2 := by
-        apply (norm_sub_le _ _).trans_eq
-        rw [norm_one, AddChar.norm_apply]
-        norm_num
+      have hhat_sq : ‖dft (changIndicatorComplex X) ψ‖ ^ 2 ≤ (η * X.card) ^ 2 :=
+        pow_le_pow_left₀ (norm_nonneg _) hhat.le 2
+      have hchord : ‖1 - ψ x‖ ≤ 2 :=
+        (norm_sub_le _ _).trans_eq (by norm_num [AddChar.norm_apply])
       apply (mul_le_mul_of_nonneg_left hchord
         (pow_nonneg (norm_nonneg _) 4)).trans
-      rw [show ‖dft (changIndicatorComplex X) ψ‖ ^ 4 =
-        ‖dft (changIndicatorComplex X) ψ‖ ^ 2 *
-          ‖dft (changIndicatorComplex X) ψ‖ ^ 2 by ring]
       nlinarith [mul_le_mul_of_nonneg_left hhat_sq
         (mul_nonneg (by norm_num : (0 : ℝ) ≤ 2)
           (sq_nonneg ‖dft (changIndicatorComplex X) ψ‖)),
@@ -240,41 +232,24 @@ private lemma spectrum_chord_subset_fourfold
   intro x hx
   apply changFourfoldCorrelation_ne_zero_mem_sub X
   intro hzero
-  have hfourier :
-      (𝔼 ψ, ((‖dft (changIndicatorComplex X) ψ‖ ^ 4 : ℝ) : ℂ) * ψ x) = 0 := by
-    rw [expect_fourier_changFourfoldCorrelation, hzero]
-  have hmoment :
-      (𝔼 ψ, ((‖dft (changIndicatorComplex X) ψ‖ ^ 4 : ℝ) : ℂ)) =
-        ((boringEnergy 2 X : ℝ) : ℂ) := by
-    norm_cast
-    exact fourthMoment_changIndicatorComplex X
   have herr :
       ((boringEnergy 2 X : ℝ) : ℂ) =
         𝔼 ψ, ((‖dft (changIndicatorComplex X) ψ‖ ^ 4 : ℝ) : ℂ) *
           (1 - ψ x) := by
-    rw [← hmoment]
     simp_rw [mul_sub, mul_one]
-    rw [Finset.expect_sub_distrib, hfourier, sub_zero]
-  have hnorm :
-      boringEnergy 2 X ≤
-        𝔼 ψ, ‖dft (changIndicatorComplex X) ψ‖ ^ 4 * ‖1 - ψ x‖ := by
-    have hnorm_expect := norm_expect_le
-      (K := ℝ)
-      (s := Finset.univ)
-      (f := fun ψ : AddChar G ℂ ↦
-        ((‖dft (changIndicatorComplex X) ψ‖ ^ 4 : ℝ) : ℂ) * (1 - ψ x))
-    have henergy_nonneg : 0 ≤ boringEnergy 2 X :=
-      energy_nonneg 2 X trivChar
-    rw [← herr, Complex.norm_real,
-      Real.norm_of_nonneg henergy_nonneg] at hnorm_expect
-    simpa only [norm_mul, Complex.norm_real,
-      Real.norm_of_nonneg (pow_nonneg (norm_nonneg _) 4)] using hnorm_expect
-  exact not_le_of_gt
-    ((weighted_chord_error_le X hε x hx).trans_lt hbudget) hnorm
+    rw [Finset.expect_sub_distrib, expect_fourier_changFourfoldCorrelation, hzero, sub_zero,
+      ← fourthMoment_changIndicatorComplex X]
+    norm_cast
+  have hnorm := norm_expect_le (K := ℝ) (s := Finset.univ)
+    (f := fun ψ : AddChar G ℂ ↦ ((‖dft (changIndicatorComplex X) ψ‖ ^ 4 : ℝ) : ℂ) * (1 - ψ x))
+  rw [← herr, Complex.norm_real,
+    Real.norm_of_nonneg (by exact energy_nonneg 2 X trivChar : 0 ≤ boringEnergy 2 X)] at hnorm
+  refine not_le_of_gt ((weighted_chord_error_le X hε x hx).trans_lt hbudget) ?_
+  simpa [norm_mul] using hnorm
 
-/-- At the Chang threshold `η = (8κ)⁻¹/²`, the chord-width `1/4` Bohr neighborhood of the
-large spectrum lies in `2X - 2X`. -/
-theorem changLargeSpectrum_chord_subset_fourfold
+/-- At the threshold $\eta = (8\kappa)^{-1/2}$, the set of $x$ with $|1 - \psi(x)| \le 1/4$ for
+every $\psi$ in the large spectrum lies in $2X - 2X$. -/
+lemma changLargeSpectrum_chord_subset_fourfold
     {q : ℕ} [NeZero q] {κ : ℝ}
     (X : Finset (ZMod q)) (hκ : 2 ≤ κ) (hX : X.Nonempty)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card) :
@@ -284,21 +259,14 @@ theorem changLargeSpectrum_chord_subset_fourfold
   let : MeasurableSpace (ZMod q) := ⊤
   apply spectrum_chord_subset_fourfold X (by norm_num)
   have hκpos : 0 < κ := by linarith
-  have hinvpos : 0 < (8 * κ)⁻¹ := inv_pos.mpr (by positivity)
-  have hinv : (8 * κ) * (8 * κ)⁻¹ = 1 :=
-    mul_inv_cancel₀ (by positivity)
-  have hsqrt : Real.sqrt ((8 * κ)⁻¹) ^ 2 = (8 * κ)⁻¹ :=
-    Real.sq_sqrt hinvpos.le
   have henergy := fourthEnergy_lower_bound X hX hXX
   have hXpos : (0 : ℝ) < X.card := by exact_mod_cast hX.card_pos
   have henergypos : 0 < boringEnergy 2 X := by
-    apply lt_of_not_ge
-    intro hnonpos
-    have := mul_nonpos_of_nonneg_of_nonpos hκpos.le hnonpos
-    nlinarith [pow_pos hXpos 3]
-  rw [mul_pow, hsqrt]
+    by_contra! hnonpos
+    nlinarith [pow_pos hXpos 3, mul_nonpos_of_nonneg_of_nonpos hκpos.le hnonpos]
+  rw [mul_pow, Real.sq_sqrt (inv_nonneg.mpr (by positivity : (0 : ℝ) ≤ 8 * κ))]
   nlinarith [mul_nonneg (sq_nonneg (X.card : ℝ)) hXpos.le,
-    mul_nonneg hκpos.le henergypos.le]
+    mul_nonneg hκpos.le henergypos.le, mul_inv_cancel₀ (by positivity : 8 * κ ≠ 0)]
 
 private lemma changIndicatorComplex_ne_zero
     {G : Type*} {X : Finset G} (hX : X.Nonempty) :
@@ -306,8 +274,7 @@ private lemma changIndicatorComplex_ne_zero
   classical
   obtain ⟨x, hx⟩ := hX
   intro hzero
-  have := congrFun hzero x
-  simp [changIndicatorComplex, hx] at this
+  simpa [changIndicatorComplex, hx] using congrFun hzero x
 
 private lemma changIndicator_density_parameter
     {G : Type*} [AddCommGroup G] [Fintype G] [MeasurableSpace G]
@@ -318,9 +285,11 @@ private lemma changIndicator_density_parameter
     Real.sq_sqrt (Nat.cast_nonneg X.card)]
   field_simp
 
-/-- Chang's dissociated-spectrum bound, with APAP's norm quotient converted to the density
-`|X| / q`. -/
-theorem exists_changLargeSpectrum_generators {q : ℕ} [NeZero q]
+/-- **Chang's lemma.** The large spectrum of $1_X$ at threshold $\eta$ lies in the span of a
+subset $\Delta$ of itself with
+$|\Delta| \le \lceil C e \lceil 1 + \log(q / |X|) \rceil / \eta^2 \rceil$, where $C$ is
+`changConst`. -/
+lemma exists_changLargeSpectrum_generators {q : ℕ} [NeZero q]
     (X : Finset (ZMod q)) (hX : X.Nonempty) {η : ℝ} (hη : 0 < η) :
     ∃ Δ, Δ ⊆ changLargeSpectrum X η ∧
       Δ.card ≤
@@ -338,7 +307,7 @@ private lemma norm_one_sub_zpow_le {z : ℂ} (hz : ‖z‖ = 1) {e : ℤ}
   rcases he with rfl | rfl | rfl
   · rw [zpow_neg_one, Complex.inv_eq_conj hz]
     apply le_of_eq
-    simpa only [map_one, map_sub] using RCLike.norm_conj (1 - z)
+    simpa using RCLike.norm_conj (1 - z)
   · simp
   · rw [zpow_one]
 
@@ -358,19 +327,20 @@ private lemma norm_one_sub_addSpan_apply_le
     {Δ : Finset (AddChar G ℂ)} {ψ : AddChar G ℂ}
     (hψ : ψ ∈ Δ.addSpan) (x : G) :
     ‖1 - ψ x‖ ≤ ∑ γ ∈ Δ, ‖1 - γ x‖ := by
-  rw [Finset.mem_addSpan] at hψ
-  obtain ⟨e, he, hsum⟩ := hψ
+  obtain ⟨e, he, hsum⟩ := Finset.mem_addSpan.1 hψ
   rw [← hsum, AddChar.sum_apply]
   simp_rw [AddChar.zsmul_apply]
-  refine (norm_one_sub_prod_le_sum ?_).trans
-    (Finset.sum_le_sum fun γ hγ ↦
-      norm_one_sub_zpow_le (AddChar.norm_apply γ x) (he γ))
-  intro γ hγ
-  rw [norm_zpow, AddChar.norm_apply, one_zpow]
+  refine (norm_one_sub_prod_le_sum ?_).trans ?_
+  · intro γ hγ
+    rw [norm_zpow, AddChar.norm_apply, one_zpow]
+  · apply Finset.sum_le_sum
+    intro γ hγ
+    exact norm_one_sub_zpow_le (AddChar.norm_apply γ x) (he γ)
 
-/-- Controlling Chang's generators in chord distance controls the whole large spectrum and
-therefore gives a Bohr neighborhood contained in `2X - 2X`. -/
-theorem changGenerators_chord_subset_fourfold
+/-- If the large spectrum at threshold $(8\kappa)^{-1/2}$ lies in the span of $\Delta$, then the
+set of $x$ with $|1 - \psi(x)| \le (4(|\Delta| + 1))^{-1}$ for every $\psi \in \Delta$ lies in
+$2X - 2X$. -/
+lemma changGenerators_chord_subset_fourfold
     {q : ℕ} [NeZero q] {κ : ℝ}
     (X : Finset (ZMod q)) (hκ : 2 ≤ κ) (hX : X.Nonempty)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
@@ -383,25 +353,20 @@ theorem changGenerators_chord_subset_fourfold
   apply changLargeSpectrum_chord_subset_fourfold X hκ hX hXX
   intro ψ hψ
   apply (norm_one_sub_addSpan_apply_le (hspan hψ) x).trans
-  apply (Finset.sum_le_sum fun γ hγ ↦ hx γ hγ).trans
-  rw [sum_const, nsmul_eq_mul]
-  have hcard : (0 : ℝ) ≤ Δ.card := Nat.cast_nonneg _
-  have hdenom : (0 : ℝ) < 4 * (Δ.card + 1) := by positivity
-  rw [inv_eq_one_div, mul_one_div]
-  apply (div_le_div_iff₀ hdenom (by norm_num)).mpr
-  nlinarith
+  apply (Finset.sum_le_sum hx).trans
+  rw [sum_const, nsmul_eq_mul, inv_eq_one_div, mul_one_div]
+  apply (div_le_div_iff₀ (by positivity) (by norm_num)).mpr
+  nlinarith [(Nat.cast_nonneg _ : (0 : ℝ) ≤ Δ.card)]
 
 /-! ## Frequencies
 
-Chord widths are the analytic side of the Bohr condition; the geometric construction of a
-progression inside a chord neighborhood works instead with integer representatives of the products
-of frequencies with group elements. Converting between the two is the last analytic step of the
-adapter, so it belongs here: everything below this module sees only the arithmetic statement
-`(a : ZMod q) = r * x` together with a bound on the integer `a`. -/
+Chord widths are the analytic form of the Bohr condition. The construction of a progression inside
+a chord neighborhood works instead with integer representatives $a$ of the products $r x$ of
+frequencies with group elements, together with bounds on $|a|$. -/
 
-/-- Every character of `ZMod q` is given by a frequency, and its chord width at `x` is at most
-`2 π |a| / q` for any integer `a` representing the product of that frequency with `x`. -/
-theorem exists_frequency_chord_le {q : ℕ} [NeZero q] (ψ : AddChar (ZMod q) ℂ) :
+/-- Every character $\psi$ of $\mathbb{Z}/q\mathbb{Z}$ is given by a frequency $r$, and
+$|1 - \psi(x)| \le 2 \pi |a| / q$ for every integer $a$ with $a \equiv r x \pmod q$. -/
+lemma exists_frequency_chord_le {q : ℕ} [NeZero q] (ψ : AddChar (ZMod q) ℂ) :
     ∃ r : ZMod q, ∀ (x : ZMod q) (a : ℤ), ((a : ZMod q) = r * x) →
       ‖1 - ψ x‖ ≤ 2 * Real.pi * |(a : ℝ)| / q := by
   obtain ⟨r, rfl⟩ := AddChar.zmodAddEquiv.surjective ψ

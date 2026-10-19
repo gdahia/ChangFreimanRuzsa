@@ -13,10 +13,20 @@ import ChangFreimanRuzsa.Reboxing.ConvexCardinality
 
 /-! # Gauge bounds for lattice coefficient boxes
 
-The projection induction constructs independent lattice steps one rank at a time. Its quantitative
-invariant is most naturally stated on the endpoints: if `mᵢ bᵢ` has controlled gauge for every
-step, then the entire centered coefficient box has controlled gauge, with only a factor equal to
-the number of steps.
+Let $L$ be a subgroup of a real normed space $E$ and let $K \subseteq E$. A
+`GaugeControlledLatticeBox L K s A` consists of linearly independent vectors
+$b_1, \dots, b_s \in L$ and half-widths $m_1, \dots, m_s \in \mathbb{N}$ such that every point of
+$K \cap L$ is $\sum_i c_i b_i$ with $c_i \in \mathbb{Z}$ and $|c_i| \le m_i$, and
+$m_i \, g_K(b_i) \le A$ for every $i$, where $g_K$ is the gauge of $K$.
+
+If $K$ is a symmetric convex neighbourhood of $0$, then every combination $\sum_i c_i b_i$ with
+$|c_i| \le m_i$ has gauge at most $s A$. For the lattice $\mathbb{Z}^s \subseteq \mathbb{R}^s$ and
+$A = a \in \mathbb{N}$, the coefficient box therefore maps into $s a K$, and the residue estimate
+`card_le_pow_mul_card_of_mem_convex_dilate` turns the box into an `AdaptedLatticeBox` for
+$D = K \cap \mathbb{Z}^s$ with $\prod_i (2 m_i + 1) \le (2 s a + 1)^s |D|$.
+
+The file also defines the dilations $A_0 = 0$, $A_{s+1} = 1 + 4 s A_s$ of the shortest-vector
+induction and proves the elementary facts that the induction uses.
 -/
 
 @[expose] public section
@@ -43,12 +53,12 @@ structure GaugeControlledLatticeBox (L : AddSubgroup E) (K : Set E) (s : ℕ) (A
     ∃ c ∈ intBox halfWidth, ∑ i, (c i : ℝ) • step i = x
   endpoint_gauge : ∀ i, (halfWidth i : ℝ) * gauge K (step i) ≤ A
 
-/-- A loose integral dilation budget for the shortest-vector projection induction. -/
+/-- The gauge bounds $A_0 = 0$ and $A_{s+1} = 1 + 4 s A_s$ of the shortest-vector induction. -/
 def gaugeReboxingDilation : ℕ → ℕ
   | 0 => 0
   | s + 1 => 1 + 4 * s * gaugeReboxingDilation s
 
-/-- The cardinality loss delivered by the gauge-controlled coefficient box in rank `s`. -/
+/-- The factor $(2 s A_s + 1)^s$, where $A_s$ is `gaugeReboxingDilation s`. -/
 def boxReboxingFactor (s : ℕ) : ℕ :=
   (2 * (s * gaugeReboxingDilation s) + 1) ^ s
 
@@ -62,39 +72,22 @@ lemma gaugeReboxingDilation_le_pow (s : ℕ) :
   induction s with
   | zero => simp [gaugeReboxingDilation]
   | succ s ih =>
-      rw [gaugeReboxingDilation]
-      have hbase : 4 * s + 1 ≤ 4 * (s + 1) + 1 := by omega
-      have hpow := Nat.pow_le_pow_left hbase s
-      have hmul := Nat.mul_le_mul_left (4 * s) (ih.trans hpow)
-      apply (Nat.add_le_add_left hmul 1).trans
-      rw [pow_succ]
-      have hone : 1 ≤ (4 * (s + 1) + 1) ^ s :=
-        one_le_pow₀ (by omega)
-      nlinarith
+      rw [gaugeReboxingDilation, pow_succ]
+      have hpow := Nat.pow_le_pow_left (by grind : 4 * s + 1 ≤ 4 * (s + 1) + 1) s
+      have hone : 1 ≤ (4 * (s + 1) + 1) ^ s := one_le_pow₀ (by grind)
+      nlinarith [Nat.mul_le_mul_left (4 * s) (ih.trans hpow)]
 
 lemma boxReboxingFactor_le_pow (s : ℕ) :
     boxReboxingFactor s ≤ (4 * s + 1) ^ ((s + 2) * s) := by
-  rcases Nat.eq_zero_or_pos s with rfl | hs
-  · simp [boxReboxingFactor]
-  have hA := gaugeReboxingDilation_le_pow s
-  have hone : 1 ≤ (4 * s + 1) ^ s := one_le_pow₀ (by omega)
-  have hbase :
-      2 * (s * gaugeReboxingDilation s) + 1 ≤ (4 * s + 1) ^ (s + 2) := by
-    rw [pow_add]
-    have hscaled := Nat.mul_le_mul_left (2 * s) hA
-    have hfirst :
-        2 * (s * gaugeReboxingDilation s) + 1 ≤
-          (2 * s + 1) * (4 * s + 1) ^ s := by
-      nlinarith
-    apply hfirst.trans
-    have hcoef : 2 * s + 1 ≤ (4 * s + 1) ^ 2 := by nlinarith
-    simpa only [mul_comm] using
-      Nat.mul_le_mul_right ((4 * s + 1) ^ s) hcoef
-  unfold boxReboxingFactor
-  apply (Nat.pow_le_pow_left hbase s).trans_eq
-  rw [← pow_mul]
+  have hone : 1 ≤ (4 * s + 1) ^ s := one_le_pow₀ (by grind)
+  rw [boxReboxingFactor, pow_mul]
+  apply Nat.pow_le_pow_left
+  rw [pow_add]
+  nlinarith [Nat.mul_le_mul_left (2 * s) (gaugeReboxingDilation_le_pow s),
+    Nat.mul_le_mul_left ((4 * s + 1) ^ s) (by nlinarith : 2 * s + 1 ≤ (4 * s + 1) ^ 2)]
 
-/-- The zero-rank base of the projection induction. -/
+/-- In a space of dimension $0$, the empty family is a gauge-controlled lattice box with
+$A = 0$. -/
 def gaugeControlledLatticeBoxZero
     [FiniteDimensional ℝ E] (L : AddSubgroup E) (K : Set E)
     (hrank : Module.finrank ℝ E = 0) :
@@ -110,8 +103,8 @@ def gaugeControlledLatticeBoxZero
     endpoint_gauge := fun i ↦ Fin.elim0 i
   }
 
-/-- Projecting a body and its lattice along a surjective linear map preserves full spanning by
-lattice points. -/
+/-- If $K \cap L$ spans $E$ and $\pi : E \to F$ is a surjective linear map, then
+$\pi(K) \cap \pi(L)$ spans $F$. -/
 lemma span_inter_image_map_eq_top
     {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     (L : AddSubgroup E) (K : Set E) (π : E →ₗ[ℝ] F)
@@ -119,21 +112,15 @@ lemma span_inter_image_map_eq_top
     (hspan : Submodule.span ℝ (K ∩ (L : Set E)) = ⊤) :
     Submodule.span ℝ
       ((π '' K) ∩ ((L.map (π : E →+ F)) : Set F)) = ⊤ := by
-  apply top_unique
-  intro y _
-  obtain ⟨x, rfl⟩ := hπ y
-  have hx : x ∈ Submodule.span ℝ (K ∩ (L : Set E)) := by
-    rw [hspan]
-    exact Submodule.mem_top
-  have hmap :
-      π x ∈ Submodule.map π (Submodule.span ℝ (K ∩ (L : Set E))) :=
-    Submodule.mem_map.mpr ⟨x, hx, rfl⟩
-  rw [Submodule.map_span] at hmap
-  refine Submodule.span_mono ?_ hmap
-  rintro z ⟨x, hx, rfl⟩
-  exact ⟨⟨x, hx.1, rfl⟩, AddSubgroup.mem_map.mpr ⟨x, hx.2, rfl⟩⟩
+  rw [eq_top_iff, ← LinearMap.range_eq_top.mpr hπ, LinearMap.range_eq_map, ← hspan,
+    Submodule.map_span]
+  apply Submodule.span_mono
+  rintro _ ⟨x, ⟨hxK, hxL⟩, rfl⟩
+  exact ⟨⟨x, hxK, rfl⟩, AddSubgroup.mem_map_of_mem _ hxL⟩
 
-/-- Choose a shortest nonzero lattice direction meeting the body. -/
+/-- If $K$ is a closed bounded convex neighbourhood of $0$ and $K \cap L$ contains a nonzero
+point, then $L$ has a nonzero point $v$ of positive minimal gauge among the nonzero points
+of $L$. -/
 lemma exists_shortest_lattice_direction
     [FiniteDimensional ℝ E] (L : AddSubgroup E) [DiscreteTopology L] (K : Set E)
     (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0)
@@ -151,31 +138,24 @@ lemma exists_shortest_lattice_direction
   obtain ⟨w, hwindep, hw⟩ :=
     ConvexGeometry.exists_witness_successiveMinimum
       (k := 1) (L := L) hconv hclosed hK₀ hbdd hne1
-  let v := w 0
-  have hvL : v ∈ L := (hw 0).1
-  have hvne : v ≠ 0 := hwindep.ne_zero 0
-  have hgaugele : gauge K v ≤ ConvexGeometry.successiveMinimum L K 1 :=
-    (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN
-      (ConvexGeometry.successiveMinimum_nonneg L K 1) v).mp (hw 0).2
-  have hfirst : ∀ y ∈ L, y ≠ 0 →
-      ConvexGeometry.successiveMinimum L K 1 ≤ gauge K y :=
-    fun y hy hyne ↦
-      ConvexGeometry.successiveMinimum_le (gauge_nonneg y)
-        ⟨fun _ ↦ y, linearIndependent_unique_iff.mpr hyne,
-          fun _ ↦ ⟨hy, (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN
-            (gauge_nonneg y) y).mpr le_rfl⟩⟩
-  have hlampos : 0 < ConvexGeometry.successiveMinimum L K 1 := by
+  obtain ⟨hvL, hvK⟩ := hw 0
+  have hgaugele : gauge K (w 0) ≤ successiveMinimum L K 1 :=
+    (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN (successiveMinimum_nonneg L K 1) _).mp hvK
+  have hfirst : ∀ y ∈ L, y ≠ 0 → successiveMinimum L K 1 ≤ gauge K y := by
+    intro y hy hyne
+    exact successiveMinimum_le (gauge_nonneg y) ⟨fun _ ↦ y, linearIndependent_unique_iff.mpr hyne,
+      fun _ ↦ ⟨hy, (mem_smul_iff_gauge_le hconv hclosed hK₀ hvonN (gauge_nonneg y) y).mpr le_rfl⟩⟩
+  have hlampos : 0 < successiveMinimum L K 1 := by
     obtain ⟨R, hR⟩ := hbdd.subset_closedBall (0 : E)
     obtain ⟨r, hrpos, hr⟩ := exists_pos_forall_norm_lt L
-    have hmaxpos : (0 : ℝ) < max R 1 :=
-      lt_of_lt_of_le zero_lt_one (le_max_right _ _)
     have hxpos : 0 < r / (2 * max R 1) := div_pos hrpos (by positivity)
-    refine lt_of_lt_of_le hxpos (ConvexGeometry.le_successiveMinimum_one
+    refine hxpos.trans_le (le_successiveMinimum_one
       (hR.trans (closedBall_subset_closedBall (le_max_left R 1))) hr hxpos.le ?_ hne1)
     nlinarith [div_mul_cancel₀ r (by positivity : (2 * max R 1 : ℝ) ≠ 0),
-      mul_pos hxpos hmaxpos]
-  refine ⟨v, hvL, hvne, lt_of_lt_of_le hlampos (hfirst v hvL hvne), ?_⟩
-  exact fun y hy hyne ↦ hgaugele.trans (hfirst y hy hyne)
+      mul_pos hxpos (lt_max_of_lt_right zero_lt_one : (0 : ℝ) < max R 1)]
+  refine ⟨w 0, hvL, hwindep.ne_zero 0, hlampos.trans_le (hfirst _ hvL (hwindep.ne_zero 0)), ?_⟩
+  intro y hy hyne
+  exact hgaugele.trans (hfirst y hy hyne)
 
 /-- Endpoint gauge bounds control every linear combination in the centered integer box. -/
 lemma gauge_sum_zsmul_le_card_mul
@@ -184,16 +164,12 @@ lemma gauge_sum_zsmul_le_card_mul
     (hend : ∀ i, (m i : ℝ) * gauge K (step i) ≤ A)
     {c : Fin s → ℤ} (hc : c ∈ intBox m) :
     gauge K (∑ i, (c i : ℝ) • step i) ≤ s * A := by
-  apply (gauge_sum_le hconv (absorbent_nhds_zero hK₀) Finset.univ
-    fun i ↦ (c i : ℝ) • step i).trans
-  have hterm : ∀ i : Fin s, gauge K ((c i : ℝ) • step i) ≤ A := by
-    intro i
-    rw [gauge_smul_abs hsymm]
-    refine (mul_le_mul_of_nonneg_right ?_ (gauge_nonneg (step i))).trans (hend i)
-    have hi := mem_intBox.mp hc i
-    exact_mod_cast hi
-  apply (Finset.sum_le_sum fun i _ ↦ hterm i).trans_eq
-  simp
+  refine (gauge_sum_le hconv (absorbent_nhds_zero hK₀) Finset.univ _).trans ?_
+  refine (Finset.sum_le_card_nsmul _ _ A ?_).trans_eq (by simp)
+  intro i _
+  rw [gauge_smul_abs hsymm]
+  refine (mul_le_mul_of_nonneg_right ?_ (gauge_nonneg (step i))).trans (hend i)
+  exact_mod_cast mem_intBox.mp hc i
 
 lemma GaugeControlledLatticeBox.gauge_sum_le
     {L : AddSubgroup E} {A : ℝ} (B : GaugeControlledLatticeBox L K s A)
@@ -208,36 +184,30 @@ lemma GaugeControlledLatticeBox.sum_injective
     Function.Injective (fun c : Fin s → ℤ ↦ ∑ i, (c i : ℝ) • B.step i) := by
   intro c c' h
   funext i
-  have hzero :
-      ∑ j, ((c j - c' j : ℤ) : ℝ) • B.step j = 0 := by
-    simp only [Int.cast_sub, sub_smul, Finset.sum_sub_distrib]
-    exact sub_eq_zero.mpr h
   have hi := Fintype.linearIndependent_iff.mp B.step_independent
-    (fun j ↦ ((c j - c' j : ℤ) : ℝ)) hzero i
-  exact sub_eq_zero.mp (by exact_mod_cast hi)
+    (fun j ↦ ((c j - c' j : ℤ) : ℝ)) (by simpa [sub_smul, sub_eq_zero] using h) i
+  simpa [sub_eq_zero] using hi
 
-/-- The endpoint estimate used when a projected step is lifted and reduced modulo the shortest
-lattice direction. -/
+/-- If $\nu \le \mu + \lambda / 2$, $\lambda \le 2 \mu$ and $m \mu \le A$, then
+$m \nu \le 2 A$. This bounds the endpoint of a lifted step. -/
 lemma endpoint_gauge_lift_le_two_mul {m : ℕ} {A lam μ ν : ℝ}
     (hν : ν ≤ μ + lam / 2) (hlam : lam ≤ 2 * μ)
     (hend : (m : ℝ) * μ ≤ A) :
     (m : ℝ) * ν ≤ 2 * A := by
-  have hm : (0 : ℝ) ≤ m := Nat.cast_nonneg m
-  nlinarith
+  nlinarith [(Nat.cast_nonneg m : (0 : ℝ) ≤ m)]
 
 lemma intVectorToReal_stepsHom (step : Fin s → (Fin s → ℤ)) (c : Fin s → ℤ) :
     intVectorToReal (stepsHom step c) =
       ∑ i, (c i : ℝ) • intVectorToReal (step i) := by
   change intVectorToReal (∑ i, c i • step i) = _
   rw [intVectorToReal_sum]
-  apply Finset.sum_congr rfl
-  intro i _
+  congr with i : 1
   rw [intVectorToReal_zsmul, Int.cast_smul_eq_zsmul]
 
-/-- A gauge-controlled box in the standard integer lattice gives an adapted integral box. Its
-coordinate-box cardinality is bounded by the residue estimate applied to a dimension-only
-dilate. -/
-theorem GaugeControlledLatticeBox.exists_adaptedLatticeBox
+/-- Let $K \subseteq \mathbb{R}^s$ be a closed bounded symmetric convex neighbourhood of $0$ and
+let $D = K \cap \mathbb{Z}^s$. A gauge-controlled box for $\mathbb{Z}^s$ and $K$ with gauge bound
+$a$ gives an adapted lattice box for $D$ with $\prod_i (2 m_i + 1) \le (2 s a + 1)^s |D|$. -/
+lemma GaugeControlledLatticeBox.exists_adaptedLatticeBox
     {D : Finset (Fin s → ℤ)} {K : Set (Fin s → ℝ)}
     (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0)
     (hbdd : Bornology.IsVonNBounded ℝ K) (hsymm : ∀ x, x ∈ K ↔ -x ∈ K)
@@ -250,10 +220,7 @@ theorem GaugeControlledLatticeBox.exists_adaptedLatticeBox
     ∃ C : AdaptedLatticeBox D,
       ∏ i, (2 * C.halfWidth i + 1) ≤ (2 * (s * a) + 1) ^ s * D.card := by
   choose stepZ hstepZ hstep using fun i ↦ AddSubgroup.mem_map.mp (B.step_mem i)
-  have hstepReal : ∀ i, intVectorToReal (stepZ i) = B.step i := by
-    intro i
-    funext j
-    exact congr_fun (hstep i) j
+  have hstepReal : ∀ i, intVectorToReal (stepZ i) = B.step i := hstep
   let C : AdaptedLatticeBox D := {
     step := stepZ
     halfWidth := B.halfWidth
@@ -261,39 +228,27 @@ theorem GaugeControlledLatticeBox.exists_adaptedLatticeBox
       intro c c' hcc'
       apply B.sum_injective
       have hreal := congr_arg intVectorToReal hcc'
-      rw [intVectorToReal_stepsHom, intVectorToReal_stepsHom] at hreal
-      simpa only [hstepReal] using hreal
+      simp_rw [intVectorToReal_stepsHom, hstepReal] at hreal
+      exact hreal
     mem_stepBox := by
       intro x hx
-      have hxL :
-          intVectorToReal x ∈
-            (⊤ : AddSubgroup (Fin s → ℤ)).map
-              (BoxLattice.intCastHom : (Fin s → ℤ) →+ (Fin s → ℝ)) := by
-        exact AddSubgroup.mem_map.mpr ⟨x, by simp, rfl⟩
-      obtain ⟨c, hc, hcx⟩ := B.cover (intVectorToReal x) ((hDK x).mp hx) hxL
+      obtain ⟨c, hc, hcx⟩ := B.cover (intVectorToReal x) ((hDK x).mp hx)
+        (AddSubgroup.mem_map_of_mem _ (AddSubgroup.mem_top x))
       refine ⟨c, hc, intVectorToReal_injective ?_⟩
-      rw [intVectorToReal_stepsHom]
-      simp_rw [hstepReal]
+      simp_rw [intVectorToReal_stepsHom, hstepReal]
       exact hcx
   }
-  let T := (intBox C.halfWidth).image (stepsHom C.step)
-  have hTcard : T.card = ∏ i, (2 * C.halfWidth i + 1) := by
-    dsimp only [T]
-    rw [Finset.card_image_of_injective _ C.stepHom_injective, card_intBox]
-  have hTmem : ∀ v ∈ T,
-      intVectorToReal v ∈ ((s * a : ℕ) : ℝ) • K := by
-    intro v hv
-    obtain ⟨c, hc, rfl⟩ := Finset.mem_image.mp hv
-    apply (mem_smul_iff_gauge_le hconv hclosed hK₀ hbdd
-      (Nat.cast_nonneg _) _).mpr
-    rw [intVectorToReal_stepsHom]
-    change gauge K (∑ i, (c i : ℝ) • intVectorToReal (stepZ i)) ≤ _
-    simp_rw [hstepReal]
-    convert B.gauge_sum_le hconv hK₀ (fun x hx ↦ (hsymm x).mp hx) hc using 1
-    norm_num
-  refine ⟨C, hTcard ▸ ?_⟩
-  exact card_le_pow_mul_card_of_mem_convex_dilate D T hconv
-    (mem_of_mem_nhds hK₀) hsymm hDK hTmem
+  refine ⟨C, ?_⟩
+  rw [← card_intBox, ← Finset.card_image_of_injective _ C.stepHom_injective]
+  apply card_le_pow_mul_card_of_mem_convex_dilate D _ hconv (mem_of_mem_nhds hK₀) hsymm hDK
+  intro v hv
+  obtain ⟨c, hc, rfl⟩ := Finset.mem_image.mp hv
+  apply (mem_smul_iff_gauge_le hconv hclosed hK₀ hbdd (Nat.cast_nonneg _) _).mpr
+  rw [intVectorToReal_stepsHom]
+  change gauge K (∑ i, (c i : ℝ) • intVectorToReal (stepZ i)) ≤ _
+  simp_rw [hstepReal]
+  convert B.gauge_sum_le hconv hK₀ (fun x hx ↦ (hsymm x).mp hx) hc using 1
+  norm_num
 
 end
 
