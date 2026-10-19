@@ -6,14 +6,9 @@ Authors: Gabriel Dahia
 module
 
 public import Mathlib.Basic.Real.Basic
-public import Mathlib.Data.Nat.Factorial.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
-public import Mathlib.LinearAlgebra.Matrix.ToLin
 import TauCeti.LinearAlgebra.IntegralLattice.PosDef.Minkowski
-import Mathlib.Algebra.Order.Star.Rat
-import Mathlib.Analysis.Real.Pi.Bounds
 import Mathlib.Analysis.SpecialFunctions.Gamma.BohrMollerup
-import Mathlib.LinearAlgebra.Matrix.PosDef
 
 /-! # Minkowski's second theorem for a weighted sum of squares
 
@@ -53,10 +48,6 @@ private lemma dotProduct_weightedGram_mulVec (c : Fin n → ℤ) :
   rw [mulVec_diagonal]
   ring
 
-private lemma det_weightedGram : (weightedGram B w).det = B.det ^ 2 * ∏ j, (w j : ℤ) := by
-  rw [weightedGram, det_mul, det_mul, det_transpose, det_diagonal]
-  ring
-
 private lemma posDef_weightedGram (hB : B.det ≠ 0) (hw : ∀ j, 0 < w j) :
     ((weightedGram B w).map (Int.castRingHom ℚ)).PosDef := by
   have hmap : (weightedGram B w).map (Int.castRingHom ℚ) = (B.map (Int.castRingHom ℚ))ᴴ *
@@ -64,18 +55,22 @@ private lemma posDef_weightedGram (hB : B.det ≠ 0) (hw : ∀ j, 0 < w j) :
     rw [weightedGram, Matrix.map_mul, Matrix.map_mul, conjTranspose_eq_transpose_of_trivial,
       transpose_map, diagonal_map (map_zero _)]
     simp
-  have hdet : IsUnit (B.map (Int.castRingHom ℚ)).det := by
-    rw [isUnit_iff_ne_zero, ← RingHom.mapMatrix_apply, ← RingHom.map_det]
-    simpa using hB
   rw [hmap]
   exact (PosDef.diagonal (by simpa using hw)).conjTranspose_mul_mul_same
-    (mulVec_injective_iff_isUnit.mpr ((isUnit_iff_isUnit_det _).mpr hdet))
+    (mulVec_injective_of_det_ne_zero (by simpa [← Int.cast_det] using hB))
 
 /-- The lattice $\mathbb{Z}^n$ with the form $x \mapsto \sum_j w_j (Bx)_j^2$. -/
 private noncomputable def weightedLattice (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
     IntegralLattice (Fin n → ℚ) :=
   IntegralLattice.ofGramMatrix (Pi.basisFun ℚ (Fin n)) (weightedGram B w) (weightedGram_isSymm B w)
 
+private lemma determinant_weightedLattice :
+    (weightedLattice B w).determinant = B.det ^ 2 * ∏ j, (w j : ℤ) := by
+  rw [weightedLattice, IntegralLattice.determinant_ofGramMatrix, weightedGram, det_mul, det_mul,
+    det_transpose, det_diagonal]
+  ring
+
+/-- The basis of `weightedLattice B w` given by the standard basis of $\mathbb{Z}^n$. -/
 private noncomputable def weightedBasis (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
     Basis (Fin n) ℤ (weightedLattice B w) :=
   IntegralLattice.ofGramMatrix.basis _ _ _
@@ -101,6 +96,7 @@ private lemma integralNorm_weightedLattice (y : weightedLattice B w) :
   refine .trans ?_ (dotProduct_weightedGram_mulVec ((weightedBasis B w).equivFun y))
   simp [dotProduct, mulVec, Finset.mul_sum, mul_assoc]
 
+/-- $\Gamma(n/2 + 1)^2 \le n!$, by the log-convexity of $\Gamma$ between $1$ and $n + 1$. -/
 private lemma gamma_sq_le_factorial (n : ℕ) : Real.Gamma (n / 2 + 1) ^ 2 ≤ n ! := by
   have h := Real.Gamma_mul_add_mul_le_rpow_Gamma_mul_rpow_Gamma (s := 1) (t := n + 1)
     (a := 1 / 2) (b := 1 / 2) one_pos (by positivity) (by norm_num) (by norm_num) (by norm_num)
@@ -109,48 +105,39 @@ private lemma gamma_sq_le_factorial (n : ℕ) : Real.Gamma (n / 2 + 1) ^ 2 ≤ n
   exact (pow_le_pow_left₀ (Real.Gamma_pos_of_pos (by positivity)).le h 2).trans_eq
     (Real.sq_sqrt (Nat.cast_nonneg _))
 
+/-- The constant $4^n \Gamma(n/2 + 1)^2 / \pi^n$ of Minkowski's second theorem is at most
+$2^n \, n!$. -/
 private lemma le_of_mul_pi_pow_le {P Δ : ℝ} (hP : 0 ≤ P) (hΔ : 0 ≤ Δ)
     (h : P * Real.pi ^ n ≤ 4 ^ n * Real.Gamma (n / 2 + 1) ^ 2 * Δ) : P ≤ 2 ^ n * n ! * Δ := by
-  have h₁ : P * 2 ^ n ≤ 4 ^ n * (n ! : ℝ) * Δ := by
-    refine (mul_le_mul_of_nonneg_left (pow_le_pow_left₀ zero_le_two Real.two_le_pi n) hP).trans
-      (h.trans ?_)
-    gcongr
-    exact gamma_sq_le_factorial n
-  rw [(by norm_num : (4 : ℝ) = 2 * 2), mul_pow] at h₁
-  refine le_of_mul_le_mul_right ?_ (pow_pos zero_lt_two n)
-  linarith
+  refine le_of_mul_le_mul_left ?_ (pow_pos zero_lt_two n)
+  calc 2 ^ n * P ≤ Real.pi ^ n * P := by gcongr; exact Real.two_le_pi
+    _ ≤ 4 ^ n * Real.Gamma (n / 2 + 1) ^ 2 * Δ := by linarith
+    _ ≤ 4 ^ n * n ! * Δ := by gcongr; exact gamma_sq_le_factorial n
+    _ = 2 ^ n * (2 ^ n * n ! * Δ) := by rw [(by norm_num : (4 : ℝ) = 2 * 2), mul_pow]; ring
 
 /-- **Minkowski's second theorem** for the lattice $B \mathbb{Z}^n$ and the norm
 $x \mapsto \sum_j w_j x_j^2$. There are $n$ linearly independent lattice vectors whose norms have
 product at most $2^n \, n! \det(B)^2 \prod_j w_j$. -/
-lemma exists_linearIndependent_prod_weightedNorm_le (B : Matrix (Fin n) (Fin n) ℤ)
-    (hB : B.det ≠ 0) (w : Fin n → ℕ) (hw : ∀ j, 0 < w j) :
+lemma exists_linearIndependent_prod_weightedNorm_le (hB : B.det ≠ 0) (hw : ∀ j, 0 < w j) :
     ∃ v : Fin n → Fin n → ℤ, LinearIndependent ℤ v ∧ (∀ i, ∃ c, B *ᵥ c = v i) ∧
-      ((∏ i, ∑ j, (w j : ℤ) * v i j ^ 2 : ℤ) : ℝ) ≤
-        2 ^ n * n ! * ((B.det ^ 2 * ∏ j, (w j : ℤ) : ℤ) : ℝ) := by
+      ∏ i, ∑ j, (w j : ℝ) * v i j ^ 2 ≤ 2 ^ n * n ! * ((B.det : ℝ) ^ 2 * ∏ j, (w j : ℝ)) := by
   set L := weightedLattice B w
   have hL : L.IsPosDef :=
     (IntegralLattice.isPosDef_ofGramMatrix_iff _ _ _).mpr (posDef_weightedGram hB hw)
   have hn : finrank ℤ L = n := by simpa using finrank_eq_card_basis (weightedBasis B w)
   obtain ⟨x, hx, hnorm⟩ :=
     hL.isPosSemidef.exists_linearIndependent_integralNorm_eq_successiveMinimum
-  have hmink := hL.prod_successiveMinimum_mul_pi_pow_le
-  obtain ⟨v, hv⟩ : ∃ v : Fin n → Fin n → ℤ,
-      v = fun i ↦ weightedVec B w (x (finCongr hn.symm i)) := ⟨_, rfl⟩
-  have hprod : (∏ i, (L.successiveMinimum i : ℝ)) =
-      ((∏ i, ∑ j, (w j : ℤ) * v i j ^ 2 : ℤ) : ℝ) := by
-    rw [← (finCongr hn.symm).prod_comp, hv]
-    push_cast
-    congr with i
-    exact_mod_cast (hnorm _).symm.trans (integralNorm_weightedLattice _)
-  have hdet : L.determinant = B.det ^ 2 * ∏ j, (w j : ℤ) :=
-    (IntegralLattice.determinant_ofGramMatrix _ _ _).trans det_weightedGram
-  rw [hprod, hdet, hn] at hmink
-  refine ⟨v, ?_, fun i ↦ ⟨_, (congr_fun hv i).symm⟩, le_of_mul_pi_pow_le ?_ ?_ hmink⟩
-  · rw [hv]
-    exact (hx.comp _ (finCongr hn.symm).injective).map' _
+  refine ⟨fun i ↦ weightedVec B w (x (finCongr hn.symm i)), ?_, fun i ↦ ⟨_, rfl⟩, ?_⟩
+  · exact (hx.comp _ (finCongr hn.symm).injective).map' _
       (LinearMap.ker_eq_bot.mpr (weightedVec_injective hB))
-  · positivity
-  · positivity
+  · have hprod : ∏ i, (L.successiveMinimum i : ℝ) =
+        ∏ i, ∑ j, (w j : ℝ) * weightedVec B w (x (finCongr hn.symm i)) j ^ 2 := by
+      rw [← (finCongr hn.symm).prod_comp]
+      congr with i
+      exact_mod_cast (hnorm _).symm.trans (integralNorm_weightedLattice _)
+    have hmink := hL.prod_successiveMinimum_mul_pi_pow_le
+    rw [hprod, determinant_weightedLattice] at hmink
+    simp only [hn] at hmink
+    exact_mod_cast le_of_mul_pi_pow_le (by positivity) (by positivity) hmink
 
 end ChangFreimanRuzsa

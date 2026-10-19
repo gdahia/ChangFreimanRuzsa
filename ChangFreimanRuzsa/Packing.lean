@@ -5,381 +5,318 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.Properization.AlgebraAndGAPBasics
+public import ChangFreimanRuzsa.GapToolkit
+public import Mathlib.Algebra.Group.Pointwise.Finset.Basic
+public import Mathlib.Algebra.Group.Pointwise.Finset.Scalar
+import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.Group.Action.Pointwise.Finset
+import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Positivity.Finset
+import Mathlib.Tactic.Ring.RingNF
 
-/-! # Chang's batch packing argument
+/-! # The packing argument of Chang's proof
 
 This file contains the combinatorial packing argument of Chang's proof. Starting from a finite set
-$Q$, one repeatedly adjoins a batch $S \subseteq A$ of $m$ elements whose translates of the current
-set are pairwise disjoint, so that each step multiplies the size of the current set by $m$. When no
-such batch exists, a maximal family of disjoint translates gives $F \subseteq A$ with $|F| < m$ and
+$Q$, one repeatedly adds a set $S \subseteq A$ of $m$ elements whose translates of the current set
+are pairwise disjoint, so that each step multiplies the size of the current set by $m$. When no
+such set exists, a maximal family of disjoint translates gives $F \subseteq A$ with $|F| < m$ and
 $A \subseteq F + (Q' - Q')$, where $Q'$ is the current set.
+
+The file also defines progressions containing the sets built in this way.
+
+## Main definitions
+
+* `listSubsetSum l`: the subset sums of a list $a_1, \dots, a_n$, that is,
+  $\{0, a_1\} + \dots + \{0, a_n\}$.
+* `GAP.consBinary P a`: the progression $P$ with the step $a$ of length $2$ added.
+* `GAP.consBinaryList P l`: the progression $P$ with one step of length $2$ added for each entry
+  of $l$.
+* `GAP.difference P`: a progression containing $P - P$, with the steps of $P$ and doubled lengths.
 
 ## Main statements
 
-* `exists_maximal_disjoint_translates`: a maximal family of disjoint translates of $Q$ by elements
-  of $A$ covers $A$ by $F + (Q - Q)$.
-* `exists_chang_batch_packing`: the batching process terminates when at most $B$ batches can be
-  adjoined.
-* `GAP.add_binaryListSum_subset_consBinaryList` and `GAP.card_consBinaryList_le`: adjoining one
-  binary generator per element of a batch gives a progression that contains the sums with the batch
-  and whose size at most doubles with each generator.
+* `exists_pairwiseDisjoint_vadd_subset_add_sub`: a maximal family of disjoint translates of $Q$ by
+  elements of $A$ covers $A$ by $F + (Q - Q)$.
+* `exists_card_add_sum_eq_card_mul_pow_and_subset_add_sub`: the packing process stops when at most
+  $B$ steps are possible.
+* `GAP.add_listSubsetSum_subset_consBinaryList` and `GAP.card_consBinaryList_le`: the progression
+  `P.consBinaryList l` contains $P$ plus the subset sums of $l$, and has at most
+  $2^{|l|} \prod_i \ell_i$ elements.
 -/
 
 @[expose] public section
 
 namespace ChangFreimanRuzsa
 
+open Finset
 open scoped Pointwise
 
 noncomputable section
+
+/-! ## Subset sums of a list -/
+
+section ListSubsetSum
+
+variable {G : Type*} [DecidableEq G] [AddCommMonoid G]
+
+/-- The subset sums $\sum_{j \in J} a_j$ of a list $a_1, \dots, a_n$, over all sets $J$ of
+positions. It is the sumset $\{0, a_1\} + \dots + \{0, a_n\}$. -/
+def listSubsetSum (l : List G) : Finset G :=
+  (l.map fun a ↦ ({0, a} : Finset G)).sum
+
+@[simp] lemma listSubsetSum_nil : listSubsetSum ([] : List G) = 0 := rfl
+
+lemma listSubsetSum_cons (a : G) (l : List G) :
+    listSubsetSum (a :: l) = {0, a} + listSubsetSum l := by
+  simp [listSubsetSum]
+
+lemma listSubsetSum_append (l₁ l₂ : List G) :
+    listSubsetSum (l₁ ++ l₂) = listSubsetSum l₁ + listSubsetSum l₂ := by
+  simp [listSubsetSum]
+
+lemma zero_mem_listSubsetSum (l : List G) : 0 ∈ listSubsetSum l := by
+  induction l with
+  | nil => simp [listSubsetSum]
+  | cons a l ih =>
+    rw [listSubsetSum_cons]
+    simpa using add_mem_add (mem_insert_self 0 {a}) ih
+
+lemma mem_listSubsetSum_of_mem {l : List G} {x : G} (hx : x ∈ l) : x ∈ listSubsetSum l := by
+  induction l with
+  | nil => simp at hx
+  | cons a l ih =>
+    rw [listSubsetSum_cons]
+    obtain rfl | hx := List.mem_cons.1 hx
+    · simpa using add_mem_add (by simp : x ∈ ({0, x} : Finset G)) (zero_mem_listSubsetSum l)
+    · simpa using add_mem_add (by simp : 0 ∈ ({0, a} : Finset G)) (ih hx)
+
+omit [DecidableEq G] [AddCommMonoid G] in
+/-- Listing the elements of $k$ sets of $m$ elements each gives a list of length $mk$. -/
+lemma length_flatMap_toList {l : List (Finset G)} {m : ℕ} (hl : ∀ S ∈ l, #S = m) :
+    (l.flatMap Finset.toList).length = m * l.length := by
+  rw [List.length_flatMap, List.map_congr_left (g := fun _ ↦ m) (by simpa using hl),
+    List.map_const', List.sum_replicate, smul_eq_mul, mul_comm]
+
+/-- A sum of one element from each set of a list of sets is a subset sum of the list of all their
+elements. -/
+lemma sum_subset_listSubsetSum_flatMap_toList (l : List (Finset G)) :
+    l.sum ⊆ listSubsetSum (l.flatMap Finset.toList) := by
+  induction l with
+  | nil => simp
+  | cons S l ih =>
+    rw [List.sum_cons, List.flatMap_cons, listSubsetSum_append]
+    refine add_subset_add ?_ ih
+    intro x hx
+    exact mem_listSubsetSum_of_mem (mem_toList.2 hx)
+
+end ListSubsetSum
+
+/-! ## Progressions containing sums and differences -/
 
 namespace GAP
 
 variable {G : Type*} [DecidableEq G] [AddCommGroup G]
 
-/-- Add one coefficient direction to the front of a GAP. -/
-def consGenerator (P : GAP G) (originShift step : G) (length : ℕ)
-    (hlength : 0 < length) : GAP G where
+/-- The progression $P$ with the step $a$ of length $2$ added in front of its steps. It contains
+$P + \{0, a\}$. -/
+def consBinary (P : GAP G) (a : G) : GAP G where
   dim := P.dim + 1
-  carrier :=
-    Finset.univ.image (gapMap (P.origin + originShift)
-      (Fin.cases step P.step) (Fin.cases length P.length))
-  origin := P.origin + originShift
-  step := Fin.cases step P.step
-  length := Fin.cases length P.length
-  length_pos := Fin.cases hlength P.length_pos
+  carrier := univ.image (gapMap P.origin (Fin.cons a P.step) (Fin.cons 2 P.length))
+  origin := P.origin
+  step := Fin.cons a P.step
+  length := Fin.cons 2 P.length
+  length_pos i := by cases i using Fin.cases <;> simp [P.length_pos]
   carrier_eq := rfl
 
-/-- A point of `P`, shifted by the new origin and by an allowed multiple of the new step, lies in
-the one-generator extension. -/
-lemma add_nsmul_mem_consGenerator (P : GAP G) (originShift step : G)
-    (length : ℕ) (hlength : 0 < length) {x : G} (hx : x ∈ P.carrier)
-    (k : ℕ) (hk : k < length) :
-    x + originShift + k • step ∈
-      (P.consGenerator originShift step length hlength).carrier := by
-  let newLength : Fin (P.dim + 1) → ℕ := Fin.cases length P.length
-  let w : (i : Fin (P.dim + 1)) → Fin (newLength i) :=
-    @Fin.cases P.dim (fun i ↦ Fin (newLength i))
-      (⟨k, by simpa [newLength] using hk⟩ : Fin (newLength 0))
-      (fun i ↦ (⟨P.coefficientsFin x i, by
-        simp [newLength]⟩ :
-          Fin (newLength i.succ)))
-  rw [consGenerator, Finset.mem_image]
-  refine ⟨w, Finset.mem_univ _, ?_⟩
-  rw [gapMap, Fin.sum_univ_succ]
-  simp only [w, Fin.cases_zero, Fin.cases_succ]
-  rw [← stepsHom_natCast]
-  have hcoeff :
-      stepsHom P.step (fun i ↦ (P.coefficientsFin x i : ℤ)) =
-        x - P.origin :=
-    stepHom_coordinateMap P hx
-  rw [hcoeff]
-  abel
-
-/-- Add a binary coefficient `0, a` to a GAP. -/
-def consBinary (P : GAP G) (a : G) : GAP G :=
-  P.consGenerator 0 a 2 (by omega)
-
-lemma mem_consBinary (P : GAP G) (a : G) {x : G} (hx : x ∈ P.carrier) :
-    x ∈ (P.consBinary a).carrier := by
-  simpa [consBinary] using
-    P.add_nsmul_mem_consGenerator 0 a 2 (by grind) hx 0 (by grind)
-
-lemma add_mem_consBinary (P : GAP G) (a : G) {x : G} (hx : x ∈ P.carrier) :
-    x + a ∈ (P.consBinary a).carrier := by
-  simpa [consBinary, one_nsmul] using
-    P.add_nsmul_mem_consGenerator 0 a 2 (by grind) hx 1 (by grind)
-
-/-- A coefficient-box GAP containing `P - P`. -/
-def differenceHull (P : GAP G) : GAP G :=
-  ofData P.dim
-    (-∑ i, (P.length i - 1) • P.step i)
-    P.step (fun i ↦ 2 * P.length i) fun i ↦ by
-      exact Nat.mul_pos (by omega) (P.length_pos i)
-
-lemma sub_carrier_subset_differenceHull (P : GAP G) :
-    P.carrier - P.carrier ⊆ P.differenceHull.carrier := by
-  intro z hz
-  obtain ⟨x, hx, y, hy, rfl⟩ := Finset.mem_sub.1 hz
-  let w : (i : Fin P.dim) → Fin (2 * P.length i) :=
-    fun i ↦ ⟨(P.coefficientsFin x i : ℕ) +
-      (P.length i - 1 - P.coefficientsFin y i), by grind [(P.coefficientsFin x i).isLt]⟩
-  change x - y ∈
-    (ofData P.dim (-∑ i, (P.length i - 1) • P.step i)
-      P.step (fun i ↦ 2 * P.length i)
-      (fun i ↦ Nat.mul_pos (by omega) (P.length_pos i))).carrier
-  convert mem_ofData P.dim
-    (-∑ i, (P.length i - 1) • P.step i)
-    P.step (fun i ↦ 2 * P.length i)
-    (fun i ↦ Nat.mul_pos (by omega) (P.length_pos i)) w using 1
-  have hxy :
-      ∑ i, (w i : ℕ) • P.step i =
-        stepHom P (P.coordinateMap x) - stepHom P (P.coordinateMap y) +
-          ∑ i, (P.length i - 1) • P.step i := by
-    simp only [stepHom]
-    change (∑ i, (w i : ℕ) • P.step i) =
-      stepsHom P.step (fun i ↦ ((P.coefficientsFin x i : ℕ) : ℤ)) -
-          stepsHom P.step (fun i ↦ ((P.coefficientsFin y i : ℕ) : ℤ)) +
-        ∑ i, (P.length i - 1) • P.step i
-    rw [stepsHom_natCast P.step (fun i ↦ (P.coefficientsFin x i : ℕ)),
-      stepsHom_natCast P.step (fun i ↦ (P.coefficientsFin y i : ℕ)),
-      ← Finset.sum_sub_distrib,
-      ← Finset.sum_add_distrib]
-    congr with i
-    obtain ⟨k, hk⟩ := Nat.exists_eq_add_of_le
-      (by grind [(P.coefficientsFin y i).isLt] : (P.coefficientsFin y i : ℕ) ≤ P.length i - 1)
-    simp only [w]
-    rw [hk, Nat.add_sub_cancel_left, add_nsmul, add_nsmul]
+lemma add_nsmul_mem_consBinary {P : GAP G} (a : G) {x : G} (hx : x ∈ P.carrier) {k : ℕ}
+    (hk : k < 2) : x + k • a ∈ (P.consBinary a).carrier := by
+  obtain ⟨c, hc, rfl⟩ := P.mem_carrier_iff.1 hx
+  refine mem_image_gapMap_iff.2 ⟨Fin.cons k c, ?_, ?_⟩
+  · intro i
+    cases i using Fin.cases <;> simp [hk, hc]
+  · simp [Fin.sum_univ_succ]
     abel
-  change x - y =
-    -∑ i, (P.length i - 1) • P.step i +
-      ∑ i, (w i : ℕ) • P.step i
-  rw [hxy, stepHom_coordinateMap P hx, stepHom_coordinateMap P hy]
-  abel
 
-lemma differenceHull_dim (P : GAP G) : P.differenceHull.dim = P.dim := rfl
+lemma add_pair_subset_consBinary (P : GAP G) (a : G) :
+    P.carrier + {0, a} ⊆ (P.consBinary a).carrier := by
+  intro z hz
+  obtain ⟨x, hx, e, he, rfl⟩ := mem_add.1 hz
+  simp only [mem_insert, mem_singleton] at he
+  obtain rfl | rfl := he
+  · simpa using add_nsmul_mem_consBinary _ hx (k := 0) (by grind)
+  · simpa using add_nsmul_mem_consBinary _ hx (k := 1) (by grind)
 
-/-- Repeatedly add binary generators. -/
+lemma one_lt_length_consBinary {P : GAP G} (h : ∀ i, 1 < P.length i) (a : G)
+    (i : Fin (P.dim + 1)) : 1 < (P.consBinary a).length i := by
+  cases i using Fin.cases <;> simp [consBinary, h]
+
+/-- The progression $P$ with one step of length $2$ added for each entry of the list $l$. -/
 def consBinaryList (P : GAP G) : List G → GAP G
   | [] => P
   | a :: l => (P.consBinaryList l).consBinary a
 
-/-- All subset sums along a list. -/
-def binaryListSum : List G → Finset G
-  | [] => {0}
-  | a :: l => ({0, a} : Finset G) + binaryListSum l
-
-lemma add_binaryListSum_subset_consBinaryList (P : GAP G) (l : List G) :
-    P.carrier + binaryListSum l ⊆ (P.consBinaryList l).carrier := by
+lemma add_listSubsetSum_subset_consBinaryList (P : GAP G) (l : List G) :
+    P.carrier + listSubsetSum l ⊆ (P.consBinaryList l).carrier := by
   induction l with
-  | nil => simp [binaryListSum, consBinaryList, Finset.singleton_zero]
+  | nil => simp [consBinaryList]
   | cons a l ih =>
-    intro z hz
-    obtain ⟨x, hx, y, hy, rfl⟩ := Finset.mem_add.1 hz
-    obtain ⟨e, he, s, hs, rfl⟩ := Finset.mem_add.1 hy
-    have hxs : x + s ∈ (P.consBinaryList l).carrier := ih (Finset.add_mem_add hx hs)
-    simp only [Finset.mem_insert, Finset.mem_singleton] at he
-    rcases he with rfl | rfl
-    · simpa [consBinaryList] using (P.consBinaryList l).mem_consBinary _ hxs
-    · simpa [consBinaryList, add_assoc, add_comm, add_left_comm] using
-        (P.consBinaryList l).add_mem_consBinary e hxs
+    rw [listSubsetSum_cons, add_left_comm, add_comm {0, a}]
+    exact (add_subset_add_right ih).trans ((P.consBinaryList l).add_pair_subset_consBinary a)
 
-/-- The number of coefficient choices in a GAP's defining box. -/
-def boxVolume (P : GAP G) : ℕ :=
-  ∏ i, P.length i
-
-lemma boxVolume_differenceHull (P : GAP G) :
-    P.differenceHull.boxVolume = 2 ^ P.dim * P.boxVolume := by
-  change (∏ i : Fin P.dim, 2 * P.length i) = 2 ^ P.dim * P.boxVolume
-  rw [Finset.prod_mul_distrib, Finset.prod_const, Finset.card_univ,
-    Fintype.card_fin, boxVolume]
-
-lemma boxVolume_consGenerator (P : GAP G) (originShift step : G)
-    (length : ℕ) (hlength : 0 < length) :
-    (P.consGenerator originShift step length hlength).boxVolume =
-      length * P.boxVolume := by
-  rw [boxVolume, boxVolume, consGenerator, Fin.prod_univ_succ]
-  rfl
+lemma add_subset_consBinaryList_toList {P : GAP G} {S : Finset G} (hS : S ⊆ P.carrier)
+    (W : Finset G) : S + W ⊆ (P.consBinaryList W.toList).carrier :=
+  (add_subset_add hS fun _ hw ↦ mem_listSubsetSum_of_mem (mem_toList.2 hw)).trans
+    (P.add_listSubsetSum_subset_consBinaryList W.toList)
 
 lemma dim_consBinaryList (P : GAP G) (l : List G) :
     (P.consBinaryList l).dim = P.dim + l.length := by
   induction l with
   | nil => rfl
   | cons a l ih =>
-      rw [consBinaryList]
-      change (P.consBinaryList l).dim + 1 = P.dim + (l.length + 1)
-      grind
+    simp only [consBinaryList, consBinary, ih, List.length_cons]
+    grind
+
+lemma one_lt_length_consBinaryList {P : GAP G} (h : ∀ i, 1 < P.length i) (l : List G)
+    (i : Fin (P.consBinaryList l).dim) : 1 < (P.consBinaryList l).length i := by
+  induction l with
+  | nil => exact h i
+  | cons a l ih => exact one_lt_length_consBinary ih a i
+
+/-- A progression containing $P - P$. It has the steps $v_i$ of $P$, the lengths $2 \ell_i$ and
+the origin $-\sum_i (\ell_i - 1) v_i$. -/
+def difference (P : GAP G) : GAP G where
+  dim := P.dim
+  carrier := univ.image (gapMap (-∑ i, (P.length i - 1) • P.step i) P.step (2 * P.length ·))
+  origin := -∑ i, (P.length i - 1) • P.step i
+  step := P.step
+  length := (2 * P.length ·)
+  length_pos i := by grind [P.length_pos i]
+  carrier_eq := rfl
+
+@[simp] lemma dim_difference (P : GAP G) : P.difference.dim = P.dim := rfl
+
+lemma sub_subset_difference (P : GAP G) : P.carrier - P.carrier ⊆ P.difference.carrier := by
+  intro z hz
+  obtain ⟨x, hx, y, hy, rfl⟩ := mem_sub.1 hz
+  obtain ⟨c, hc, rfl⟩ := P.mem_carrier_iff.1 hx
+  obtain ⟨c', hc', rfl⟩ := P.mem_carrier_iff.1 hy
+  refine mem_image_gapMap_iff.2
+    ⟨fun i ↦ c i + (P.length i - 1 - c' i), fun i ↦ by grind [hc i, hc' i], ?_⟩
+  have h (i : Fin P.dim) : (P.length i - 1 - c' i) • P.step i =
+      (P.length i - 1) • P.step i - c' i • P.step i := by
+    rw [sub_nsmul _ (Nat.le_sub_one_of_lt (hc' i)), sub_eq_add_neg]
+  simp only [add_nsmul, h, sum_add_distrib, sum_sub_distrib]
+  abel
+
+lemma sub_subset_difference_of_subset {P : GAP G} {S : Finset G} (hS : S ⊆ P.carrier) :
+    S - S ⊆ P.difference.carrier :=
+  (sub_subset_sub hS hS).trans P.sub_subset_difference
+
+lemma one_lt_length_difference (P : GAP G) (i : Fin P.dim) : 1 < P.difference.length i := by
+  simp only [difference]
+  grind [P.length_pos i]
+
+/-- The number $\prod_i \ell_i$ of coefficient vectors of a GAP. -/
+def boxVolume (P : GAP G) : ℕ := ∏ i, P.length i
+
+lemma boxVolume_difference (P : GAP G) : P.difference.boxVolume = 2 ^ P.dim * P.boxVolume := by
+  change ∏ i : Fin P.dim, 2 * P.length i = _
+  rw [prod_mul_distrib, Fin.prod_const, boxVolume]
+
+lemma boxVolume_consBinary (P : GAP G) (a : G) :
+    (P.consBinary a).boxVolume = 2 * P.boxVolume := by
+  change ∏ i : Fin (P.dim + 1), Fin.cons 2 P.length i = _
+  rw [Fin.prod_cons, boxVolume]
 
 lemma boxVolume_consBinaryList (P : GAP G) (l : List G) :
     (P.consBinaryList l).boxVolume = 2 ^ l.length * P.boxVolume := by
   induction l with
   | nil => simp [consBinaryList]
   | cons a l ih =>
-      rw [consBinaryList, consBinary, boxVolume_consGenerator, ih,
-        List.length_cons, pow_succ]
-      ring
+    rw [consBinaryList, boxVolume_consBinary, ih, List.length_cons, pow_succ]
+    ring
 
 lemma card_consBinaryList_le (P : GAP G) (l : List G) :
-    (P.consBinaryList l).carrier.card ≤ 2 ^ l.length * P.boxVolume := by
-  rw [← P.boxVolume_consBinaryList l, boxVolume]
+    #(P.consBinaryList l).carrier ≤ 2 ^ l.length * P.boxVolume := by
+  rw [← P.boxVolume_consBinaryList l]
   exact (P.consBinaryList l).card_le_prod_length
 
 end GAP
 
-section MaximalPacking
+/-! ## The packing argument -/
 
 variable {G : Type*} [DecidableEq G] [AddCommGroup G]
 
 /-- If $F \subseteq A$ is maximal such that the translates $f + Q$, $f \in F$, are pairwise
 disjoint, then $A \subseteq F + (Q - Q)$. This is Ruzsa's covering argument. -/
-lemma exists_maximal_disjoint_translates (A Q : Finset G) (hQ : Q.Nonempty) :
+lemma exists_pairwiseDisjoint_vadd_subset_add_sub (A : Finset G) {Q : Finset G}
+    (hQ : Q.Nonempty) :
     ∃ F ⊆ A, (F : Set G).PairwiseDisjoint (· +ᵥ Q) ∧ A ⊆ F + (Q - Q) := by
   classical
-  set C := {F ∈ A.powerset | (SetLike.coe F).PairwiseDisjoint (· +ᵥ Q)}
-  obtain ⟨F, hFmax⟩ := C.exists_maximal (Finset.filter_nonempty_iff.mpr
-    ⟨∅, Finset.empty_mem_powerset A, by simp⟩)
-  simp only [C, Finset.mem_filter, Finset.mem_powerset] at hFmax
+  obtain ⟨F, hFmax⟩ := {F ∈ A.powerset | (SetLike.coe F).PairwiseDisjoint (· +ᵥ Q)}.exists_maximal
+    ⟨∅, by simp⟩
+  simp only [mem_filter, mem_powerset] at hFmax
   obtain ⟨hFA, hF⟩ := hFmax.prop
   refine ⟨F, hFA, hF, ?_⟩
   intro a ha
   by_cases haF : a ∈ F
-  · exact Finset.subset_add_left F hQ.zero_mem_sub haF
+  · exact subset_add_left F hQ.zero_mem_sub haF
   by_cases! H : ∀ b ∈ F, Disjoint (a +ᵥ Q) (b +ᵥ Q)
-  · refine (hFmax.not_gt ?_ (Finset.ssubset_insert haF)).elim
-    rw [Finset.insert_subset_iff, Finset.coe_insert]
+  · refine (hFmax.not_gt ?_ (ssubset_insert haF)).elim
+    rw [insert_subset_iff, coe_insert]
     exact ⟨⟨ha, hFA⟩, hF.insert fun _ hb _ ↦ H _ hb⟩
   obtain ⟨b, hb, hab⟩ := H
-  rw [Finset.not_disjoint_iff] at hab
-  obtain ⟨c, hca, hcb⟩ := hab
-  rw [Finset.mem_vadd_finset] at hca hcb
-  obtain ⟨qa, hqa, hqac⟩ := hca
-  obtain ⟨qb, hqb, hqbc⟩ := hcb
-  change a + qa = c at hqac
-  change b + qb = c at hqbc
-  refine Finset.mem_add.mpr ⟨b, hb, qb - qa,
-    Finset.mem_sub.mpr ⟨qb, hqb, qa, hqa, rfl⟩, ?_⟩
-  apply add_right_cancel (b := qa)
-  rw [add_assoc, sub_add_cancel, hqbc, hqac]
+  obtain ⟨c, hca, hcb⟩ := not_disjoint_iff.1 hab
+  obtain ⟨qa, hqa, rfl⟩ := mem_vadd_finset.1 hca
+  obtain ⟨qb, hqb, hqbc⟩ := mem_vadd_finset.1 hcb
+  refine mem_add.2 ⟨b, hb, qb - qa, sub_mem_sub hqb hqa, ?_⟩
+  rw [vadd_eq_add, vadd_eq_add] at hqbc
+  rw [add_sub, hqbc, add_sub_cancel_right]
 
-end MaximalPacking
-
-section BatchPacking
-
-variable {G : Type*} [DecidableEq G] [AddCommGroup G]
-
-/-- The sum of one choice from each batch. -/
-def batchSum : List (Finset G) → Finset G
-  | [] => {0}
-  | S :: batches => S + batchSum batches
-
-/-- A deterministic list containing exactly the elements of a finset. -/
-def finsetList (S : Finset G) : List G :=
-  S.val.toList
-
-omit [DecidableEq G] [AddCommGroup G] in
-@[simp] lemma finsetList_length (S : Finset G) :
-    (finsetList S).length = S.card := by
-  rw [finsetList, Multiset.length_toList, Finset.card_def]
-
-omit [DecidableEq G] [AddCommGroup G] in
-@[simp] lemma mem_finsetList {S : Finset G} {x : G} :
-    x ∈ finsetList S ↔ x ∈ S := by
-  change x ∈ (↑S.val.toList : Multiset G) ↔ x ∈ S.val
-  rw [Multiset.coe_toList]
-
-/-- The concatenation of deterministic enumerations of all batches. -/
-def batchElements (batches : List (Finset G)) : List G :=
-  batches.flatMap finsetList
-
-omit [DecidableEq G] [AddCommGroup G] in
-lemma batchElements_length {batches : List (Finset G)} {m : ℕ}
-    (hbatches : ∀ S ∈ batches, S.card = m) :
-    (batchElements batches).length = m * batches.length := by
-  induction batches with
-  | nil => simp [batchElements]
-  | cons S batches ih =>
-      rw [batchElements, List.flatMap_cons, List.length_append]
-      change (finsetList S).length + (batchElements batches).length =
-        m * (S :: batches).length
-      rw [finsetList_length,
-        ih (fun T hT ↦ hbatches T (List.mem_cons_of_mem S hT)),
-        List.length_cons, hbatches S List.mem_cons_self]
-      ring
-
-lemma zero_mem_binaryListSum (l : List G) :
-    0 ∈ GAP.binaryListSum l := by
-  induction l with
-  | nil => simp [GAP.binaryListSum]
-  | cons a l ih =>
-      rw [GAP.binaryListSum, Finset.mem_add]
-      exact ⟨0, by simp, 0, ih, by simp⟩
-
-lemma mem_binaryListSum_of_mem {l : List G} {x : G} (hx : x ∈ l) :
-    x ∈ GAP.binaryListSum l := by
-  induction l with
-  | nil => simp at hx
-  | cons a l ih =>
-      rw [List.mem_cons] at hx
-      rw [GAP.binaryListSum, Finset.mem_add]
-      rcases hx with rfl | hx
-      · exact ⟨x, by simp, 0, zero_mem_binaryListSum l, by simp⟩
-      · exact ⟨0, by simp, x, ih hx, by simp⟩
-
-lemma binaryListSum_append (l₁ l₂ : List G) :
-    GAP.binaryListSum (l₁ ++ l₂) =
-      GAP.binaryListSum l₁ + GAP.binaryListSum l₂ := by
-  induction l₁ with
-  | nil =>
-      ext x
-      simp [GAP.binaryListSum, Finset.mem_add]
-  | cons a l₁ ih =>
-      rw [List.cons_append, GAP.binaryListSum, GAP.binaryListSum, ih, add_assoc]
-
-lemma batchSum_subset_binaryListSum_batchElements (batches : List (Finset G)) :
-    batchSum batches ⊆ GAP.binaryListSum (batchElements batches) := by
-  induction batches with
-  | nil => simp [batchSum, batchElements, GAP.binaryListSum]
-  | cons S batches ih =>
-      intro z hz
-      obtain ⟨x, hx, y, hy, rfl⟩ := Finset.mem_add.1 hz
-      rw [batchElements, List.flatMap_cons, binaryListSum_append, Finset.mem_add]
-      exact ⟨x, mem_binaryListSum_of_mem (mem_finsetList.mpr hx),
-        y, ih hy, rfl⟩
-
-private lemma add_batchSum_nil (Q : Finset G) : Q + batchSum [] = Q := by
-  rw [batchSum, Finset.singleton_zero, add_zero]
-
-private lemma exists_small_cover_or_batch (A Q : Finset G) (hQ : Q.Nonempty) (m : ℕ) :
-    (∃ F ⊆ A, F.card < m ∧ A ⊆ F + (Q - Q)) ∨
-      ∃ S ⊆ A, S.card = m ∧ (Q + S).card = Q.card * m := by
-  obtain ⟨F, hFA, hFdisjoint, hcover⟩ := exists_maximal_disjoint_translates A Q hQ
-  obtain h | h := lt_or_ge F.card m
+/-- Either a maximal family of disjoint translates of $Q$ by elements of $A$ has fewer than $m$
+elements, or $A$ contains a set $S$ of $m$ elements with $|Q + S| = |Q| m$. -/
+private lemma exists_subset_add_sub_or_card_add_eq (A : Finset G) {Q : Finset G}
+    (hQ : Q.Nonempty) (m : ℕ) :
+    (∃ F ⊆ A, #F < m ∧ A ⊆ F + (Q - Q)) ∨ ∃ S ⊆ A, #S = m ∧ #(Q + S) = #Q * m := by
+  obtain ⟨F, hFA, hF, hcover⟩ := exists_pairwiseDisjoint_vadd_subset_add_sub A hQ
+  obtain h | h := lt_or_ge #F m
   · exact Or.inl ⟨F, hFA, h, hcover⟩
-  right
-  obtain ⟨S, hSF, hScard⟩ := Finset.exists_subset_card_eq h
-  refine ⟨S, hSF.trans hFA, hScard, ?_⟩
-  rw [add_comm, Finset.card_add_iff.mpr (Finset.pairwiseDisjoint_vadd_iff.mp
-    (Set.Pairwise.mono (Finset.coe_subset.mpr hSF) hFdisjoint)), hScard, Nat.mul_comm]
+  obtain ⟨S, hSF, hS⟩ := exists_subset_card_eq h
+  refine Or.inr ⟨S, hSF.trans hFA, hS, ?_⟩
+  rw [add_comm, card_add_iff.2 (pairwiseDisjoint_vadd_iff.1 (hF.subset (coe_subset.2 hSF))), hS,
+    mul_comm]
 
-/-- Chang's batching process. At every step it chooses $m$ pairwise disjoint translates of the
-current set by elements of $A$, so adjoining the chosen batch multiplies its cardinality by $m$.
-The ambient group may be infinite. The process terminates because, by hypothesis, at most $B$
-batches can be adjoined in this way. -/
-lemma exists_chang_batch_packing (A Q : Finset G) (hQ : Q.Nonempty) (m : ℕ) (hm : 0 < m)
-    (B : ℕ) (hB : ∀ batches : List (Finset G), (∀ S ∈ batches, S ⊆ A ∧ S.card = m) →
-      (Q + batchSum batches).card = Q.card * m ^ batches.length → batches.length ≤ B) :
-    ∃ batches : List (Finset G), ∃ F : Finset G,
-      (∀ S ∈ batches, S ⊆ A ∧ S.card = m) ∧
-      (Q + batchSum batches).card = Q.card * m ^ batches.length ∧
-      F ⊆ A ∧ F.card < m ∧
-      A ⊆ F + ((Q + batchSum batches) - (Q + batchSum batches)) := by
-  obtain ⟨F, hFA, hFcard, hcover⟩ | ⟨S, hSA, hScard, hQS⟩ :=
-    exists_small_cover_or_batch A Q hQ m
-  · exact ⟨[], F, by simp, by simp [add_batchSum_nil], hFA, hFcard, by rwa [add_batchSum_nil]⟩
+private lemma card_add_sum_cons {Q S : Finset G} {m : ℕ} {l : List (Finset G)}
+    (hQS : #(Q + S) = #Q * m) (hl : #(Q + S + l.sum) = #(Q + S) * m ^ l.length) :
+    #(Q + (S :: l).sum) = #Q * m ^ (S :: l).length := by
+  rw [List.sum_cons, ← add_assoc, hl, hQS, List.length_cons, pow_succ]
+  ring
+
+/-- The packing argument of Chang's proof. Starting from $Q$, each step adds a set
+$S_j \subseteq A$ of $m$ elements whose translates of the current set are pairwise disjoint. If at
+most $B$ such steps are possible, then there are sets $S_1, \dots, S_k \subseteq A$ of size $m$
+with $|Q + S_1 + \dots + S_k| = |Q| m^k$, and a set $F \subseteq A$ with $|F| < m$ and
+$A \subseteq F + (Q' - Q')$, where $Q' = Q + S_1 + \dots + S_k$. The group may be infinite. -/
+lemma exists_card_add_sum_eq_card_mul_pow_and_subset_add_sub {A Q : Finset G} (hQ : Q.Nonempty)
+    {m : ℕ} (hm : 0 < m) {B : ℕ} (hB : ∀ l : List (Finset G), (∀ S ∈ l, S ⊆ A ∧ #S = m) →
+      #(Q + l.sum) = #Q * m ^ l.length → l.length ≤ B) :
+    ∃ (l : List (Finset G)) (F : Finset G), (∀ S ∈ l, S ⊆ A ∧ #S = m) ∧
+      #(Q + l.sum) = #Q * m ^ l.length ∧ F ⊆ A ∧ #F < m ∧
+      A ⊆ F + ((Q + l.sum) - (Q + l.sum)) := by
+  obtain ⟨F, hFA, hF, hcover⟩ | ⟨S, hSA, hS, hQS⟩ := exists_subset_add_sub_or_card_add_eq A hQ m
+  · exact ⟨[], F, by simp, by simp, hFA, hF, by simpa using hcover⟩
+  have hSl {l : List (Finset G)} (hl : ∀ T ∈ l, T ⊆ A ∧ #T = m) :
+      ∀ T ∈ S :: l, T ⊆ A ∧ #T = m :=
+    List.forall_mem_cons.2 ⟨⟨hSA, hS⟩, hl⟩
   cases B with
-  | zero =>
-    refine absurd (hB [S] (by simp [hSA, hScard]) ?_) (by simp)
-    rw [batchSum, ← add_assoc, add_batchSum_nil, hQS]
-    simp
+  | zero => exact absurd (hB [S] (hSl (by simp)) (by simpa using hQS)) (by simp)
   | succ B =>
-    have hrec :=
-      exists_chang_batch_packing A (Q + S) (hQ.add (Finset.card_pos.1 (hScard ▸ hm))) m hm B ?_
-    · obtain ⟨batches, F, hbatches, hpacked, hFA, hFcard, hcover⟩ := hrec
-      refine ⟨S :: batches, F, List.forall_mem_cons.2 ⟨⟨hSA, hScard⟩, hbatches⟩, ?_, hFA,
-        hFcard, ?_⟩
-      · rw [batchSum, ← add_assoc, hpacked, hQS, List.length_cons, pow_succ]
-        ring
-      · simpa [batchSum, ← add_assoc] using hcover
-    intro batches hbatches hcard
-    refine Nat.le_of_succ_le_succ (hB (S :: batches)
-      (List.forall_mem_cons.2 ⟨⟨hSA, hScard⟩, hbatches⟩) ?_)
-    rw [batchSum, ← add_assoc, hcard, hQS, List.length_cons, pow_succ]
-    ring
-
-end BatchPacking
+    obtain ⟨l, F, hl, hcard, hFA, hF, hcover⟩ :=
+      exists_card_add_sum_eq_card_mul_pow_and_subset_add_sub (hQ.add (card_pos.1 (hS ▸ hm))) hm
+        (B := B) fun l hl hcard ↦
+          Nat.le_of_succ_le_succ (hB _ (hSl hl) (card_add_sum_cons hQS hcard))
+    exact ⟨S :: l, F, hSl hl, card_add_sum_cons hQS hcard, hFA, hF,
+      by simpa [← add_assoc] using hcover⟩
 
 end
 

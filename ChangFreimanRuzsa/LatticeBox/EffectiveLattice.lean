@@ -5,22 +5,20 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.BoxLatticePoints
 public import ChangFreimanRuzsa.LatticeCoordinates
 
 /-!
 # Integer coordinates of the integer points of a span
 
 Let $S$ be a finite subset of $\mathbb{Z}^d$, let $H$ be its real span and let $r = \dim H$. The
-integer points of $H$ form a subgroup $\Lambda$ of $\mathbb{Z}^d$. This file defines the map
-$\mathbb{Z}^d \to \mathbb{Z}^r$ that sends a point of $\Lambda$ to its coordinates in the basis
-`integerGeneratedLatticeBasis S`, and is zero outside $\Lambda$. On $\Lambda$ it is additive and
-it is the inverse of `ofLatticeCoordinates S`. The coordinates of the points of $S$ span
-$\mathbb{R}^r$, so in these coordinates $S$ is not contained in a proper subspace.
+integer points of $H$ form the subgroup $\Lambda$ = `saturatedSpan S` of $\mathbb{Z}^d$. This file
+defines the map $\mathbb{Z}^d \to \mathbb{Z}^r$ that sends a point of $\Lambda$ to its coordinates
+in the basis `integerGeneratedLatticeBasis S`, and is zero outside $\Lambda$. On $\Lambda$ it is
+additive and it is the inverse of `ofLatticeCoordinates S`. The coordinates of the points of $S$
+span $\mathbb{R}^r$, so in these coordinates $S$ is not contained in a proper subspace.
 
 ## Main definitions
 
-* `integerGeneratedLattice S`: the subgroup $\Lambda$ of $\mathbb{Z}^d$.
 * `latticeCoordinates S`: the coordinate map $\mathbb{Z}^d \to \mathbb{Z}^r$.
 
 ## Main statements
@@ -41,28 +39,16 @@ noncomputable section
 
 variable {d : ℕ} (S : Finset (Fin d → ℤ))
 
-/-- The subgroup of $\mathbb{Z}^d$ of the integer points of the real span of `S`. -/
-def integerGeneratedLattice : AddSubgroup (Fin d → ℤ) :=
-  (integerGeneratedSubspace S).toAddSubgroup.comap BoxLattice.intCastHom
-
-lemma mem_integerGeneratedLattice {y : Fin d → ℤ} :
-    y ∈ integerGeneratedLattice S ↔ intVectorToReal y ∈ integerGeneratedSubspace S :=
-  Iff.rfl
-
-lemma mem_integerGeneratedLattice_of_mem {y : Fin d → ℤ} (hy : y ∈ S) :
-    y ∈ integerGeneratedLattice S :=
-  Submodule.subset_span ⟨y, hy, rfl⟩
-
 lemma ofLatticeCoordinates_mem (v : Fin (integerGeneratedRank S) → ℤ) :
-    ofLatticeCoordinates S v ∈ integerGeneratedLattice S := by
-  rw [mem_integerGeneratedLattice, ← realOfLatticeCoordinates_intVectorToReal]
+    ofLatticeCoordinates S v ∈ saturatedSpan S := by
+  rw [mem_saturatedSpan, ← realOfLatticeCoordinates_intVectorToReal]
   exact realOfLatticeCoordinates_mem S _
 
 open Classical in
 /-- The coordinates in `integerGeneratedLatticeBasis S` of an integer point of the real span of
 `S`. The value at an integer vector outside the span is zero. -/
 def latticeCoordinates (y : Fin d → ℤ) : Fin (integerGeneratedRank S) → ℤ :=
-  if hy : y ∈ integerGeneratedLattice S then
+  if hy : y ∈ saturatedSpan S then
     fun i ↦ (integerGeneratedLatticeBasis S).repr
       ⟨⟨intVectorToReal y, hy⟩, intVectorToReal_mem_standardIntegerLattice y⟩ i
   else 0
@@ -71,7 +57,7 @@ variable {S}
 
 /-- The point of the span of `S` with the coordinates of `y` is `y`. -/
 lemma realOfLatticeCoordinates_latticeCoordinates {y : Fin d → ℤ}
-    (hy : y ∈ integerGeneratedLattice S) :
+    (hy : y ∈ saturatedSpan S) :
     realOfLatticeCoordinates S (intVectorToReal (latticeCoordinates S y)) = intVectorToReal y := by
   have h : intVectorToReal (latticeCoordinates S y) =
       ((integerGeneratedLatticeBasis S).ofZLatticeBasis ℝ _).equivFun ⟨intVectorToReal y, hy⟩ := by
@@ -84,7 +70,7 @@ lemma realOfLatticeCoordinates_latticeCoordinates {y : Fin d → ℤ}
   rfl
 
 lemma ofLatticeCoordinates_latticeCoordinates {y : Fin d → ℤ}
-    (hy : y ∈ integerGeneratedLattice S) :
+    (hy : y ∈ saturatedSpan S) :
     ofLatticeCoordinates S (latticeCoordinates S y) = y := by
   apply intVectorToReal_injective
   rw [← realOfLatticeCoordinates_intVectorToReal, realOfLatticeCoordinates_latticeCoordinates hy]
@@ -101,7 +87,7 @@ lemma latticeCoordinates_ofLatticeCoordinates (v : Fin (integerGeneratedRank S) 
 lemma ofLatticeCoordinates_injective : Function.Injective (ofLatticeCoordinates S) :=
   Function.LeftInverse.injective (latticeCoordinates_ofLatticeCoordinates S)
 
-lemma latticeCoordinates_injOn : Set.InjOn (latticeCoordinates S) (integerGeneratedLattice S) := by
+lemma latticeCoordinates_injOn : Set.InjOn (latticeCoordinates S) (saturatedSpan S) := by
   intro a ha b hb hab
   rw [← ofLatticeCoordinates_latticeCoordinates ha, hab, ofLatticeCoordinates_latticeCoordinates hb]
 
@@ -110,8 +96,8 @@ lemma latticeCoordinates_zero : latticeCoordinates S 0 = 0 := by
 
 variable {S}
 
-lemma latticeCoordinates_add {a b : Fin d → ℤ} (ha : a ∈ integerGeneratedLattice S)
-    (hb : b ∈ integerGeneratedLattice S) :
+lemma latticeCoordinates_add {a b : Fin d → ℤ} (ha : a ∈ saturatedSpan S)
+    (hb : b ∈ saturatedSpan S) :
     latticeCoordinates S (a + b) = latticeCoordinates S a + latticeCoordinates S b := by
   apply ofLatticeCoordinates_injective S
   rw [map_add, ofLatticeCoordinates_latticeCoordinates ha,
@@ -121,8 +107,8 @@ lemma latticeCoordinates_add {a b : Fin d → ℤ} (ha : a ∈ integerGeneratedL
 /-- On the integer points of the span of `S`, the coordinate map preserves and reflects the
 equality of two sums of two terms. -/
 lemma latticeCoordinates_add_eq_add_iff {a b c e : Fin d → ℤ}
-    (ha : a ∈ integerGeneratedLattice S) (hb : b ∈ integerGeneratedLattice S)
-    (hc : c ∈ integerGeneratedLattice S) (he : e ∈ integerGeneratedLattice S) :
+    (ha : a ∈ saturatedSpan S) (hb : b ∈ saturatedSpan S)
+    (hc : c ∈ saturatedSpan S) (he : e ∈ saturatedSpan S) :
     latticeCoordinates S a + latticeCoordinates S b =
       latticeCoordinates S c + latticeCoordinates S e ↔ a + b = c + e := by
   rw [← latticeCoordinates_add ha hb, ← latticeCoordinates_add hc he]
@@ -139,7 +125,7 @@ lemma span_image_intVectorToReal_latticeCoordinates :
   congr 1
   apply Set.image_congr
   intro y hy
-  exact realOfLatticeCoordinates_latticeCoordinates (mem_integerGeneratedLattice_of_mem S hy)
+  exact realOfLatticeCoordinates_latticeCoordinates (subset_saturatedSpan S hy)
 
 end
 

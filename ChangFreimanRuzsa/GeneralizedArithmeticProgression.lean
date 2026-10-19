@@ -6,13 +6,7 @@ Authors: Gabriel Dahia
 module
 
 public import Mathlib.Algebra.BigOperators.Group.Finset.Defs
-public import Mathlib.Data.Fintype.Pi
-public import Mathlib.Basic.Real.Basic
-public import Mathlib.Data.ZMod.Defs
-import Mathlib.Algebra.Order.Archimedean.Real.Basic
-import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
-import Mathlib.Order.Int.ConditionallyCompleteOrder
-import Mathlib.Data.Set.Card
+public import Mathlib.Data.Fintype.Basic
 
 /-!
 # The coordinate map of a generalized arithmetic progression
@@ -27,16 +21,9 @@ sends a vector of coordinates $w$ to that point.
 
 namespace ChangFreimanRuzsa
 
-open Nat
-open scoped Pointwise
-
-noncomputable section
-
 /-- The point $a + \sum_i w_i s_i$ of the generalized arithmetic progression with origin $a$,
 steps $s_i$ and lengths $L_i$, for coordinates $0 \le w_i < L_i$. -/
 def gapMap {G : Type*} [AddCommMonoid G] {d : ℕ} (origin : G) (step : Fin d → G)
     (length : Fin d → ℕ) (w : (i : Fin d) → Fin (length i)) : G := origin + ∑ i, (w i : ℕ) • step i
-
-end
 
 end ChangFreimanRuzsa

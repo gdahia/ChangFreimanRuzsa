@@ -7,14 +7,9 @@ module
 
 public import Mathlib.Data.Int.Interval
 public import Mathlib.Data.Pi.Interval
-public import Mathlib.GroupTheory.Index
-public import Mathlib.Algebra.Order.Archimedean.Real.Basic
-public import Mathlib.Order.Int.ConditionallyCompleteOrder
+public import Mathlib.Basic.Real.Basic
 public import Mathlib.LinearAlgebra.LinearIndependent.Defs
-import Mathlib.Algebra.Order.BigOperators.GroupWithZero.Finset
-import Mathlib.Combinatorics.Pigeonhole
-import Mathlib.LinearAlgebra.Dimension.Constructions
-import Mathlib.LinearAlgebra.FreeModule.StrongRankCondition
+import Mathlib.Data.Rat.Floor
 
 /-! # Geometry of numbers for the relation lattice of a progression
 
@@ -24,8 +19,8 @@ of relations among the steps of a progression.
 
 ## Main definitions and statements
 
-- `intBox` and `natBox`: the symmetric and the nonnegative integer boxes, with their
-  cardinalities.
+- `intBox` and `natBox`: the symmetric and the nonnegative integer boxes, as intervals of
+  $\mathbb{Z}^d$ for the pointwise order, with their cardinalities.
 - `card_mul_prod_le_of_separated`: the packing bound. A set of points of a box that are pairwise
   far apart is small.
 - `IsShort` and `HasIndependentShort`: a dilate of a box contains a vector, or a given number of
@@ -48,19 +43,18 @@ section Box
 
 variable {d : ℕ}
 
-/-- The symmetric box of integer vectors with `|v i| ≤ m i`. -/
+/-- The symmetric box of the integer vectors $v$ with $|v_i| \le m_i$ for every $i$. -/
 def intBox (m : Fin d → ℕ) : Finset (Fin d → ℤ) :=
   Finset.Icc (fun i ↦ -(m i : ℤ)) fun i ↦ (m i : ℤ)
 
-/-- The nonnegative box of integer vectors with `0 ≤ v i ≤ m i`. -/
+/-- The nonnegative box of the integer vectors $v$ with $0 \le v_i \le m_i$ for every $i$. -/
 def natBox (m : Fin d → ℕ) : Finset (Fin d → ℤ) :=
   Finset.Icc 0 fun i ↦ (m i : ℤ)
 
-lemma mem_intBox {m : Fin d → ℕ} {v : Fin d → ℤ} : v ∈ intBox m ↔ ∀ i, |v i| ≤ (m i : ℤ) := by
+lemma mem_intBox {m : Fin d → ℕ} {v : Fin d → ℤ} : v ∈ intBox m ↔ ∀ i, |v i| ≤ m i := by
   simp [intBox, Pi.le_def, abs_le, ← forall_and]
 
-lemma mem_natBox {m : Fin d → ℕ} {v : Fin d → ℤ} :
-    v ∈ natBox m ↔ ∀ i, 0 ≤ v i ∧ v i ≤ (m i : ℤ) := by
+lemma mem_natBox {m : Fin d → ℕ} {v : Fin d → ℤ} : v ∈ natBox m ↔ ∀ i, 0 ≤ v i ∧ v i ≤ m i := by
   simp [natBox, Pi.le_def, ← forall_and]
 
 @[simp] lemma zero_mem_intBox (m : Fin d → ℕ) : (0 : Fin d → ℤ) ∈ intBox m :=
@@ -77,7 +71,8 @@ lemma card_natBox (m : Fin d → ℕ) : (natBox m).card = ∏ i, (m i + 1) := by
   congr with i
   simp
 
-/-- A difference of two points of a box lies in the symmetric box of the same half-widths. -/
+/-- The difference of two points of the nonnegative box of half-widths $m$ lies in the symmetric
+box of half-widths $m$. -/
 lemma sub_mem_intBox {m : Fin d → ℕ} {v w : Fin d → ℤ} (hv : v ∈ natBox m) (hw : w ∈ natBox m) :
     v - w ∈ intBox m := by
   rw [mem_natBox] at hv hw
@@ -86,7 +81,8 @@ lemma sub_mem_intBox {m : Fin d → ℕ} {v w : Fin d → ℤ} (hv : v ∈ natBo
   simp only [Pi.sub_apply, abs_le]
   grind [hv i, hw i]
 
-/-- Translating a box by a point of a smaller box lands in the box of the added half-widths. -/
+/-- The sum of a point of the symmetric box of half-widths $m$ and a point of the nonnegative box of
+half-widths $m'$ lies in the symmetric box of half-widths $m + m'$. -/
 lemma add_mem_intBox {m m' : Fin d → ℕ} {v w : Fin d → ℤ} (hv : v ∈ intBox m)
     (hw : w ∈ natBox m') : v + w ∈ intBox fun i ↦ m i + m' i := by
   rw [mem_intBox] at hv ⊢
@@ -99,74 +95,67 @@ end Box
 
 /-! ## The packing bound
 
-A set of integer points that are pairwise far apart in the box metric is sparse: the translates of
-a box of half-widths `m` by its elements are disjoint, hence fit in the enlarged box. This is the
-counting form of the volume packing argument. -/
+A set $s$ of integer points that are pairwise far apart in the box metric is sparse: the
+translates of the nonnegative box of half-widths $m$ by the points of $s$ are disjoint, hence fit
+in an enlarged box. This is the counting form of the volume packing argument. -/
 
 section Packing
 
 variable {d : ℕ}
 
-/-- The packing bound: if distinct points of `s` are never within `m` of each other, and `s` lies
-in the box of half-widths `M`, then `s` is small. -/
+/-- If any two distinct points of $s$ differ by more than $m_i$ in some coordinate $i$, then the
+translates of the nonnegative box of half-widths $m$ by the points of $s$ are disjoint. -/
+lemma injOn_add_of_separated {s : Finset (Fin d → ℤ)} {m : Fin d → ℕ}
+    (hsep : ∀ u ∈ s, ∀ w ∈ s, u ≠ w → ∃ i, m i < |u i - w i|) :
+    Set.InjOn (fun ((u, a) : (Fin d → ℤ) × (Fin d → ℤ)) ↦ u + a) ↑(s ×ˢ natBox m) := by
+  rintro ⟨u, a⟩ hp ⟨u', a'⟩ hp' hsum
+  obtain ⟨hu, ha⟩ := Finset.mem_product.mp hp
+  obtain ⟨hu', ha'⟩ := Finset.mem_product.mp hp'
+  obtain rfl : u = u' := by
+    by_contra hne
+    obtain ⟨i, hi⟩ := hsep u hu u' hu' hne
+    grind [lt_abs, abs_le, mem_intBox.mp (sub_mem_intBox ha ha') i, congr_fun hsum i,
+      Pi.add_apply, Pi.sub_apply]
+  simpa using hsum
+
+/-- The packing bound: if $s$ lies in the symmetric box of half-widths $M$ and any two distinct
+points of $s$ differ by more than $m_i$ in some coordinate $i$, then
+$|s| \prod_i (m_i + 1) \le \prod_i (2 (M_i + m_i) + 1)$. -/
 lemma card_mul_prod_le_of_separated {s : Finset (Fin d → ℤ)} {m M : Fin d → ℕ}
-    (hbox : ∀ u ∈ s, ∀ i, |u i| ≤ (M i : ℤ))
-    (hsep : ∀ u ∈ s, ∀ w ∈ s, u ≠ w → ∃ i, (m i : ℤ) < |u i - w i|) :
+    (hbox : s ⊆ intBox M) (hsep : ∀ u ∈ s, ∀ w ∈ s, u ≠ w → ∃ i, m i < |u i - w i|) :
     s.card * ∏ i, (m i + 1) ≤ ∏ i, (2 * (M i + m i) + 1) := by
-  classical
   rw [← card_natBox, ← Finset.card_product, ← card_intBox]
-  apply Finset.card_le_card_of_injOn fun (u, a) ↦ u + a
-  · rintro ⟨u, a⟩ hp
-    obtain ⟨hu, ha⟩ := Finset.mem_product.mp hp
-    exact add_mem_intBox (mem_intBox.mpr (hbox u hu)) ha
-  · rintro ⟨u, a⟩ hp ⟨u', a'⟩ hp' hsum
-    obtain ⟨hu, ha⟩ := Finset.mem_product.mp hp
-    obtain ⟨hu', ha'⟩ := Finset.mem_product.mp hp'
-    obtain rfl : u = u' := by
-      by_contra hne
-      obtain ⟨i, hi⟩ := hsep u hu u' hu' hne
-      grind [lt_abs, abs_le, mem_intBox.mp (sub_mem_intBox ha ha') i, congr_fun hsum i,
-        Pi.add_apply, Pi.sub_apply]
-    simpa using hsum
+  refine Finset.card_le_card_of_injOn _ ?_ (injOn_add_of_separated hsep)
+  rintro ⟨u, a⟩ hp
+  obtain ⟨hu, ha⟩ := Finset.mem_product.mp hp
+  exact add_mem_intBox (hbox hu) ha
 
 end Packing
 
 /-! ## Short independent vectors
 
-`HasIndependentShort Λ L k t` says that the `t`-dilate of the box of half-widths `L` contains `k`
-linearly independent vectors of a subgroup `Λ` of `ℤ ^ d`. Linear independence is taken over `ℤ`,
-which for integer vectors is the same as linear independence over `ℝ`.
+`HasIndependentShort Λ L k t` says that the $t$-dilate of the box of half-widths $L$ contains $k$
+linearly independent vectors of a subgroup $\Lambda$ of $\mathbb{Z}^d$. Linear independence is
+taken over $\mathbb{Z}$, which for integer vectors is the same as linear independence over
+$\mathbb{R}$.
 
-The properization does not use the successive minima of `Λ`. The relation lattice of a progression
-in `ℤ` does not have full rank, so only the first few minima would be defined. The largest `k`
-with `HasIndependentShort Λ L k t` for a fixed `t` is defined for every `Λ`, and it is what
-`GAP.shortRelationRank` uses. -/
+The properization does not use the successive minima of $\Lambda$. The relation lattice of a
+progression in $\mathbb{Z}$ does not have full rank, so only the first few minima would be defined.
+The largest $k$ with `HasIndependentShort Λ L k t` for a fixed $t$ is defined for every $\Lambda$,
+and it is what `GAP.shortRelationRank` uses. -/
 
 section ShortVectors
 
 variable {d : ℕ}
 
-/-- `IsShort L t v` says that `v` lies in the `t`-dilate of the box of half-widths `L`. -/
+/-- `IsShort L t v` says that $|v_i| \le t L_i$ for every $i$, that is, $v$ lies in the $t$-dilate
+of the box of half-widths $L$. -/
 def IsShort (L : Fin d → ℕ) (t : ℝ) (v : Fin d → ℤ) : Prop := ∀ i, |(v i : ℝ)| ≤ t * L i
 
-lemma IsShort.mono {L : Fin d → ℕ} {t t' : ℝ} {v : Fin d → ℤ} (h : IsShort L t v) (htt' : t ≤ t') :
-    IsShort L t' v := fun i ↦
-  (h i).trans (mul_le_mul_of_nonneg_right htt' (Nat.cast_nonneg _))
-
-/-- `HasIndependentShort Λ L k t` says that the `t`-dilate of the box of half-widths `L` contains
-`k` linearly independent vectors of `Λ`. -/
+/-- `HasIndependentShort Λ L k t` says that the $t$-dilate of the box of half-widths $L$ contains
+$k$ linearly independent vectors of $\Lambda$. -/
 def HasIndependentShort (Λ : AddSubgroup (Fin d → ℤ)) (L : Fin d → ℕ) (k : ℕ) (t : ℝ) : Prop :=
   ∃ v : Fin k → (Fin d → ℤ), LinearIndependent ℤ v ∧ ∀ j, v j ∈ Λ ∧ IsShort L t (v j)
-
-lemma HasIndependentShort.mono {Λ : AddSubgroup (Fin d → ℤ)} {L : Fin d → ℕ} {k : ℕ} {t t' : ℝ}
-    (h : HasIndependentShort Λ L k t) (htt' : t ≤ t') : HasIndependentShort Λ L k t' := by
-  obtain ⟨v, hindep, hv⟩ := h
-  exact ⟨v, hindep, fun j ↦ (hv j).imp_right (·.mono htt')⟩
-
-lemma HasIndependentShort.of_le {Λ : AddSubgroup (Fin d → ℤ)} {L : Fin d → ℕ} {k k' : ℕ} {t : ℝ}
-    (h : HasIndependentShort Λ L k t) (hk : k' ≤ k) : HasIndependentShort Λ L k' t := by
-  obtain ⟨v, hindep, hv⟩ := h
-  exact ⟨v ∘ Fin.castLE hk, hindep.comp _ (Fin.castLE_injective hk), fun j ↦ hv _⟩
 
 end ShortVectors
 

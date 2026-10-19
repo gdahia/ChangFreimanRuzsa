@@ -12,9 +12,10 @@ public import ChangFreimanRuzsa.Lattice
 # A basis of the lattice of integer points of a span
 
 Let $S$ be a finite subset of $\mathbb{Z}^d$, let $H$ be its real span and let $r = \dim H$. By
-`integerGeneratedSubspace_lattice_rank`, the integer points of $H$ form a lattice of rank $r$. This
-file fixes a basis of that lattice and defines the map that sends a vector of $r$ coordinates to
-the combination of the basis with these coefficients, over $\mathbb{Z}$ and over $\mathbb{R}$.
+`finrank_subspaceIntegerLattice_integerGeneratedSubspace`, the integer points of $H$ form a lattice
+of rank $r$. This file fixes a basis of that lattice and defines the map that sends a vector of $r$
+coordinates to the combination of the basis with these coefficients, over $\mathbb{Z}$ and over
+$\mathbb{R}$.
 
 ## Main definitions
 
@@ -59,13 +60,13 @@ lemma integerGeneratedRank_le_card : integerGeneratedRank S ≤ #S := by
 def integerGeneratedLatticeBasis :
     Module.Basis (Fin (integerGeneratedRank S)) ℤ
       (subspaceIntegerLattice (integerGeneratedSubspace S)) :=
-  Module.finBasisOfFinrankEq ℤ _ (integerGeneratedSubspace_lattice_rank S)
+  Module.finBasisOfFinrankEq ℤ _ (finrank_subspaceIntegerLattice_integerGeneratedSubspace S)
 
 /-- An integer vector whose real cast is the $i$-th vector of `integerGeneratedLatticeBasis S`. -/
 def latticeBasisIntVector (i : Fin (integerGeneratedRank S)) : Fin d → ℤ :=
   (exists_intVectorToReal_of_mem_standardIntegerLattice
     (mem_standardIntegerLattice_of_mem_subspaceIntegerLattice
-      (integerGeneratedLatticeBasis S i).2)).choose
+      (integerGeneratedLatticeBasis S i).property)).choose
 
 lemma intVectorToReal_latticeBasisIntVector (i : Fin (integerGeneratedRank S)) :
     intVectorToReal (latticeBasisIntVector S i) =
@@ -101,10 +102,10 @@ lemma realOfLatticeCoordinates_mem (x : Fin (integerGeneratedRank S) → ℝ) :
 lemma realOfLatticeCoordinates_intVectorToReal (v : Fin (integerGeneratedRank S) → ℤ) :
     realOfLatticeCoordinates S (intVectorToReal v) =
       intVectorToReal (ofLatticeCoordinates S v) := by
-  rw [ofLatticeCoordinates, stepsHom_apply, intVectorToReal_sum, realOfLatticeCoordinates,
+  rw [ofLatticeCoordinates, stepsHom_apply, map_sum, realOfLatticeCoordinates,
     LinearMap.comp_apply, LinearEquiv.coe_coe, Module.Basis.equivFun_symm_apply, map_sum]
   congr with i : 1
-  rw [intVectorToReal_zsmul, intVectorToReal_latticeBasisIntVector, map_smul,
+  rw [map_zsmul, intVectorToReal_latticeBasisIntVector, map_smul,
     Module.Basis.ofZLatticeBasis_apply, ← Int.cast_smul_eq_zsmul ℝ]
   rfl
 

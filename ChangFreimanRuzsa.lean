@@ -10,7 +10,6 @@ public import ChangFreimanRuzsa.Bound
 public import ChangFreimanRuzsa.BoxLatticePoints
 public import ChangFreimanRuzsa.Container
 public import ChangFreimanRuzsa.ConvexGeometry
-public import ChangFreimanRuzsa.ConvexProgression
 public import ChangFreimanRuzsa.CoordinateReduction
 public import ChangFreimanRuzsa.Cyclic
 public import ChangFreimanRuzsa.CyclicFreimanDimension
@@ -21,18 +20,23 @@ public import ChangFreimanRuzsa.FreimanRigidity
 public import ChangFreimanRuzsa.GapToolkit
 public import ChangFreimanRuzsa.GeneralizedArithmeticProgression
 public import ChangFreimanRuzsa.GeometryOfNumbers
+public import ChangFreimanRuzsa.IntVectorToReal
 public import ChangFreimanRuzsa.Integers
 public import ChangFreimanRuzsa.Lattice
+public import ChangFreimanRuzsa.LatticeBox.AdaptedBox
+public import ChangFreimanRuzsa.LatticeBox.ConvexCardinality
+public import ChangFreimanRuzsa.LatticeBox.EffectiveLattice
+public import ChangFreimanRuzsa.LatticeBox.GaugeBox
+public import ChangFreimanRuzsa.LatticeBox.GaugeInduction
 public import ChangFreimanRuzsa.LatticeCoordinates
 public import ChangFreimanRuzsa.MinkowskiSecond
 public import ChangFreimanRuzsa.Packing
-public import ChangFreimanRuzsa.Properization.AlgebraAndGAPBasics
+public import ChangFreimanRuzsa.Properization.ExponentialBounds
+public import ChangFreimanRuzsa.Properization.Relations
+public import ChangFreimanRuzsa.Properization.Reshape
+public import ChangFreimanRuzsa.Properization.SaturatedSpan
 public import ChangFreimanRuzsa.Properization.ShortRelationsAndIteration
-public import ChangFreimanRuzsa.Reboxing.AdaptedBox
-public import ChangFreimanRuzsa.Reboxing.ConvexCardinality
-public import ChangFreimanRuzsa.Reboxing.EffectiveLattice
-public import ChangFreimanRuzsa.Reboxing.GaugeBox
-public import ChangFreimanRuzsa.Reboxing.GaugeInduction
+public import ChangFreimanRuzsa.Properization.SmithQuotient
 public import ChangFreimanRuzsa.RuzsaModel
 
 /-!

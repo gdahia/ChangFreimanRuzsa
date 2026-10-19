@@ -42,9 +42,9 @@ dependency.
 **Dimension at most the Freiman dimension**
 (`ChangFreimanRuzsa.exists_twoProperGAP_zmod_dim_le_freimanDim` and
 `ChangFreimanRuzsa.exists_twoProperGAP_int_dim_le_freimanDim`). Under the hypotheses of
-Theorem 2, with the budget `changFreimanDimExponent κ` in place of $10^{53} \kappa^{20}$, the
+Theorem 2, with the exponent `freimanDimExponent κ` in place of $10^{53} \kappa^{20}$, the
 $2$-proper progression can be taken of dimension at most the Freiman dimension of $X$. The same
-holds for a finite set $X$ of integers with $|X| > \exp(\mathtt{changContainerExponent}\ \kappa)$,
+holds for a finite set $X$ of integers with $|X| > \exp(\mathtt{containerExponent}\ \kappa)$,
 with no upper bound on $|X|$.
 
 **Dimension at most $2\kappa - 1$**
@@ -54,23 +54,23 @@ the progression has dimension at most $2\kappa - 1$, since the Freiman dimension
 set $X$ with $|X + X| \le \kappa |X|$ is at most $2\kappa - 1$
 (`SumOfSetsInSeveralDimensions.freimanDim_le_two_mul_sub_one_of_card_add_le`).
 
-[Challenge.lean](Challenge.lean) contains Theorems 1 and 2 in terms of Mathlib, with the
-definitions of `gapMap`, `GAP` and `GAP.TwoProper`, under the same names with a prime and with
-`sorry` placeholders, and [Solution.lean](Solution.lean) proves each of them by the library
-theorem. The statements with the Freiman dimension and with $2\kappa - 1$ are not part of
+[Challenge.lean](Challenge.lean) contains Theorems 1 and 2 in terms of Mathlib, under the
+library names with a prime and with `sorry` placeholders, together with the definitions of
+`gapMap`, `GAP` and `GAP.TwoProper`. [Solution.lean](Solution.lean) proves each of them by the
+library theorem. The statements with the Freiman dimension and with $2\kappa - 1$ are not part of
 `Challenge.lean`. The library and the solution contain no `sorry`, and the theorems depend on no
 axioms other than `propext`, `Classical.choice` and `Quot.sound`.
 
-The library also states the theorems with named budgets, which the explicit bounds above replace:
+The library also states the theorems with named exponents, which the explicit bounds above replace:
 
-| Theorem | Budget | Bound for `κ ≥ 2` |
+| Theorem | Exponent | Bound for `κ ≥ 2` |
 | --- | --- | --- |
-| `exists_twoProperGAP_of_small_sumset`, for integers, size | `changIntExponent κ` | at least `κ ^ 2`, at most `10 ^ 59 * κ ^ 20` |
-| `exists_twoProperGAP_of_small_sumset`, for integers, dimension | `changContainerExponent (2 * κ)` | at most `3 * 10 ^ 14 * κ ^ 5` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, size | `changZModExponent κ` | at most `10 ^ 53 * κ ^ 20` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, dimension and lower bound on `\|X\|` | `changContainerExponent κ` | at most `7 * 10 ^ 12 * κ ^ 5` |
-| `exists_twoProperGAP_zmod_dim_le_freimanDim` and `exists_twoProperGAP_int_dim_le_freimanDim`, size | `changFreimanDimExponent κ` | at most `10 ^ 53 * κ ^ 20` |
-| `exists_twoProperGAP_int_of_small_sumset` | the budgets of `exists_twoProperGAP_zmod_of_small_sumset` | for integers with `exp (changContainerExponent κ) < \|X\|` |
+| `exists_twoProperGAP_of_small_sumset`, for integers, size | `intExponent κ` | at least `κ ^ 2`, at most `10 ^ 59 * κ ^ 20` |
+| `exists_twoProperGAP_of_small_sumset`, for integers, dimension | `containerExponent (2 * κ)` | at most `3 * 10 ^ 14 * κ ^ 5` |
+| `exists_twoProperGAP_zmod_of_small_sumset`, size | `zmodExponent κ` | at most `10 ^ 53 * κ ^ 20` |
+| `exists_twoProperGAP_zmod_of_small_sumset`, dimension and lower bound on `\|X\|` | `containerExponent κ` | at most `7 * 10 ^ 12 * κ ^ 5` |
+| `exists_twoProperGAP_zmod_dim_le_freimanDim` and `exists_twoProperGAP_int_dim_le_freimanDim`, size | `freimanDimExponent κ` | at most `10 ^ 53 * κ ^ 20` |
+| `exists_twoProperGAP_int_of_small_sumset` | the exponents of `exists_twoProperGAP_zmod_of_small_sumset` | for integers with `exp (containerExponent κ) < \|X\|` |
 
 ## Proof
 
@@ -81,11 +81,11 @@ large spectrum of $Y$ is spanned by a dissociated set $\Delta$ whose size is bou
 $\kappa$, and $2Y - 2Y$ contains the Bohr set of $\Delta$. Minkowski's second theorem, applied to
 the lattice of the frequencies of $\Delta$, gives a proper progression of dimension $|\Delta| + 1$
 inside that Bohr set. The Freiman isomorphism carries it back to a proper progression inside
-$2X_1 - 2X_1$. Chang's covering argument adds elements of $X_1$ to the progression in batches of
-$\lceil 3\kappa \rceil$ until it covers $X_1$, and Ruzsa's covering lemma recovers $X$. The result
+$2X_1 - 2X_1$. Chang's covering argument repeatedly adds to the progression a set of
+$\lceil 3\kappa \rceil$ elements of $X_1$ with disjoint translates until it covers $X_1$, and Ruzsa's covering lemma recovers $X$. The result
 is a progression containing $X$, not necessarily proper, of dimension at most
-`changContainerExponent κ`. The covering argument holds for a finite subset of any abelian group:
-the Plünnecke–Ruzsa inequality bounds the number of batches, so the group need not be finite.
+`containerExponent κ`. The covering argument holds for a finite subset of any abelian group:
+the Plünnecke–Ruzsa inequality bounds the number of these steps, so the group need not be finite.
 
 A progression is $2$-proper when its steps satisfy no short linear relation. If there is one, the
 progression is contained in a progression of smaller dimension whose size is larger by a factor
@@ -113,7 +113,7 @@ $2X_1 - 2X_1$ for the reduction of $X$. On $X$ the reduction modulo $q$ is a Fre
 of order $8$, so the progression is carried back to a proper progression of integers inside
 $2X_1 - 2X_1$. The covering argument, the passage to a $2$-proper progression and the reduction of
 the dimension then take place in $\mathbb{Z}$. A set $X$ with at most
-$\exp(\mathtt{changContainerExponent}\ \kappa)$ elements is first replaced by its sum with a long
+$\exp(\mathtt{containerExponent}\ \kappa)$ elements is first replaced by its sum with a long
 progression of large common difference.
 
 ## Files
@@ -127,15 +127,15 @@ progression of large common difference.
 | `BohrProgression.lean` | A proper progression inside a Bohr set |
 | `FreimanRigidity.lean` | Images of progressions under Freiman isomorphisms |
 | `Packing.lean` | Chang's covering argument |
-| `Container.lean` | The progression containing `X`, with the budget `changContainerExponent` |
-| `GeometryOfNumbers.lean`, `ConvexGeometry.lean`, `ConvexProgression.lean`, `Lattice.lean`, `BoxLatticePoints.lean` | Lattices, convex bodies and successive minima |
-| `Reboxing/` | Covering the lattice points of a convex body by a box in a lattice basis |
-| `Properization/` | Short relations and the passage to a `2`-proper progression |
-| `Cyclic.lean` | Chang's theorem in `ZMod q` with budgets |
-| `Integers.lean` | Chang's theorem for sets of integers with budgets |
-| `Bound.lean` | Polynomial bounds for the budgets |
+| `Container.lean` | The progression containing `X`, with the exponent `containerExponent` |
+| `GeometryOfNumbers.lean`, `ConvexGeometry.lean`, `IntVectorToReal.lean`, `Lattice.lean`, `BoxLatticePoints.lean` | Lattices, convex bodies and shortest lattice vectors |
+| `LatticeBox/` | Covering the lattice points of a convex body by a box in a lattice basis |
+| `Properization/` | Relations of a progression, saturated spans, Smith normal form quotients, short relations and the passage to a `2`-proper progression |
+| `Cyclic.lean` | Chang's theorem in `ZMod q` with named exponents |
+| `Integers.lean` | Chang's theorem for sets of integers with named exponents |
+| `Bound.lean` | Polynomial bounds for the exponents |
 | `ExplicitBounds.lean` | Theorems 1 and 2 |
-| `LatticeCoordinates.lean`, `Reboxing/EffectiveLattice.lean` | Coordinates in a basis of the lattice of integer points of the span of a finite set of integer vectors |
+| `LatticeCoordinates.lean`, `LatticeBox/EffectiveLattice.lean` | Coordinates in a basis of the lattice of integer points of the span of a finite set of integer vectors |
 | `FreimanModel.lean` | The Freiman model of a subset of a `2`-proper progression |
 | `CoordinateReduction.lean` | A `2`-proper progression of dimension at most `freimanDim X` containing `X` |
 | `CyclicFreimanDimension.lean` | Chang's theorem in `ZMod q` and for sets of integers with dimension at most `freimanDim X`, and at most `2 * κ - 1` |
@@ -147,6 +147,14 @@ progression of large common difference.
 
 [formalization.yaml](formalization.yaml) records the sources, the differences from them, the
 scope, and the use of AI coding agents.
+
+## Verification
+
+`Challenge.lean` imports only Mathlib. It repeats the library definitions of `gapMap`, `GAP` and
+`GAP.TwoProper` and states `exists_twoProperGAP_subset_dim_le_card_le'` and
+`exists_twoProperGAP_zmod_subset_dim_le_card_le'` with `sorry`. `comparator.json` names these
+two theorems, `Challenge` and `Solution` as the modules to compare, and `propext`,
+`Classical.choice` and `Quot.sound` as the permitted axioms.
 
 ## Build
 

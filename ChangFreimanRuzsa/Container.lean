@@ -12,49 +12,60 @@ import ChangFreimanRuzsa.Fourier
 import ChangFreimanRuzsa.FreimanRigidity
 import ChangFreimanRuzsa.RuzsaModel
 import Mathlib.Analysis.Complex.ExponentialBounds
-import Mathlib.Analysis.SpecialFunctions.Trigonometric.Arctan
 import Mathlib.Combinatorics.Additive.PluenneckeRuzsa
 import Mathlib.Combinatorics.Additive.RuzsaCovering
-import Mathlib.Combinatorics.Matroid.Init
-import Mathlib.NumberTheory.ArithmeticFunction.Misc
 
-/-! # A coarse progression containing a set of small doubling
+/-! # A progression containing a set of small doubling
 
 Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$. If
 $|X|$ is large in terms of $\kappa$, then $X$ is contained in a (not necessarily proper) GAP whose
-dimension, and whose size relative to $|X|$, are bounded in terms of $\kappa$ alone. The proof has
-five steps.
+dimension, and whose size relative to $|X|$, are bounded in terms of $\kappa$ alone. The proof
+follows Chang's argument.
 
-1. (`RuzsaModel.lean`) There are a subset $X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a Freiman
-   $8$-isomorphic copy $Y \subseteq \mathbb{Z}/m\mathbb{Z}$ of $X_1$ with $m \le \kappa^{16} |X|$,
-   so that $Y$ has density at least $(8 \kappa^{16})^{-1}$ in $\mathbb{Z}/m\mathbb{Z}$.
-2. (`Fourier.lean`) Chang's lemma in $\mathbb{Z}/m\mathbb{Z}$ gives a dissociated set $\Delta$ of
-   characters whose size is bounded in terms of $\kappa$ and whose chord neighbourhood lies in
-   $2Y - 2Y$.
-3. (`BohrProgression.lean`) The chord neighbourhood of $\Delta$ contains a proper progression $Q$ of
-   dimension $|\Delta| + 1$.
-4. (`FreimanRigidity.lean`) The Freiman isomorphism carries $Q$ to a proper progression
-   $Q_1 \subseteq 2X_1 - 2X_1$ of $\mathbb{Z}/q\mathbb{Z}$ with the same dimension and cardinality.
-5. (`Packing.lean`) Adding to $Q_1$ batches of $\lceil 3 \kappa \rceil$ elements of $X_1$ until it
-   covers $X_1$, and covering $X$ by few translates of $X_1$, gives the progression containing $X$.
-   This step, `exists_coarseGAP_container_of_model_gap`, holds in every abelian group, and
-   `Integers.lean` applies it to sets of integers.
+1. (`exists_subset_isAddFreimanIso_eight_card_le`) Ruzsa's model lemma gives a subset
+   $X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a Freiman $8$-isomorphic copy
+   $Y \subseteq \mathbb{Z}/m\mathbb{Z}$ of $X_1$ with $m \le 8 \kappa^{16} |Y|$ and
+   $|Y + Y| \le 8 \kappa |Y|$.
+2. (`exists_card_le_deltaBound_chordSet_subset`) Chang's lemma in $\mathbb{Z}/m\mathbb{Z}$
+   gives a set $\Delta$ of characters whose size is bounded in terms of $\kappa$ and whose Bohr
+   set lies in $2Y - 2Y$.
+3. (`exists_proper_gap_chordSet_card_le`) The Bohr set of $\Delta$ contains a proper
+   progression $Q$ of dimension $d = |\Delta| + 1$ with $m \le 2^{12 d^2} |Q|$.
+4. (`exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`) The Freiman isomorphism carries
+   $Q$ to a proper progression $Q_1 \subseteq 2X_1 - 2X_1$ of $\mathbb{Z}/q\mathbb{Z}$ with the
+   same dimension and cardinality.
+5. (`exists_length_le_iterationBound_subset_add_sub`) The packing argument adds to $Q_1$ sets
+   $S_1, \dots, S_k \subseteq X_1$ of $\lceil 3 \kappa \rceil$ elements until
+   $X_1 \subseteq F + (Q' - Q')$ with $|F| \le \lceil 3 \kappa \rceil$, where
+   $Q' = Q_1 + S_1 + \dots + S_k$.
+6. (`exists_card_le_coverBound_subset_sub_sub_add`) Ruzsa's covering lemma gives
+   $X \subseteq (Q' - Q') - (Q' - Q') + W$ for a small set $W$.
+7. (`GAP.packingContainer`) Adding to $Q_1$ one step of length $2$ for each element of the sets
+   $S_j$, doubling twice and adding one step of length $2$ for each element of $W$ gives a
+   progression containing $X$.
 
-All bounds are explicit functions of $\kappa$. They are collected in `changContainerExponent`, which
-bounds the dimension of the container, the logarithm of its size relative to $|X|$, and the size
-that $|X|$ has to exceed for $\mathbb{Z}/m\mathbb{Z}$ to contain a Bohr progression.
+Steps 5 to 7, `exists_gap_subset_dim_le_card_le_of_subset_add_sub_add`, hold in every abelian
+group, and `Integers.lean` applies them to sets of integers.
+
+All bounds are explicit functions of $\kappa$. They are collected in `containerExponent`, which
+bounds the dimension of the progression containing $X$, the logarithm of its size relative to
+$|X|$, and the size that $|X|$ has to exceed for $\mathbb{Z}/m\mathbb{Z}$ to contain a Bohr
+progression.
 
 ## Main statements
 
-* `exists_model_gap`: steps 1 to 4.
-* `exists_coarseGAP_container_of_model_gap`: step 5, in an arbitrary abelian group.
-* `exists_coarseGAP_container`: the coarse container in $\mathbb{Z}/q\mathbb{Z}$.
+* `exists_proper_gap_zmod_subset_add_sub_add_card_le`: steps 1 to 4.
+* `exists_gap_subset_dim_le_card_le_of_subset_add_sub_add`: steps 5 to 7, in an arbitrary abelian
+  group.
+* `exists_gap_zmod_subset_dim_le_card_le`: the progression containing $X$ in
+  $\mathbb{Z}/q\mathbb{Z}$.
 -/
 
 @[expose] public section
 
 namespace ChangFreimanRuzsa
 
+open Finset
 open scoped Pointwise
 
 noncomputable section
@@ -66,457 +77,435 @@ them is optimal.
 -/
 
 /-- The bound on the size of the dissociated set $\Delta$ given by Chang's lemma in
-$\mathbb{Z}/m\mathbb{Z}$. It is the bound of `exists_changLargeSpectrum_generators` at the threshold
-$\eta^2 = (64 \kappa)^{-1}$ and the density $|Y| / m \ge (8 \kappa^{16})^{-1}$. -/
-def changDeltaBound (κ : ℝ) : ℕ :=
+$\mathbb{Z}/m\mathbb{Z}$. It is the bound of `exists_card_le_largeSpec_subset_addSpan` at the
+threshold $\eta^2 = (64 \kappa)^{-1}$ and the density $|Y| / m \ge (8 \kappa^{16})^{-1}$. -/
+def deltaBound (κ : ℝ) : ℕ :=
   ⌈changConst * Real.exp 1 * (⌈1 + Real.log (8 * κ ^ 16)⌉₊ : ℝ) * (8 * (8 * κ))⌉₊
 
 /-- The bound on the dimension $|\Delta| + 1$ of the Bohr progression $Q$ and of its image $Q_1$
 in $\mathbb{Z}/q\mathbb{Z}$. -/
-def changGapDim (κ : ℝ) : ℕ := changDeltaBound κ + 1
+def bohrGAPDim (κ : ℝ) : ℕ := deltaBound κ + 1
 
-/-- The batch size $\lceil 3 \kappa \rceil$ of the packing argument. Since it exceeds $e \kappa$,
-the growth of the packed set outpaces the Plünnecke–Ruzsa bound on the sumsets containing it. -/
-def changBatchSize (κ : ℝ) : ℕ := ⌈3 * κ⌉₊
+/-- The number $m = \lceil 3 \kappa \rceil$ of disjoint translates added at each step of the
+packing argument. Since $m \ge 3 \kappa$, after $k$ steps the size $|Q_1| m^k$ of the current set
+stays below the Plünnecke–Ruzsa bound $\kappa^{k + 4} |X|$ only if $3^k |Q_1| \le \kappa^4 |X|$. -/
+def translateCount (κ : ℝ) : ℕ := ⌈3 * κ⌉₊
 
-/-- The bound on the number of batches in the packing argument. -/
-def changPackBound (κ : ℝ) : ℝ := 3 + 4 * κ + 9 * (changGapDim κ : ℝ) ^ 2
+/-- The bound on the number of steps of the packing argument. -/
+def iterationBound (κ : ℝ) : ℝ := 3 + 4 * κ + 9 * bohrGAPDim κ ^ 2
 
 /-- The bound on the number of translates added at the end of the packing argument to cover $X$. -/
-def changCoverBound (κ : ℝ) : ℝ := 8 * κ * (changBatchSize κ : ℝ) ^ 2
+def coverBound (κ : ℝ) : ℝ := 8 * κ * translateCount κ ^ 2
 
-/-- The exponent $E(\kappa)$ of the coarse container. It bounds the dimension of the container, the
-logarithm of its size relative to $|X|$, and the logarithm of the size that $|X|$ has to exceed for
-the Ruzsa model of $X$ to contain a Bohr progression. -/
-def changContainerExponent (κ : ℝ) : ℝ :=
-  256 + 3 * (changGapDim κ : ℝ) + 4 * κ + changCoverBound κ +
-    3 * (changBatchSize κ : ℝ) * changPackBound κ
+/-- The exponent $E(\kappa)$ of the progression containing $X$. It bounds the dimension of the
+progression, the logarithm of its size relative to $|X|$, and the logarithm of the size that $|X|$
+has to exceed for the Ruzsa model of $X$ to contain a Bohr progression. -/
+def containerExponent (κ : ℝ) : ℝ :=
+  256 + 3 * bohrGAPDim κ + 4 * κ + coverBound κ + 3 * translateCount κ * iterationBound κ
 
-lemma changPackBound_nonneg {κ : ℝ} (hκ : 0 ≤ κ) : 0 ≤ changPackBound κ := by
-  rw [changPackBound]
+lemma iterationBound_nonneg {κ : ℝ} (hκ : 0 ≤ κ) : 0 ≤ iterationBound κ := by
+  rw [iterationBound]
   positivity
 
-lemma changCoverBound_nonneg {κ : ℝ} (hκ : 0 ≤ κ) : 0 ≤ changCoverBound κ := by
-  rw [changCoverBound]
+lemma coverBound_nonneg {κ : ℝ} (hκ : 0 ≤ κ) : 0 ≤ coverBound κ := by
+  rw [coverBound]
   positivity
 
-lemma changContainerExponent_pos {κ : ℝ} (hκ : 2 ≤ κ) : 0 < changContainerExponent κ := by
-  rw [changContainerExponent]
-  nlinarith [changCoverBound_nonneg (by linarith : 0 ≤ κ),
-    changPackBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (changGapDim κ),
-    Nat.cast_nonneg (α := ℝ) (changBatchSize κ)]
+lemma containerExponent_pos {κ : ℝ} (hκ : 2 ≤ κ) : 0 < containerExponent κ := by
+  rw [containerExponent]
+  nlinarith [coverBound_nonneg (by linarith : 0 ≤ κ),
+    iterationBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ),
+    Nat.cast_nonneg (α := ℝ) (translateCount κ)]
 
-/-- The exponent bounds the dimension of the container. -/
-lemma changContainerExponent_dim_le {κ : ℝ} (hκ : 2 ≤ κ) :
-    changCoverBound κ + (changGapDim κ : ℝ) + (changBatchSize κ : ℝ) * changPackBound κ ≤
-      changContainerExponent κ := by
-  rw [changContainerExponent]
-  nlinarith [changCoverBound_nonneg (by linarith : 0 ≤ κ),
-    changPackBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (changGapDim κ),
-    Nat.cast_nonneg (α := ℝ) (changBatchSize κ)]
+/-- The exponent bounds the dimension of the progression containing $X$. -/
+lemma coverBound_add_bohrGAPDim_add_le_containerExponent {κ : ℝ} (hκ : 2 ≤ κ) :
+    coverBound κ + bohrGAPDim κ + translateCount κ * iterationBound κ ≤ containerExponent κ := by
+  rw [containerExponent]
+  nlinarith [coverBound_nonneg (by linarith : 0 ≤ κ),
+    iterationBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ),
+    Nat.cast_nonneg (α := ℝ) (translateCount κ)]
 
-/-- The exponent bounds the logarithm of the size of the container relative to $|X|$. -/
-lemma changContainerExponent_size_le {κ : ℝ} (_hκ : 2 ≤ κ) :
-    changCoverBound κ + 2 * (changGapDim κ : ℝ) +
-      3 * (changBatchSize κ : ℝ) * changPackBound κ + 4 * κ ≤ changContainerExponent κ := by
-  rw [changContainerExponent]
-  linarith [Nat.cast_nonneg (α := ℝ) (changGapDim κ)]
-
-/-! ## Numerical bounds
-
-Two estimates bounding products of powers by a power of two.
--/
-
-/-- $d \le 2^d$ for every natural number $d$, in the reals. -/
-private lemma nat_le_two_pow (d : ℕ) : (d : ℝ) ≤ 2 ^ d := by
-  exact_mod_cast (Nat.lt_two_pow_self (n := d)).le
-
-/-- The dimensional factor of `exists_proper_gap_chordSet`, together with the reciprocal of the
-chord width, is at most $2^{12 (k + 1)^2}$, where $k = |\Delta|$. -/
-private lemma bohr_factor_le (k : ℕ) :
-    (2 : ℝ) ^ ((k + 5) * (k + 1)) * ((k : ℝ) + 1) ^ (k + 1) * (8 * Real.pi * ((k : ℝ) + 1)) ^ k
-      ≤ 2 ^ (12 * (k + 1) ^ 2) := by
-  have hdpow : ((k : ℝ) + 1) ≤ 2 ^ (k + 1) := by
-    simpa using nat_le_two_pow (k + 1)
-  have h₁ : (2 : ℝ) ^ ((k + 5) * (k + 1)) ≤ 2 ^ (5 * (k + 1) ^ 2) :=
-    pow_le_pow_right₀ (by norm_num) (by nlinarith [Nat.zero_le k])
-  have h₂ : ((k : ℝ) + 1) ^ (k + 1) ≤ 2 ^ ((k + 1) ^ 2) := by
-    refine (pow_le_pow_left₀ (by positivity) hdpow (k + 1)).trans ?_
-    rw [← pow_mul, sq]
-  have h₃ : (8 * Real.pi * ((k : ℝ) + 1)) ^ k ≤ 2 ^ (6 * (k + 1) ^ 2) := by
-    have hbase : 8 * Real.pi * ((k : ℝ) + 1) ≤ 2 ^ (5 + (k + 1)) := by
-      rw [pow_add]
-      nlinarith [mul_le_mul_of_nonneg_right Real.pi_le_four (by positivity : (0 : ℝ) ≤ k + 1)]
-    refine ((pow_le_pow_left₀ (by positivity) hbase k).trans ?_)
-    rw [← pow_mul]
-    exact pow_le_pow_right₀ (by norm_num) (by nlinarith [Nat.zero_le k])
-  refine le_trans (mul_le_mul (mul_le_mul h₁ h₂ (by positivity) (by positivity)) h₃
-    (by positivity) (by positivity)) (le_of_eq ?_)
-  rw [← pow_add, ← pow_add]
-  congr 1
-  ring
-
-/-! ## Auxiliary facts about the packing GAPs -/
-
-namespace GAP
-
-variable {G : Type*} [DecidableEq G] [AddCommGroup G]
-
-lemma one_lt_length_consGenerator (P : GAP G) (originShift step : G) {length : ℕ}
-    (hlength : 0 < length) (h1 : 1 < length) (h : ∀ i, 1 < P.length i) :
-    ∀ i, 1 < (P.consGenerator originShift step length hlength).length i := by
-  intro i
-  induction i using Fin.cases with
-  | zero => exact h1
-  | succ j => exact h j
-
-lemma one_lt_length_consBinaryList (P : GAP G) (l : List G) (h : ∀ i, 1 < P.length i) :
-    ∀ i, 1 < (P.consBinaryList l).length i := by
-  induction l with
-  | nil => exact h
-  | cons a l ih =>
-      exact (P.consBinaryList l).one_lt_length_consGenerator 0 a (by grind) (by grind) ih
-
-lemma one_lt_length_differenceHull (P : GAP G) : ∀ i, 1 < P.differenceHull.length i := by
-  intro i
-  change 1 < 2 * P.length i
-  grind [P.length_pos i]
-
-end GAP
-
-/-- Each batch is a subset of `A`, so a choice of one element per batch is a sum of
-`batches.length` elements of `A`. -/
-private lemma batchSum_subset_nsmul {G : Type*} [DecidableEq G] [AddCommGroup G]
-    (batches : List (Finset G)) (A : Finset G) (h : ∀ S ∈ batches, S ⊆ A) :
-    batchSum batches ⊆ batches.length • A := by
-  induction batches with
-  | nil => simp [batchSum]
-  | cons S l ih =>
-      rw [batchSum, List.length_cons, succ_nsmul']
-      exact Finset.add_subset_add (h S List.mem_cons_self) (ih (by grind))
+/-- The exponent bounds the logarithm of the size of the progression containing $X$ relative to
+$|X|$. -/
+lemma coverBound_add_two_mul_bohrGAPDim_add_le_containerExponent (κ : ℝ) :
+    coverBound κ + 2 * bohrGAPDim κ + 3 * translateCount κ * iterationBound κ + 4 * κ ≤
+      containerExponent κ := by
+  rw [containerExponent]
+  linarith [Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ)]
 
 /-- The exponent bounds the logarithm of the size that $|X|$ has to exceed for the Ruzsa model of
 $X$ to contain a Bohr progression. -/
-lemma changContainerExponent_threshold_le {κ : ℝ} (hκ : 2 ≤ κ) :
-    256 + (changGapDim κ : ℝ) ≤ changContainerExponent κ := by
-  rw [changContainerExponent]
-  nlinarith [changCoverBound_nonneg (by linarith : 0 ≤ κ),
-    changPackBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (changGapDim κ),
-    Nat.cast_nonneg (α := ℝ) (changBatchSize κ)]
+lemma add_bohrGAPDim_le_containerExponent {κ : ℝ} (hκ : 2 ≤ κ) :
+    256 + bohrGAPDim κ ≤ containerExponent κ := by
+  rw [containerExponent]
+  nlinarith [coverBound_nonneg (by linarith : 0 ≤ κ),
+    iterationBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ),
+    Nat.cast_nonneg (α := ℝ) (translateCount κ)]
 
-/-! ## The container -/
+/-- If $x > e^{E(\kappa)}$, then $x \ge 256 d$, where $d$ is `bohrGAPDim κ`. -/
+lemma mul_bohrGAPDim_le_of_exp_lt {κ x : ℝ} (hκ : 2 ≤ κ)
+    (hx : Real.exp (containerExponent κ) < x) : 256 * bohrGAPDim κ ≤ x := by
+  refine le_trans ?_ ((Real.exp_le_exp.2 (add_bohrGAPDim_le_containerExponent hκ)).trans hx.le)
+  rw [Real.exp_add]
+  nlinarith [Real.add_one_le_exp (256 : ℝ), Real.add_one_le_exp (bohrGAPDim κ : ℝ),
+    Real.exp_pos (bohrGAPDim κ : ℝ), Real.exp_pos (256 : ℝ),
+    Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ)]
 
-private lemma two_pow_le_exp_nat (N : ℕ) : (2 : ℝ) ^ N ≤ Real.exp N := by
-  rw [← Real.exp_one_pow]
-  exact pow_le_pow_left₀ (by norm_num) Real.exp_one_gt_two.le N
+/-! ## A proper progression in a set of small doubling -/
 
-private lemma pow_le_exp_mul {κ : ℝ} (hκ : 0 ≤ κ) (n : ℕ) : κ ^ n ≤ Real.exp (n * κ) := by
-  rw [Real.exp_nat_mul]
-  exact pow_le_pow_left₀ hκ (by linarith [Real.add_one_le_exp κ]) n
+/-- Ruzsa's model lemma with the bounds used in Chang's argument. If
+$X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfies $|X + X| \le \kappa |X|$, then there are a subset
+$X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a Freiman $8$-isomorphism $\varphi$ from $X_1$ onto
+$Y = \varphi(X_1) \subseteq \mathbb{Z}/m\mathbb{Z}$ with $|X| \le 8m$, $m \le 8 \kappa^{16} |Y|$ and
+$|Y + Y| \le 8 \kappa |Y|$. -/
+lemma exists_subset_isAddFreimanIso_eight_card_le {q : ℕ} {κ : ℝ} (hq : q.Prime) (hκ : 0 ≤ κ)
+    {X : Finset (ZMod q)} (hX : X.Nonempty) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
+    ∃ (m : ℕ) (X₁ : Finset (ZMod q)) (φ : ZMod q → ZMod m), 0 < m ∧ X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧
+      IsAddFreimanIso 8 (X₁ : Set (ZMod q)) (X₁.image φ : Set (ZMod m)) φ ∧ (#X : ℝ) ≤ 8 * m ∧
+      (m : ℝ) ≤ 8 * κ ^ 16 * #(X₁.image φ) ∧
+      (#(X₁.image φ + X₁.image φ) : ℝ) ≤ 8 * κ * #(X₁.image φ) := by
+  obtain ⟨m, X₁, φ, hm, hmX, hX₁X, hX₁, hφ⟩ :=
+    exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le (s := 8) hq (by norm_num) hX hXX
+  have : NeZero m := ⟨hm.ne'⟩
+  have hY : #(X₁.image φ) = #X₁ := card_image_of_injOn hφ.bijOn.injOn
+  have hX₁R : (#X : ℝ) ≤ 8 * #X₁ := by exact_mod_cast hX₁
+  refine ⟨m, X₁, φ, hm, hX₁X, hX₁, hφ, ?_, ?_, ?_⟩
+  · have hYm : (#X₁ : ℝ) ≤ m := by
+      exact_mod_cast hY ▸ (card_le_univ (X₁.image φ)).trans_eq (ZMod.card m)
+    linarith
+  · norm_num at hmX
+    rw [hY]
+    nlinarith [pow_nonneg hκ 16]
+  · have h : (#(X₁.image φ + X₁.image φ) : ℝ) ≤ #(X + X) := by
+      exact_mod_cast (card_add_le_of_isAddFreimanIso
+        (IsAddFreimanIso.mono (hmn := by norm_num) hφ.invFunOn)).trans
+          (card_le_card (add_subset_add hX₁X hX₁X))
+    rw [hY]
+    nlinarith
+
+/-- Chang's lemma in the model. If $Y \subseteq \mathbb{Z}/m\mathbb{Z}$ satisfies
+$m \le 8 \kappa^{16} |Y|$ and $|Y + Y| \le 8 \kappa |Y|$, then there is a set $\Delta$ of at most
+`deltaBound κ` characters such that every $x$ with $|1 - \psi(x)| \le (4(|\Delta| + 1))^{-1}$
+for all $\psi \in \Delta$ lies in $2Y - 2Y$. -/
+lemma exists_card_le_deltaBound_chordSet_subset {m : ℕ} [NeZero m] {κ : ℝ} (hκ : 2 ≤ κ)
+    {Y : Finset (ZMod m)} (hY : Y.Nonempty) (hYm : (m : ℝ) ≤ 8 * κ ^ 16 * #Y)
+    (hYY : (#(Y + Y) : ℝ) ≤ 8 * κ * #Y) :
+    ∃ Δ : Finset (AddChar (ZMod m) ℂ), #Δ ≤ deltaBound κ ∧
+      {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ⊆
+        ((Y + Y) - (Y + Y) : Finset (ZMod m)) := by
+  obtain ⟨Δ, -, hΔ, hspan⟩ := exists_card_le_largeSpec_subset_addSpan hY
+    (η := Real.sqrt ((8 * (8 * κ))⁻¹)) (Real.sqrt_pos.2 (by positivity))
+  refine ⟨Δ, hΔ.trans (Nat.ceil_le_ceil ?_),
+    fun _ hx ↦ mem_add_sub_add_of_largeSpec_subset_addSpan (by linarith) hY hYY hspan hx⟩
+  rw [Real.sq_sqrt (by positivity), div_inv_eq_mul]
+  have hY₀ : (0 : ℝ) < #Y := by exact_mod_cast hY.card_pos
+  gcongr
+  · exact inv_pos.2 (div_pos hY₀ (Nat.cast_pos.2 (NeZero.pos m)))
+  · rw [inv_div, div_le_iff₀ hY₀]
+    exact hYm
+
+/-- The dimensional factor of `exists_proper_gap_chordSet`, together with the reciprocal of the
+chord width, is at most $2^{12 (k + 1)^2}$, where $k = |\Delta|$. -/
+private lemma two_pow_mul_pow_mul_pow_le (k : ℕ) :
+    (2 : ℝ) ^ ((k + 5) * (k + 1)) * ((k : ℝ) + 1) ^ (k + 1) * (8 * Real.pi * ((k : ℝ) + 1)) ^ k
+      ≤ 2 ^ (12 * (k + 1) ^ 2) := by
+  have hk : ((k : ℝ) + 1) ≤ 2 ^ (k + 1) := by exact_mod_cast Nat.lt_two_pow_self.le
+  refine (?_ : _ ≤ (2 : ℝ) ^ (5 * (k + 1) ^ 2) * (2 ^ (k + 1)) ^ (k + 1) *
+    2 ^ (6 * (k + 1) ^ 2)).trans_eq ?_
+  · gcongr ?_ * ?_ * ?_
+    · exact pow_le_pow_right₀ one_le_two (by nlinarith)
+    · exact pow_le_pow_left₀ (by positivity) hk (k + 1)
+    · refine (pow_le_pow_left₀ (by positivity)
+        (?_ : 8 * Real.pi * ((k : ℝ) + 1) ≤ 2 ^ (5 + (k + 1))) k).trans ?_
+      · rw [pow_add]
+        nlinarith [mul_le_mul_of_nonneg_right Real.pi_le_four (by positivity : (0 : ℝ) ≤ k + 1)]
+      · rw [← pow_mul]
+        exact pow_le_pow_right₀ one_le_two (by nlinarith)
+  · rw [← pow_mul, ← pow_add, ← pow_add]
+    ring_nf
+
+/-- The Bohr set $\{x : |1 - \psi(x)| \le (4(|\Delta| + 1))^{-1}$ for all
+$\psi \in \Delta\}$ in $\mathbb{Z}/m\mathbb{Z}$ contains a proper progression $Q$ of dimension at
+most $d$ with $m \le 2^{12 d^2} |Q|$, provided $|\Delta| < d$ and $m \ge 32 d$. -/
+lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (AddChar (ZMod m) ℂ))
+    (hΔ : #Δ + 1 ≤ d) (hm : 32 * (d : ℝ) ≤ m) :
+    ∃ Q : GAP (ZMod m), Q.Proper ∧ Q.dim ≤ d ∧
+      (Q.carrier : Set (ZMod m)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ∧
+      (m : ℝ) ≤ 2 ^ (12 * d ^ 2) * #Q.carrier := by
+  have hΔR : (#Δ : ℝ) + 1 ≤ d := by exact_mod_cast hΔ
+  have hε : 2 * Real.pi ≤ ((4 : ℝ) * (#Δ + 1))⁻¹ * m := by
+    rw [inv_mul_eq_div, le_div_iff₀ (by positivity)]
+    nlinarith [Real.pi_le_four]
+  have hε' : ((4 : ℝ) * (#Δ + 1))⁻¹ / (2 * Real.pi) = (8 * Real.pi * (#Δ + 1))⁻¹ := by
+    rw [div_eq_mul_inv, ← mul_inv]
+    ring
+  obtain ⟨Q, hQ, hdim, hsub, hcard⟩ :=
+    exists_proper_gap_chordSet Δ hε (inv_le_one_of_one_le₀ (by linarith))
+  refine ⟨Q, hQ, hdim.trans_le hΔ, hsub, ?_⟩
+  rw [hε', inv_pow, ← div_eq_mul_inv, div_le_iff₀ (by positivity)] at hcard
+  refine hcard.trans ?_
+  rw [mul_right_comm]
+  gcongr
+  exact (two_pow_mul_pow_mul_pow_le #Δ).trans (pow_le_pow_right₀ one_le_two (by gcongr))
 
 /-- Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$
-and $|X| > e^{E(\kappa)}$, where $E$ is `changContainerExponent`. Then $X$ has a subset $X_1$ with
+and $|X| > e^{E(\kappa)}$, where $E$ is `containerExponent`. Then $X$ has a subset $X_1$ with
 $|X| \le 8 |X_1|$, and $2X - 2X$ contains a proper progression $Q_1$ of dimension at most
-$d$ = `changGapDim κ` with $|X| \le 8 \cdot 2^{12 d^2} |Q_1|$. -/
-lemma exists_model_gap {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
+$d$ = `bohrGAPDim κ` with $|X| \le 8 \cdot 2^{12 d^2} |Q_1|$. -/
+lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
-    (hXlower : Real.exp (changContainerExponent κ) < X.card) :
+    (hXlower : Real.exp (containerExponent κ) < X.card) :
     ∃ (X₁ : Finset (ZMod q)) (Q₁ : GAP (ZMod q)),
       X₁ ⊆ X ∧ X.card ≤ 8 * X₁.card ∧ Q₁.Proper ∧
-        (Q₁.dim : ℝ) ≤ (changGapDim κ : ℝ) ∧
+        (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧
         Q₁.carrier ⊆ (X + X) - (X + X) ∧
-        (X.card : ℝ) ≤ 8 * 2 ^ (12 * changGapDim κ ^ 2) * Q₁.carrier.card := by
-  have : NeZero q := ⟨hq.pos.ne'⟩
-  have hκ0 : (0 : ℝ) < κ := by linarith
-  have hXpos : (0 : ℝ) < X.card := (Real.exp_pos _).trans hXlower
-  have hXne : X.Nonempty := Finset.card_pos.1 (by exact_mod_cast hXpos)
-  obtain ⟨m, X₁, φ, hm0, hmle, hX₁X, hX₁card, hφ⟩ :=
-    exists_ruzsa_model_of_doubling (s := 8) hq (by norm_num) hXne hXX
-  have : NeZero m := ⟨hm0.ne'⟩
-  have hX₁cardR : (X.card : ℝ) ≤ 8 * X₁.card := by exact_mod_cast hX₁card
-  have hYcard : ((X₁.image φ).card : ℝ) = X₁.card := by
-    rw [Finset.card_image_of_injOn hφ.bijOn.injOn]
-  have hYne : (X₁.image φ).Nonempty := (Finset.card_pos.1 (by grind [hXne.card_pos])).image φ
-  have hYm : ((X₁.image φ).card : ℝ) ≤ m := by
-    exact_mod_cast (Finset.card_le_univ (X₁.image φ)).trans_eq (ZMod.card m)
-  have hXm : (X.card : ℝ) ≤ 8 * m := by
-    linarith
-  have hdensity : ((((X₁.image φ).card : ℝ) / m)⁻¹) ≤ 8 * κ ^ 16 := by
-    rw [inv_div, div_le_iff₀ (by linarith), hYcard]
-    have hmle' : (m : ℝ) ≤ κ ^ 16 * X.card := by simpa using hmle
-    linarith [mul_le_mul_of_nonneg_left hX₁cardR (pow_pos hκ0 16).le]
-  have hYY : ((X₁.image φ + X₁.image φ).card : ℝ) ≤ (8 * κ) * (X₁.image φ).card := by
-    have h3 : ((X₁.image φ + X₁.image φ).card : ℝ) ≤ ((X + X).card : ℝ) := by
-      refine Nat.cast_le.2 (le_trans ?_ (Finset.card_le_card (Finset.add_subset_add hX₁X hX₁X)))
-      exact card_add_le_of_isAddFreimanIso (IsAddFreimanIso.mono (hmn := by norm_num) hφ.invFunOn)
-    rw [hYcard]
-    nlinarith
-  obtain ⟨Δ, -, hΔcard, hΔspan⟩ :=
-    exists_changLargeSpectrum_generators (X₁.image φ) hYne
-      (η := Real.sqrt ((8 * (8 * κ))⁻¹)) (Real.sqrt_pos.2 (by positivity))
-  have hΔbound : Δ.card ≤ changDeltaBound κ := by
-    rw [changDeltaBound]
-    refine hΔcard.trans (Nat.ceil_le_ceil ?_)
-    rw [Real.sq_sqrt (by positivity : (0 : ℝ) ≤ (8 * (8 * κ))⁻¹), div_inv_eq_mul]
-    have hceil : (⌈1 + Real.log ((((X₁.image φ).card : ℝ) / m)⁻¹)⌉₊ : ℝ) ≤
-        (⌈1 + Real.log (8 * κ ^ 16)⌉₊ : ℝ) := by
-      refine Nat.cast_le.2 (Nat.ceil_le_ceil ?_)
-      have := Real.log_le_log (by positivity) hdensity
-      linarith
-    have hpos : (0 : ℝ) ≤ changConst * Real.exp 1 := by positivity
-    have h64 : (0 : ℝ) ≤ 8 * (8 * κ) := by positivity
+        (X.card : ℝ) ≤ 8 * 2 ^ (12 * bohrGAPDim κ ^ 2) * Q₁.carrier.card := by
+  have hX : X.Nonempty := card_pos.1 (by exact_mod_cast (Real.exp_pos _).trans hXlower)
+  obtain ⟨m, X₁, φ, hm, hX₁X, hX₁, hφ, hXm, hmY, hYY⟩ :=
+    exists_subset_isAddFreimanIso_eight_card_le hq (by linarith) hX hXX
+  have : NeZero m := ⟨hm.ne'⟩
+  obtain ⟨Δ, hΔ, hchord⟩ := exists_card_le_deltaBound_chordSet_subset hκ
+    ((card_pos.1 (by grind [hX.card_pos])).image φ) hmY hYY
+  obtain ⟨Q, hQ, hQdim, hQsub, hQcard⟩ := exists_proper_gap_chordSet_card_le Δ
+    (d := bohrGAPDim κ) (Nat.add_le_add_right hΔ 1)
+    (by linarith [mul_bohrGAPDim_le_of_exp_lt hκ hXlower])
+  obtain ⟨Q₁, hQ₁, hQ₁dim, hQ₁card, hQ₁sub⟩ :=
+    exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso hφ hQ
+      (coe_subset.1 (hQsub.trans hchord))
+  refine ⟨X₁, Q₁, hX₁X, hX₁, hQ₁, by exact_mod_cast hQ₁dim.trans_le hQdim,
+    hQ₁sub.trans (by gcongr), ?_⟩
+  rw [hQ₁card]
+  linarith
+
+/-! ## The packing argument -/
+
+section Packing
+
+variable {G : Type*} [DecidableEq G] [AddCommGroup G]
+
+/-- If $Q \subseteq 2X - 2X$ and $S_1, \dots, S_k \subseteq X$, then
+$Q + S_1 + \dots + S_k \subseteq (k + 2)X - 2X$. -/
+lemma add_sum_subset_nsmul_sub_nsmul {X Q : Finset G} {l : List (Finset G)}
+    (hQ : Q ⊆ X + X - (X + X)) (hl : ∀ S ∈ l, S ⊆ X) :
+    Q + l.sum ⊆ (l.length + 2) • X - 2 • X := by
+  rw [add_nsmul, add_comm (l.length • X), ← sub_add_eq_add_sub, two_nsmul]
+  exact add_subset_add hQ (List.sum_le_length_nsmul l X hl)
+
+/-- If $Q \subseteq 2X - 2X$ and $|Q + S_1 + \dots + S_k| = |Q| m^k$ for sets $S_j \subseteq X$
+and some $m \ge 3\kappa$, then $3^k |Q| \le \kappa^4 |X|$ by the Plünnecke–Ruzsa inequality. -/
+lemma three_pow_mul_card_le {X Q : Finset G} {l : List (Finset G)} {κ : ℝ} {m : ℕ}
+    (hX : X.Nonempty) (hκ : 0 < κ) (hm : 3 * κ ≤ m) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
+    (hQ : Q ⊆ X + X - (X + X)) (hl : ∀ S ∈ l, S ⊆ X)
+    (hcard : #(Q + l.sum) = #Q * m ^ l.length) :
+    (3 : ℝ) ^ l.length * #Q ≤ κ ^ 4 * #X := by
+  have hPR : (#((l.length + 2) • X - 2 • X) : ℝ) ≤ κ ^ (l.length + 4) * #X := by
+    have h := (NNRat.cast_le (K := ℝ)).2
+      (pluennecke_ruzsa_inequality_nsmul_sub_nsmul_add hX X (l.length + 2) 2)
+    push_cast [NNRat.cast_pow] at h
+    refine h.trans ?_
     gcongr
-  have hchord := changGenerators_chord_subset_fourfold (X₁.image φ) (κ := 8 * κ) (by linarith)
-    hYne hYY hΔspan
-  have hk1 : ((Δ.card : ℝ) + 1) ≤ (changGapDim κ : ℝ) := by
-    rw [changGapDim]
-    exact_mod_cast Nat.succ_le_succ hΔbound
-  have hXbig : 256 * (changGapDim κ : ℝ) ≤ X.card := by
-    refine le_trans ?_ hXlower.le
-    refine le_trans ?_ (Real.exp_le_exp.2 (changContainerExponent_threshold_le hκ))
-    rw [Real.exp_add]
-    nlinarith [Real.add_one_le_exp (256 : ℝ), Real.add_one_le_exp (changGapDim κ : ℝ),
-      Real.exp_pos (changGapDim κ : ℝ), Real.exp_pos (256 : ℝ),
-      Nat.cast_nonneg (α := ℝ) (changGapDim κ)]
-  have hεm : 2 * Real.pi ≤ ((4 : ℝ) * (Δ.card + 1))⁻¹ * m := by
-    rw [inv_mul_eq_div, le_div_iff₀ (by positivity)]
-    have hπ : 2 * Real.pi * (4 * ((Δ.card : ℝ) + 1)) ≤ 32 * ((Δ.card : ℝ) + 1) := by
-      nlinarith [Real.pi_le_four, Nat.cast_nonneg (α := ℝ) Δ.card]
-    nlinarith [hXm, hXbig, hk1]
-  obtain ⟨Q, hQproper, hQdim, hQcert, hQsize⟩ :=
-    exists_proper_gap_chordSet Δ (ε := ((4 : ℝ) * (Δ.card + 1))⁻¹) hεm
-      (inv_le_one_of_one_le₀ (by linarith [Nat.cast_nonneg (α := ℝ) Δ.card]))
-  have hQsub : Q.carrier ⊆ (X₁.image φ + X₁.image φ) - (X₁.image φ + X₁.image φ) := fun z hz ↦
-    hchord (hQcert (Finset.mem_coe.2 hz))
-  obtain ⟨Q₁, hQ₁proper, hQ₁dim, hQ₁card, hQ₁sub⟩ := exists_transported_gap hφ Q hQproper hQsub
-  have hQ₁pos : (0 : ℝ) < Q₁.carrier.card := by
-    exact_mod_cast Finset.card_pos.2 Q₁.nonempty
-  have hQ₁dimle : (Q₁.dim : ℝ) ≤ (changGapDim κ : ℝ) := by
-    rw [hQ₁dim, hQdim, changGapDim]
-    exact Nat.cast_le.2 (Nat.succ_le_succ hΔbound)
-  have hQ₁subX : Q₁.carrier ⊆ (X + X) - (X + X) :=
-    hQ₁sub.trans (Finset.sub_subset_sub (Finset.add_subset_add hX₁X hX₁X)
-      (Finset.add_subset_add hX₁X hX₁X))
-  have hQlow : (X.card : ℝ) ≤ 8 * 2 ^ (12 * changGapDim κ ^ 2) * Q₁.carrier.card := by
-    have hε : ((4 : ℝ) * (Δ.card + 1))⁻¹ / (2 * Real.pi) =
-        (8 * Real.pi * ((Δ.card : ℝ) + 1))⁻¹ := by
-      rw [div_eq_mul_inv, ← mul_inv]
-      ring
-    rw [hε, inv_pow, ← div_eq_mul_inv, div_le_iff₀ (by positivity), ← hQ₁card] at hQsize
-    have hmono : (2 : ℝ) ^ (12 * (Δ.card + 1) ^ 2) ≤ 2 ^ (12 * changGapDim κ ^ 2) :=
-      pow_le_pow_right₀ (by norm_num)
-        (Nat.mul_le_mul_left 12 (Nat.pow_le_pow_left (Nat.succ_le_succ hΔbound) 2))
-    linarith [mul_le_mul_of_nonneg_right ((bohr_factor_le Δ.card).trans hmono) hQ₁pos.le]
-  exact ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩
+    exact (div_le_iff₀ (by exact_mod_cast hX.card_pos)).2 hXX
+  refine le_of_mul_le_mul_right ?_ (pow_pos hκ l.length)
+  calc (3 : ℝ) ^ l.length * #Q * κ ^ l.length = #Q * (3 * κ) ^ l.length := by ring
+    _ ≤ #Q * m ^ l.length := by gcongr
+    _ = #(Q + l.sum) := by exact_mod_cast hcard.symm
+    _ ≤ #((l.length + 2) • X - 2 • X) := by
+      exact_mod_cast card_le_card (add_sum_subset_nsmul_sub_nsmul hQ hl)
+    _ ≤ κ ^ (l.length + 4) * #X := hPR
+    _ = κ ^ 4 * #X * κ ^ l.length := by ring
+
+/-- If $3^k \le 8 \kappa^4 2^{12 d^2}$, where $d$ is `bohrGAPDim κ`, then $k$ is at most
+`iterationBound κ`. -/
+lemma le_iterationBound_of_three_pow_le {κ : ℝ} (hκ : 0 < κ) {k : ℕ}
+    (h : (3 : ℝ) ^ k ≤ 8 * κ ^ 4 * 2 ^ (12 * bohrGAPDim κ ^ 2)) :
+    (k : ℝ) ≤ iterationBound κ := by
+  have hlog := Real.log_le_log (by positivity) h
+  rw [Real.log_pow, Real.log_mul (by positivity) (by positivity),
+    Real.log_mul (by norm_num) (by positivity), Real.log_pow, Real.log_pow] at hlog
+  have hl3 : (1 : ℝ) ≤ Real.log 3 := by
+    simpa using Real.log_le_log (Real.exp_pos 1)
+      (by linarith [Real.exp_one_lt_d9] : Real.exp 1 ≤ 3)
+  have hl8 : Real.log 8 ≤ 3 := by
+    rw [(by norm_num : (8 : ℝ) = 2 ^ 3), Real.log_pow]
+    push_cast
+    linarith [Real.log_two_lt_d9]
+  push_cast at hlog
+  rw [iterationBound]
+  linarith [mul_le_mul_of_nonneg_left hl3 (Nat.cast_nonneg (α := ℝ) k),
+    mul_le_mul_of_nonneg_left (by linarith [Real.log_two_lt_d9] : Real.log 2 ≤ 0.7)
+      (by positivity : (0 : ℝ) ≤ 12 * (bohrGAPDim κ : ℝ) ^ 2),
+    Real.log_le_self hκ.le, sq_nonneg (bohrGAPDim κ : ℝ)]
+
+/-- The packing step of Chang's argument. Let $X_1 \subseteq X$ with $|X + X| \le \kappa |X|$, and
+let $Q \subseteq 2X - 2X$ be nonempty with $|X| \le 8 \cdot 2^{12 d^2} |Q|$, where $d$ is
+`bohrGAPDim κ`. Then $|Q| \le \kappa^4 |X|$, and there are sets
+$S_1, \dots, S_k \subseteq X_1$ of size $m$ = `translateCount κ`, with
+$k \le$ `iterationBound κ`, and a set $F$ of at most $m$ elements with
+$X_1 \subseteq F + (Q' - Q')$, where $Q' = Q + S_1 + \dots + S_k$. -/
+lemma exists_length_le_iterationBound_subset_add_sub {X X₁ Q : Finset G} {κ : ℝ}
+    (hX : X.Nonempty) (hκ : 0 < κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hX₁X : X₁ ⊆ X)
+    (hQ : Q.Nonempty) (hQX : Q ⊆ X + X - (X + X))
+    (hXQ : (#X : ℝ) ≤ 8 * 2 ^ (12 * bohrGAPDim κ ^ 2) * #Q) :
+    ∃ (l : List (Finset G)) (F : Finset G), (∀ S ∈ l, S ⊆ X₁ ∧ #S = translateCount κ) ∧
+      (l.length : ℝ) ≤ iterationBound κ ∧ (#Q : ℝ) ≤ κ ^ 4 * #X ∧
+      #F ≤ translateCount κ ∧ X₁ ⊆ F + (Q + l.sum - (Q + l.sum)) := by
+  have hgrow {l : List (Finset G)} (hl : ∀ S ∈ l, S ⊆ X₁ ∧ #S = translateCount κ)
+      (hcard : #(Q + l.sum) = #Q * translateCount κ ^ l.length) :
+      (3 : ℝ) ^ l.length * #Q ≤ κ ^ 4 * #X := by
+    obtain ⟨hlX₁, -⟩ := forall₂_and.1 hl
+    exact three_pow_mul_card_le hX hκ (Nat.le_ceil _) hXX hQX
+      (fun S hS ↦ (hlX₁ S hS).trans hX₁X) hcard
+  have hQ₁ : (1 : ℝ) ≤ #Q := by exact_mod_cast hQ.card_pos
+  have hB (l : List (Finset G)) (hl : ∀ S ∈ l, S ⊆ X₁ ∧ #S = translateCount κ)
+      (hcard : #(Q + l.sum) = #Q * translateCount κ ^ l.length) :
+      l.length ≤ ⌈κ ^ 4 * #X⌉₊ := by
+    exact_mod_cast (by exact_mod_cast (Nat.lt_pow_self (by norm_num : 1 < 3)).le :
+      (l.length : ℝ) ≤ 3 ^ l.length).trans ((le_mul_of_one_le_right (by positivity) hQ₁).trans
+        ((hgrow hl hcard).trans (Nat.le_ceil _)))
+  obtain ⟨l, F, hl, hcard, -, hF, hcover⟩ :=
+    exists_card_add_sum_eq_card_mul_pow_and_subset_add_sub hQ (Nat.ceil_pos.2 (by linarith)) hB
+  refine ⟨l, F, hl, le_iterationBound_of_three_pow_le hκ ?_, ?_, hF.le, hcover⟩
+  · refine le_of_mul_le_mul_right ((hgrow hl hcard).trans ?_) (by linarith)
+    exact (mul_le_mul_of_nonneg_left hXQ (pow_pos hκ 4).le).trans_eq (by ring)
+  · nlinarith [hgrow hl hcard, one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 3) (n := l.length)]
+
+/-- Ruzsa's covering step. If $X_1 \subseteq F + (S - S)$ with $|F| \le m$, where $m$ is
+`translateCount κ`, and $X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and
+$|X + X| \le \kappa |X|$, then $X \subseteq (S - S) - (S - S) + W$ for a set $W$ of at most
+`coverBound κ` elements. -/
+lemma exists_card_le_coverBound_subset_sub_sub_add {X X₁ F S : Finset G} {κ : ℝ}
+    (hκ : 0 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hX₁ : X₁.Nonempty) (hX₁X : X₁ ⊆ X)
+    (hXX₁ : #X ≤ 8 * #X₁) (hF : #F ≤ translateCount κ) (hcover : X₁ ⊆ F + (S - S)) :
+    ∃ W : Finset G, (#W : ℝ) ≤ coverBound κ ∧ X ⊆ S - S - (S - S) + W := by
+  obtain ⟨F', -, hF', hXF'⟩ := ruzsa_covering_add (A := X) (K := 8 * κ) hX₁ (by
+    linarith [(Nat.cast_le (α := ℝ)).2 (card_le_card (add_subset_add_left (s := X) hX₁X)),
+      mul_le_mul_of_nonneg_left (by exact_mod_cast hXX₁ : (#X : ℝ) ≤ 8 * #X₁) hκ])
+  refine ⟨F' + (F - F), ?_,
+    hXF'.trans ((add_subset_add_left (sub_subset_sub hcover hcover)).trans_eq ?_)⟩
+  · refine (Nat.cast_le.2 (card_add_le.trans (Nat.mul_le_mul_left _ card_sub_le))).trans ?_
+    push_cast
+    rw [coverBound, sq]
+    have hFR : (#F : ℝ) ≤ translateCount κ := by exact_mod_cast hF
+    gcongr
+  · rw [add_sub_add_comm]
+    ac_rfl
+
+namespace GAP
+
+/-- The progression of the packing argument. Starting from $Q$, it adds one step of length $2$ for
+each entry of $l$, applies `GAP.difference` twice and adds one step of length $2$ for each element
+of $W$. If $S \subseteq Q + \sum_{a \in l} \{0, a\}$, then it contains $(S - S) - (S - S) + W$. -/
+def packingContainer (Q : GAP G) (l : List G) (W : Finset G) : GAP G :=
+  (Q.consBinaryList l).difference.difference.consBinaryList W.toList
+
+lemma sub_sub_add_subset_packingContainer {Q : GAP G} {l : List G} {S : Finset G}
+    (hS : S ⊆ Q.carrier + listSubsetSum l) (W : Finset G) :
+    S - S - (S - S) + W ⊆ (Q.packingContainer l W).carrier :=
+  add_subset_consBinaryList_toList (sub_subset_difference_of_subset
+    (sub_subset_difference_of_subset (hS.trans (Q.add_listSubsetSum_subset_consBinaryList l)))) W
+
+lemma one_lt_length_packingContainer (Q : GAP G) (l : List G) (W : Finset G)
+    (i : Fin (Q.packingContainer l W).dim) : 1 < (Q.packingContainer l W).length i :=
+  one_lt_length_consBinaryList (one_lt_length_difference (Q.consBinaryList l).difference) _ i
+
+lemma dim_packingContainer (Q : GAP G) (l : List G) (W : Finset G) :
+    (Q.packingContainer l W).dim = Q.dim + l.length + #W := by
+  simp [packingContainer, dim_consBinaryList]
+
+lemma card_packingContainer_le (Q : GAP G) (l : List G) (W : Finset G) :
+    #(Q.packingContainer l W).carrier ≤
+      2 ^ (#W + 2 * (Q.dim + l.length) + l.length) * Q.boxVolume := by
+  refine (card_consBinaryList_le _ _).trans_eq ?_
+  rw [length_toList, boxVolume_difference, boxVolume_difference, dim_difference,
+    boxVolume_consBinaryList, dim_consBinaryList]
+  ring
+
+end GAP
+
+/-- The size bound of the progression containing $X$. Let $m$ be `translateCount κ`. If
+$a \le$ `coverBound κ`, $b \le$ `bohrGAPDim κ`, $k \le$ `iterationBound κ` and
+$0 \le y \le \kappa^4 x$, then $2^{a + 2(b + mk) + mk} y \le e^{E(\kappa)} x$, where $E$ is
+`containerExponent`. -/
+private lemma two_pow_mul_le_exp_containerExponent_mul {κ x y : ℝ} {a b k : ℕ} (hκ : 2 ≤ κ)
+    (ha : (a : ℝ) ≤ coverBound κ) (hb : (b : ℝ) ≤ bohrGAPDim κ)
+    (hk : (k : ℝ) ≤ iterationBound κ) (hy₀ : 0 ≤ y) (hy : y ≤ κ ^ 4 * x) :
+    2 ^ (a + 2 * (b + translateCount κ * k) + translateCount κ * k) * y ≤
+      Real.exp (containerExponent κ) * x := by
+  have h₂ (n : ℕ) : (2 : ℝ) ^ n ≤ Real.exp n := by
+    rw [← Real.exp_one_pow]
+    exact pow_le_pow_left₀ zero_le_two Real.exp_one_gt_two.le n
+  have hκ₄ : κ ^ 4 ≤ Real.exp (4 * κ) := by
+    simpa [← Real.exp_nat_mul] using
+      pow_le_pow_left₀ (by linarith) (by linarith [Real.add_one_le_exp κ] : κ ≤ Real.exp κ) 4
+  have hx : 0 ≤ x := nonneg_of_mul_nonneg_right (hy₀.trans hy) (by positivity)
+  refine (mul_le_mul (h₂ _) (hy.trans (mul_le_mul_of_nonneg_right hκ₄ hx)) hy₀
+    (Real.exp_nonneg _)).trans ?_
+  rw [← mul_assoc, ← Real.exp_add]
+  refine mul_le_mul_of_nonneg_right (Real.exp_le_exp.2 ?_) hx
+  push_cast
+  linarith [coverBound_add_two_mul_bohrGAPDim_add_le_containerExponent κ,
+    mul_le_mul_of_nonneg_left hk (Nat.cast_nonneg (α := ℝ) (translateCount κ))]
 
 /-- Let $X$ be a nonempty finite subset of an abelian group with $|X + X| \le \kappa |X|$. Given a
 subset $X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a proper progression $Q_1 \subseteq 2X - 2X$
-with the bounds of `exists_model_gap`, the set $X$ lies in a progression with all lengths at least
-$2$, of dimension at most $E$ and of size at most $e^{E} |X|$, where $E$ is
-`changContainerExponent κ`. The group may be infinite. -/
-lemma exists_coarseGAP_container_of_model_gap {G : Type*} [DecidableEq G] [AddCommGroup G]
+with the bounds of `exists_proper_gap_zmod_subset_add_sub_add_card_le`, the set $X$ lies in a
+progression with all lengths at least $2$, of dimension at most $E$ and of size at most
+$e^{E} |X|$, where $E$ is `containerExponent κ`. The group may be infinite. -/
+lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
-    (hQ₁proper : Q₁.Proper) (hQ₁dimle : (Q₁.dim : ℝ) ≤ (changGapDim κ : ℝ))
+    (hQ₁proper : Q₁.Proper) (hQ₁dimle : (Q₁.dim : ℝ) ≤ bohrGAPDim κ)
     (hQ₁subX : Q₁.carrier ⊆ (X + X) - (X + X))
-    (hQlow : (X.card : ℝ) ≤ 8 * 2 ^ (12 * changGapDim κ ^ 2) * Q₁.carrier.card) :
+    (hQlow : (X.card : ℝ) ≤ 8 * 2 ^ (12 * bohrGAPDim κ ^ 2) * Q₁.carrier.card) :
     ∃ P : GAP G,
       X ⊆ P.carrier ∧
         (∀ i, 1 < P.length i) ∧
-        ((P.dim : ℝ) ≤ changContainerExponent κ) ∧
-        (P.carrier.card : ℝ) ≤ Real.exp (changContainerExponent κ) * X.card := by
-  have hκ0 : (0 : ℝ) < κ := by linarith
-  have hXpos : (0 : ℝ) < X.card := Nat.cast_pos.2 hXne.card_pos
-  have hX₁cardR : (X.card : ℝ) ≤ 8 * X₁.card := by exact_mod_cast hX₁card
-  have hX₁ne : X₁.Nonempty := Finset.card_pos.1 (by grind [hXne.card_pos])
-  have hQ₁pos : (0 : ℝ) < Q₁.carrier.card := by
-    exact_mod_cast Finset.card_pos.2 Q₁.nonempty
-  have hm₀κ : 3 * κ ≤ (changBatchSize κ : ℝ) := by
-    rw [changBatchSize]
-    exact Nat.le_ceil _
-  have hm₀ : 2 ≤ changBatchSize κ := by
-    exact_mod_cast (by linarith : (2 : ℝ) ≤ changBatchSize κ)
-  have hgrow : ∀ batches : List (Finset G),
-      (∀ S ∈ batches, S ⊆ X₁ ∧ S.card = changBatchSize κ) →
-      (Q₁.carrier + batchSum batches).card =
-        Q₁.carrier.card * changBatchSize κ ^ batches.length →
-      (3 : ℝ) ^ batches.length * Q₁.carrier.card ≤ κ ^ 4 * X.card := by
-    intro batches hbatches hpacked
-    obtain ⟨hbsub, -⟩ := forall₂_and.1 hbatches
-    have hSsub : Q₁.carrier + batchSum batches ⊆ (batches.length + 2) • X - 2 • X := by
-      intro z hz
-      obtain ⟨u, hu, v, hv, rfl⟩ := Finset.mem_add.1 hz
-      obtain ⟨a, ha, b, hb, rfl⟩ := Finset.mem_sub.1 (hQ₁subX hu)
-      refine Finset.mem_sub.2 ⟨a + v, ?_, b, ?_, by abel⟩
-      · rw [add_comm batches.length 2, add_nsmul]
-        refine Finset.add_mem_add ?_
-          (batchSum_subset_nsmul batches X (fun S hS ↦ (hbsub S hS).trans hX₁X) hv)
-        rwa [two_nsmul]
-      · rwa [two_nsmul]
-    have hPR : (((batches.length + 2) • X - 2 • X).card : ℝ) ≤
-        κ ^ (batches.length + 4) * X.card := by
-      have hcast := (NNRat.cast_le (K := ℝ)).2
-        (Finset.pluennecke_ruzsa_inequality_nsmul_sub_nsmul_add hXne X (batches.length + 2) 2)
-      push_cast [NNRat.cast_pow] at hcast
-      apply hcast.trans
-      gcongr
-      exact (div_le_iff₀ hXpos).2 hXX
-    refine le_of_mul_le_mul_right ?_ (pow_pos hκ0 batches.length)
-    have h3 : (3 : ℝ) ^ batches.length * Q₁.carrier.card * κ ^ batches.length =
-        Q₁.carrier.card * (3 * κ) ^ batches.length := by
-      ring
-    have h4 : κ ^ 4 * (X.card : ℝ) * κ ^ batches.length = κ ^ (batches.length + 4) * X.card := by
-      ring
-    rw [h3, h4]
-    apply le_trans (mul_le_mul_of_nonneg_left
-      (pow_le_pow_left₀ (by positivity) hm₀κ batches.length) hQ₁pos.le)
-    refine le_trans ?_ hPR
-    rw [← Nat.cast_pow, ← Nat.cast_mul, ← hpacked]
-    exact Nat.cast_le.2 (Finset.card_le_card hSsub)
-  have hB : ∀ batches : List (Finset G),
-      (∀ S ∈ batches, S ⊆ X₁ ∧ S.card = changBatchSize κ) →
-      (Q₁.carrier + batchSum batches).card =
-        Q₁.carrier.card * changBatchSize κ ^ batches.length →
-      batches.length ≤ ⌈κ ^ 4 * X.card⌉₊ := by
-    intro batches hbatches hpacked
-    have h₁ : (batches.length : ℝ) ≤ 3 ^ batches.length :=
-      mod_cast (Nat.lt_pow_self (by norm_num : 1 < 3)).le
-    have h₂ : (1 : ℝ) ≤ Q₁.carrier.card := mod_cast Q₁.nonempty.card_pos
-    exact Nat.cast_le.1 ((h₁.trans (le_mul_of_one_le_right (by positivity) h₂)).trans
-      ((hgrow batches hbatches hpacked).trans (Nat.le_ceil _)))
-  obtain ⟨batches, F, hbatches, hpacked, -, hFcard, hcover⟩ :=
-    exists_chang_batch_packing X₁ Q₁.carrier Q₁.nonempty (changBatchSize κ) (by grind) _ hB
-  have hgrow := hgrow batches hbatches hpacked
-  have hQ₁le : (Q₁.carrier.card : ℝ) ≤ κ ^ 4 * X.card := by
-    refine le_trans ?_ hgrow
-    nlinarith [one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 3) (n := batches.length)]
-  have hlen : (batches.length : ℝ) ≤ changPackBound κ := by
-    have h3len : (3 : ℝ) ^ batches.length ≤ 8 * κ ^ 4 * 2 ^ (12 * changGapDim κ ^ 2) := by
-      refine le_of_mul_le_mul_right (hgrow.trans ?_) hQ₁pos
-      refine le_trans (mul_le_mul_of_nonneg_left hQlow (pow_pos hκ0 4).le) (le_of_eq ?_)
-      ring
-    have hlog := Real.log_le_log (by positivity) h3len
-    rw [Real.log_pow, Real.log_mul (by positivity) (by positivity),
-      Real.log_mul (by norm_num) (by positivity), Real.log_pow, Real.log_pow] at hlog
-    have hl3 : (1 : ℝ) ≤ Real.log 3 := by
-      simpa using Real.log_le_log (Real.exp_pos 1)
-        (by linarith [Real.exp_one_lt_d9] : Real.exp 1 ≤ 3)
-    have hl8 : Real.log 8 ≤ 3 := by
-      have h := Real.log_pow (2 : ℝ) 3
-      norm_num at h
-      linarith [Real.log_two_lt_d9]
-    push_cast at hlog
-    rw [changPackBound]
-    linarith [mul_le_mul_of_nonneg_left hl3 (Nat.cast_nonneg (α := ℝ) batches.length),
-      mul_le_mul_of_nonneg_left (by linarith [Real.log_two_lt_d9] : Real.log 2 ≤ 0.7)
-        (by positivity : (0 : ℝ) ≤ 12 * (changGapDim κ : ℝ) ^ 2),
-      Real.log_le_self hκ0.le, sq_nonneg (changGapDim κ : ℝ)]
-  obtain ⟨F', -, hF'card, hXcov⟩ := Finset.ruzsa_covering_add (K := 8 * κ) hX₁ne
-    (by
-      nlinarith [(Nat.cast_le (α := ℝ)).2
-        (Finset.card_le_card (Finset.add_subset_add_left (s := X) hX₁X))])
-  have hFm : (F.card : ℝ) ≤ (changBatchSize κ : ℝ) := Nat.cast_le.2 hFcard.le
-  have hWnat : (F' + (F - F)).card ≤ F'.card * (F.card * F.card) :=
-    Finset.card_add_le.trans (Nat.mul_le_mul le_rfl Finset.card_sub_le)
-  have hWcast : ((F' + (F - F)).card : ℝ) ≤ (F'.card : ℝ) * (F.card : ℝ) * (F.card : ℝ) := by
-    refine le_trans (Nat.cast_le.2 hWnat) (le_of_eq ?_)
+        ((P.dim : ℝ) ≤ containerExponent κ) ∧
+        (P.carrier.card : ℝ) ≤ Real.exp (containerExponent κ) * X.card := by
+  obtain ⟨l, F, hl, hlen, hQ₁X, hF, hcover⟩ := exists_length_le_iterationBound_subset_add_sub
+    hXne (by linarith) hXX hX₁X Q₁.nonempty hQ₁subX hQlow
+  obtain ⟨W, hW, hXW⟩ := exists_card_le_coverBound_subset_sub_sub_add (by linarith) hXX
+    (card_pos.1 (by grind [hXne.card_pos])) hX₁X hX₁card hF hcover
+  obtain ⟨-, hlcard⟩ := forall₂_and.1 hl
+  have hlength : (l.flatMap Finset.toList).length = translateCount κ * l.length :=
+    length_flatMap_toList hlcard
+  refine ⟨Q₁.packingContainer (l.flatMap Finset.toList) W,
+    hXW.trans (GAP.sub_sub_add_subset_packingContainer
+      (add_subset_add_left (sum_subset_listSubsetSum_flatMap_toList l)) W),
+    GAP.one_lt_length_packingContainer _ _ _, ?_, ?_⟩
+  · rw [GAP.dim_packingContainer, hlength]
     push_cast
-    ring
-  have hWcard : ((F' + (F - F)).card : ℝ) ≤ changCoverBound κ := by
-    apply hWcast.trans
-    rw [changCoverBound, sq, ← mul_assoc]
-    exact mul_le_mul (mul_le_mul hF'card hFm (Nat.cast_nonneg _) (by positivity)) hFm
-      (Nat.cast_nonneg _) (by positivity)
-  let W := F' + (F - F)
-  set S := Q₁.carrier + batchSum batches with hSdef
-  set R := Q₁.consBinaryList (batchElements batches) with hRdef
-  set U := R.differenceHull.differenceHull with hUdef
-  obtain ⟨-, hbcard⟩ := forall₂_and.1 hbatches
-  have hbatchlen : (batchElements batches).length = changBatchSize κ * batches.length :=
-    batchElements_length hbcard
-  have hRdim : R.dim = Q₁.dim + changBatchSize κ * batches.length := by
-    rw [hRdef, GAP.dim_consBinaryList, hbatchlen]
-  have hSR : S ⊆ R.carrier := by
-    rw [hSdef, hRdef]
-    exact (Finset.add_subset_add_left
-      (batchSum_subset_binaryListSum_batchElements batches)).trans
-      (GAP.add_binaryListSum_subset_consBinaryList Q₁ (batchElements batches))
-  have hSST : S - S ⊆ R.differenceHull.carrier :=
-    (Finset.sub_subset_sub hSR hSR).trans R.sub_carrier_subset_differenceHull
-  have hUsub : S - S - (S - S) ⊆ U.carrier := by
-    rw [hUdef]
-    exact (Finset.sub_subset_sub hSST hSST).trans
-      R.differenceHull.sub_carrier_subset_differenceHull
-  have hXW : X ⊆ U.carrier + W := by
-    intro x hx
-    obtain ⟨f', hf', y, hy, rfl⟩ := Finset.mem_add.1 (hXcov hx)
-    obtain ⟨a, ha, b, hb, rfl⟩ := Finset.mem_sub.1 hy
-    obtain ⟨g₁, hg₁, z₁, hz₁, rfl⟩ := Finset.mem_add.1 (hcover ha)
-    obtain ⟨g₂, hg₂, z₂, hz₂, rfl⟩ := Finset.mem_add.1 (hcover hb)
-    refine Finset.mem_add.2 ⟨z₁ - z₂, hUsub (Finset.mem_sub.2 ⟨z₁, hz₁, z₂, hz₂, rfl⟩),
-      f' + (g₁ - g₂), ?_, by abel⟩
-    exact Finset.add_mem_add hf' (Finset.mem_sub.2 ⟨g₁, hg₁, g₂, hg₂, rfl⟩)
-  refine ⟨U.consBinaryList (finsetList W), ?_, ?_, ?_, ?_⟩
-  · refine hXW.trans ((Finset.add_subset_add_left fun w hw ↦
-      mem_binaryListSum_of_mem (mem_finsetList.2 hw)).trans ?_)
-    exact GAP.add_binaryListSum_subset_consBinaryList U (finsetList W)
-  · refine U.one_lt_length_consBinaryList (finsetList W) ?_
-    rw [hUdef]
-    exact GAP.one_lt_length_differenceHull R.differenceHull
-  · rw [GAP.dim_consBinaryList, finsetList_length, hUdef, GAP.differenceHull_dim,
-      GAP.differenceHull_dim, hRdim]
+    linarith [coverBound_add_bohrGAPDim_add_le_containerExponent hκ,
+      mul_le_mul_of_nonneg_left hlen (Nat.cast_nonneg (α := ℝ) (translateCount κ))]
+  · refine (Nat.cast_le.2 (Q₁.card_packingContainer_le _ W)).trans ?_
+    rw [GAP.boxVolume, ← Q₁.card_eq_prod_length hQ₁proper, hlength]
     push_cast
-    refine le_trans ?_ (changContainerExponent_dim_le hκ)
-    linarith [mul_le_mul_of_nonneg_left hlen (Nat.cast_nonneg (α := ℝ) (changBatchSize κ))]
-  · have hnat : (U.consBinaryList (finsetList W)).carrier.card ≤
-        2 ^ (W.card + 2 * R.dim + changBatchSize κ * batches.length) * Q₁.carrier.card := by
-      apply (GAP.card_consBinaryList_le U (finsetList W)).trans
-      rw [finsetList_length, hUdef, GAP.boxVolume_differenceHull,
-        GAP.boxVolume_differenceHull, GAP.differenceHull_dim, hRdef,
-        GAP.boxVolume_consBinaryList, hbatchlen, GAP.boxVolume,
-        ← Q₁.card_eq_prod_length hQ₁proper, ← hRdef]
-      apply le_of_eq
-      rw [pow_add, pow_add, two_mul, pow_add]
-      ring
-    have hcardle : ((U.consBinaryList (finsetList W)).carrier.card : ℝ) ≤
-        (2 : ℝ) ^ (W.card + 2 * R.dim + changBatchSize κ * batches.length) *
-          Q₁.carrier.card := by
-      refine le_trans (Nat.cast_le.2 hnat) (le_of_eq ?_)
-      push_cast
-      ring
-    refine hcardle.trans (le_trans (mul_le_mul_of_nonneg_left hQ₁le (by positivity)) ?_)
-    rw [← mul_assoc]
-    refine mul_le_mul_of_nonneg_right ?_ hXpos.le
-    apply le_trans (mul_le_mul (two_pow_le_exp_nat _) (pow_le_exp_mul hκ0.le 4)
-      (by positivity) (Real.exp_nonneg _))
-    rw [← Real.exp_add]
-    refine Real.exp_le_exp.2 (le_trans ?_ (changContainerExponent_size_le hκ))
-    rw [hRdim]
-    push_cast
-    linarith [mul_le_mul_of_nonneg_left hlen (Nat.cast_nonneg (α := ℝ) (changBatchSize κ))]
+    exact two_pow_mul_le_exp_containerExponent_mul hκ hW hQ₁dimle hlen (by positivity) hQ₁X
+
+end Packing
 
 /-- Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$
-and $|X| > e^{E}$, where $E$ is `changContainerExponent κ`. Then $X$ lies in a GAP with all lengths
+and $|X| > e^{E}$, where $E$ is `containerExponent κ`. Then $X$ lies in a GAP with all lengths
 at least $2$, of dimension at most $E$ and of size at most $e^{E} |X|$.
 
 No upper bound on $|X|$ in terms of $q$ is needed, because the Fourier-analytic steps take place in
 $\mathbb{Z}/m\mathbb{Z}$ with $m \le \kappa^{16} |X|$. The lemma
 `exists_twoProperGAP_dim_le_freimanDim` then bounds the dimension by the Freiman dimension of
 $X$. -/
-lemma exists_coarseGAP_container {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
+lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
-    (hXlower : Real.exp (changContainerExponent κ) < X.card) :
+    (hXlower : Real.exp (containerExponent κ) < X.card) :
     ∃ P : GAP (ZMod q),
       X ⊆ P.carrier ∧
         (∀ i, 1 < P.length i) ∧
-        ((P.dim : ℝ) ≤ changContainerExponent κ) ∧
-        (P.carrier.card : ℝ) ≤ Real.exp (changContainerExponent κ) * X.card := by
+        ((P.dim : ℝ) ≤ containerExponent κ) ∧
+        (P.carrier.card : ℝ) ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
-    exists_model_gap X hq hκ hXX hXlower
-  exact exists_coarseGAP_container_of_model_gap
-    (Finset.card_pos.1 (by exact_mod_cast (Real.exp_pos _).trans hXlower)) hκ hXX hX₁X hX₁card
+    exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX hXlower
+  exact exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
+    (card_pos.1 (by exact_mod_cast (Real.exp_pos _).trans hXlower)) hκ hXX hX₁X hX₁card
     hQ₁proper hQ₁dimle hQ₁subX hQlow
 
 end
