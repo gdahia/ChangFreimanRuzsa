@@ -50,9 +50,9 @@ Steps 5 to 7, `exists_gap_subset_dim_le_card_le_of_subset_add_sub_add`, hold in 
 group, and `Integers.lean` applies them to sets of integers.
 
 All bounds are explicit functions of $\kappa$. They are collected in `containerExponent`, which
-bounds the dimension of the progression containing $X$, the logarithm of its size relative to
-$|X|$, and the size that $|X|$ has to exceed for $\mathbb{Z}/m\mathbb{Z}$ to contain a Bohr
-progression.
+bounds the dimension of the progression containing $X$ and the logarithm of its size relative to
+$|X|$. The set $X$ only has to have $256 d$ elements, where $d$ is `bohrGAPDim κ`, for
+$\mathbb{Z}/m\mathbb{Z}$ to contain a Bohr progression.
 
 ## Main statements
 
@@ -102,8 +102,8 @@ $d$ is `bohrGAPDim κ`. It bounds $\log_3$ of $8 \kappa^4$ `bohrLoss d`. -/
 def iterationBound (κ : ℝ) : ℝ := 3 + 4 * κ + 3 * bohrGAPDim κ * Real.log (8 * bohrGAPDim κ)
 
 /-- The exponent $E(\kappa)$ of the progression containing $X$. It bounds the dimension of the
-progression, the logarithm of its size relative to $|X|$, and the logarithm of the size that $|X|$
-has to exceed for the Ruzsa model of $X$ to contain a Bohr progression. -/
+progression and the logarithm of its size relative to $|X|$, and $e^{E(\kappa)}$ is at least the
+size $256 d$ that $|X|$ has to reach for the Ruzsa model of $X$ to contain a Bohr progression. -/
 def containerExponent (κ : ℝ) : ℝ :=
   256 + 3 * bohrGAPDim κ + 12 * κ + 3 * translateCount κ * (iterationBound κ + 1)
 
@@ -145,13 +145,18 @@ lemma mul_add_two_mul_bohrGAPDim_add_le_containerExponent (κ : ℝ) :
   rw [containerExponent]
   linarith [Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ)]
 
-/-- The exponent bounds the logarithm of the size that $|X|$ has to exceed for the Ruzsa model of
-$X$ to contain a Bohr progression. -/
+/-- The exponent is at least $256 + d$, where $d$ is `bohrGAPDim κ`. -/
 lemma add_bohrGAPDim_le_containerExponent {κ : ℝ} (hκ : 2 ≤ κ) :
     256 + bohrGAPDim κ ≤ containerExponent κ := by
   rw [containerExponent]
   nlinarith [iterationBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ),
     Nat.cast_nonneg (α := ℝ) (translateCount κ)]
+
+/-- A set with at least $256 d$ elements, where $d$ is `bohrGAPDim κ`, is nonempty. -/
+lemma nonempty_of_mul_bohrGAPDim_le {G : Type*} {X : Finset G} {κ : ℝ}
+    (hX : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) : X.Nonempty := by
+  have hd : (1 : ℝ) ≤ bohrGAPDim κ := by exact_mod_cast one_le_bohrGAPDim κ
+  exact card_pos.1 (by exact_mod_cast (by linarith : (0 : ℝ) < X.card))
 
 /-- If $x > e^{E(\kappa)}$, then $x \ge 256 d$, where $d$ is `bohrGAPDim κ`. -/
 lemma mul_bohrGAPDim_le_of_exp_lt {κ x : ℝ} (hκ : 2 ≤ κ)
@@ -254,19 +259,19 @@ lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (Ad
     (pow_le_pow_right₀ (by linarith) (by grind)))
 
 /-- Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$
-and $|X| > e^{E(\kappa)}$, where $E$ is `containerExponent`. Then $X$ has a subset $X_1$ with
-$|X| \le 8 |X_1|$, and $2X - 2X$ contains a proper progression $Q_1$ of dimension at most
-$d$ = `bohrGAPDim κ` with $|X| \le 8$ `bohrLoss d` $\cdot |Q_1|$. -/
+and $|X| \ge 256 d$, where $d$ is `bohrGAPDim κ`. Then $X$ has a subset $X_1$ with
+$|X| \le 8 |X_1|$, and $2X - 2X$ contains a proper progression $Q_1$ of dimension at most $d$ with
+$|X| \le 8$ `bohrLoss d` $\cdot |Q_1|$. -/
 lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
-    (hXlower : Real.exp (containerExponent κ) < X.card) :
+    (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ (X₁ : Finset (ZMod q)) (Q₁ : GAP (ZMod q)),
       X₁ ⊆ X ∧ X.card ≤ 8 * X₁.card ∧ Q₁.Proper ∧
         (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧
         Q₁.carrier ⊆ (X + X) - (X + X) ∧
         (X.card : ℝ) ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card := by
-  have hX : X.Nonempty := card_pos.1 (by exact_mod_cast (Real.exp_pos _).trans hXlower)
+  have hX : X.Nonempty := nonempty_of_mul_bohrGAPDim_le hXlower
   obtain ⟨m, X₁, φ, hm, hX₁X, hX₁, hφ, hXm, hmY, hYY⟩ :=
     exists_subset_isAddFreimanIso_eight_card_le hq (by linarith) hX hXX
   have : NeZero m := ⟨hm.ne'⟩
@@ -274,7 +279,7 @@ lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X 
     ((card_pos.1 (by grind [hX.card_pos])).image φ) hmY hYY
   obtain ⟨Q, hQ, hQdim, hQsub, hQcard⟩ := exists_proper_gap_chordSet_card_le Δ
     (d := bohrGAPDim κ) (Nat.add_le_add_right hΔ 1)
-    (by linarith [mul_bohrGAPDim_le_of_exp_lt hκ hXlower])
+    (by linarith)
   obtain ⟨Q₁, hQ₁, hQ₁dim, hQ₁card, hQ₁sub⟩ :=
     exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso hφ hQ
       (coe_subset.1 (hQsub.trans hchord))
@@ -491,8 +496,9 @@ lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
 end Packing
 
 /-- Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$
-and $|X| > e^{E}$, where $E$ is `containerExponent κ`. Then $X$ lies in a GAP with all lengths
-at least $2$, of dimension at most $E$ and of size at most $e^{E} |X|$.
+and $|X| \ge 256 d$, where $d$ is `bohrGAPDim κ`. Then $X$ lies in a GAP with all lengths at
+least $2$, of dimension at most $E$ and of size at most $e^{E} |X|$, where $E$ is
+`containerExponent κ`.
 
 No upper bound on $|X|$ in terms of $q$ is needed, because the Fourier-analytic steps take place in
 $\mathbb{Z}/m\mathbb{Z}$ with $m \le \kappa^{16} |X|$. The lemma
@@ -501,7 +507,7 @@ $X$. -/
 lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
-    (hXlower : Real.exp (containerExponent κ) < X.card) :
+    (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ P : GAP (ZMod q),
       X ⊆ P.carrier ∧
         (∀ i, 1 < P.length i) ∧
@@ -510,7 +516,7 @@ lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZM
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
     exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX hXlower
   exact exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
-    (card_pos.1 (by exact_mod_cast (Real.exp_pos _).trans hXlower)) hκ hXX hX₁X hX₁card
+    (nonempty_of_mul_bohrGAPDim_le hXlower) hκ hXX hX₁X hX₁card
     hQ₁proper hQ₁dimle hQ₁subX hQlow
 
 end

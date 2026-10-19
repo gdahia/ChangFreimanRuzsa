@@ -64,13 +64,13 @@ theorem exists_twoProperGAP_subset_dim_le_card_le' {κ : ℝ} (X : Finset ℤ) (
   sorry
 
 /-- **Chang's theorem** in `ZMod q` for a prime $q$. A set $X$ with $|X + X| \le \kappa |X|$,
-where $\kappa \ge 2$, with more than $\exp(2 \cdot 10^8 \kappa^3)$ elements and with
+where $\kappa \ge 2$, with at least $7 \cdot 10^7 \kappa^2$ elements and with
 $\exp(10^{30} \kappa^7) |X| \le q$, is contained in a $2$-proper generalized arithmetic
 progression of dimension at most $2\kappa - 1$ with at most $\exp(10^{30} \kappa^7) |X|$
 points. -/
 theorem exists_twoProperGAP_zmod_subset_dim_le_card_le' {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : Real.exp (2 * 10 ^ 8 * κ ^ 3) < #X)
+    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
     (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ 2 * κ - 1 ∧
       (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X :=

@@ -17,6 +17,7 @@ For $\kappa \ge 2$, the exponents defined in `ChangFreimanRuzsa.Container`,
 * `containerExponent κ` is at most $1.3 \cdot 10^8 \kappa^2 (1 + \log \kappa)^2$, hence at most
   $2 \cdot 10^8 \kappa^3$.
 * `containerExponent (2 * κ)` is at most $1.6 \cdot 10^9 \kappa^3$.
+* $256$ `bohrGAPDim κ` is at most $7 \cdot 10^7 \kappa^2$.
 * $(c + 2)^3 \log (c + 2)$, where $c$ is `containerExponent κ`, is at most
   $8.8 \cdot 10^{28} \kappa^7$. This bounds the cost of properization.
 * `zmodExponent κ` is at most $3 \cdot 10^{29} \kappa^7$.
@@ -120,6 +121,11 @@ private lemma bohrGAPDim_le (hκ : 2 ≤ κ) :
   unfold bohrGAPDim
   push_cast
   nlinarith [deltaBound_le hκ, Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
+
+/-- $256 d \le 7 \cdot 10^7 \kappa^2$, where $d$ is `bohrGAPDim κ`. This bounds the size that $|X|$
+has to reach in Chang's theorem in `ZMod q`. -/
+lemma mul_bohrGAPDim_le (hκ : 2 ≤ κ) : 256 * (bohrGAPDim κ : ℝ) ≤ 7 * 10 ^ 7 * κ ^ 2 := by
+  nlinarith [bohrGAPDim_le hκ, Real.log_le_sub_one_of_pos (by linarith : 0 < κ)]
 
 private lemma log_eight_mul_bohrGAPDim_le (hκ : 2 ≤ κ) :
     Real.log (8 * bohrGAPDim κ) ≤ 15 * (1 + Real.log κ) := by

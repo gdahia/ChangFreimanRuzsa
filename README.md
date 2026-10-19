@@ -30,7 +30,7 @@ $$\dim P \le \operatorname{freimanDim} X, \qquad |P| \le \exp(10^{32} \kappa^7) 
 
 **Theorem 2** (`ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le`).
 Let $q$ be a prime, let $\kappa \ge 2$, and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy
-$|X + X| \le \kappa |X|$, $|X| > \exp(2 \cdot 10^8 \kappa^3)$ and
+$|X + X| \le \kappa |X|$, $|X| \ge 7 \cdot 10^7 \kappa^2$ and
 $\exp(10^{30} \kappa^7) |X| \le q$. Then $X$ is contained in a $2$-proper progression $Q$ with
 
 $$\dim Q \le \operatorname{freimanDim} X, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
@@ -55,21 +55,22 @@ theorems depend on no axioms other than `propext`, `Classical.choice` and `Quot.
 
 The library also states the theorems with named exponents, which the explicit bounds above replace:
 
-| Theorem | Exponent | Bound for `κ ≥ 2` |
+| Theorem | Named bound | Bound for `κ ≥ 2` |
 | --- | --- | --- |
-| `exists_twoProperGAP_int_dim_le_freimanDim`, size | `intFreimanDimExponent κ` | at most `10 ^ 32 * κ ^ 7` |
-| `exists_twoProperGAP_zmod_dim_le_freimanDim`, size | `freimanDimExponent κ` | at most `10 ^ 30 * κ ^ 7` |
-| `exists_twoProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `containerExponent κ` | at most `2 * 10 ^ 8 * κ ^ 3` |
+| `exists_twoProperGAP_int_dim_le_freimanDim`, exponent of the size | `intFreimanDimExponent κ` | at most `10 ^ 32 * κ ^ 7` |
+| `exists_twoProperGAP_zmod_dim_le_freimanDim`, exponent of the size | `freimanDimExponent κ` | at most `10 ^ 30 * κ ^ 7` |
+| `exists_twoProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
 
-The progressions before the reduction of the dimension have the following exponents:
+The progressions before the reduction of the dimension have the following bounds:
 
-| Theorem | Exponent | Bound for `κ ≥ 2` |
+| Theorem | Named bound | Bound for `κ ≥ 2` |
 | --- | --- | --- |
-| `exists_twoProperGAP_of_small_sumset`, for integers, size | `intExponent κ` | at least `κ ^ 2`, at most `4 * 10 ^ 31 * κ ^ 7` |
+| `exists_twoProperGAP_of_small_sumset`, for integers, exponent of the size | `intExponent κ` | at least `κ ^ 2`, at most `4 * 10 ^ 31 * κ ^ 7` |
 | `exists_twoProperGAP_of_small_sumset`, for integers, dimension | `containerExponent (2 * κ)` | at most `16 * 10 ^ 8 * κ ^ 3` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, size | `zmodExponent κ` | at most `3 * 10 ^ 29 * κ ^ 7` |
-| `exists_twoProperGAP_zmod_of_small_sumset`, dimension and lower bound on `\|X\|` | `containerExponent κ` | at most `2 * 10 ^ 8 * κ ^ 3` |
-| `exists_twoProperGAP_int_of_small_sumset` | the exponents of `exists_twoProperGAP_zmod_of_small_sumset` | for integers with `exp (containerExponent κ) < \|X\|` |
+| `exists_twoProperGAP_zmod_of_small_sumset`, exponent of the size | `zmodExponent κ` | at most `3 * 10 ^ 29 * κ ^ 7` |
+| `exists_twoProperGAP_zmod_of_small_sumset`, dimension | `containerExponent κ` | at most `2 * 10 ^ 8 * κ ^ 3` |
+| `exists_twoProperGAP_zmod_of_small_sumset`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
+| `exists_twoProperGAP_int_of_small_sumset` | the bounds of `exists_twoProperGAP_zmod_of_small_sumset` | for integers with `256 * bohrGAPDim κ ≤ \|X\|` |
 
 ## Proof
 
@@ -79,7 +80,8 @@ onto a subset $Y$ of $\mathbb{Z}/m\mathbb{Z}$ with $m \le 8 \kappa^{16} |Y|$. By
 large spectrum of $Y$ is spanned by a dissociated set $\Delta$ with $|\Delta| = O(\kappa \log \kappa)$,
 and $2Y - 2Y$ contains the Bohr set of $\Delta$. Minkowski's second theorem, applied to the lattice
 of the frequencies of $\Delta$, gives a proper progression $Q$ of dimension $d = |\Delta| + 1$
-inside that Bohr set, with $m \le (8d)^{3d} |Q|$. The Freiman isomorphism carries it back to a
+inside that Bohr set, with $m \le (8d)^{3d} |Q|$. This needs $m \ge 32 d$, which holds when
+$|X| \ge 256 d$; it is the only lower bound on $|X|$ in the argument. The Freiman isomorphism carries it back to a
 proper progression inside $2X_1 - 2X_1$. Chang's covering argument repeatedly adds to the
 progression a set of $\lceil 3\kappa \rceil$ elements of $X_1$ with disjoint translates. By the
 Plünnecke–Ruzsa inequality this stops after $O(d \log d)$ steps, with $X_1 \subseteq F + (S - S)$

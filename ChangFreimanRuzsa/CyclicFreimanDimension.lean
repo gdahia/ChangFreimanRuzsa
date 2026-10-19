@@ -13,14 +13,15 @@ import ChangFreimanRuzsa.Bound
 # Chang's theorem with dimension at most the Freiman dimension
 
 Let $q$ be a prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$.
-Write $c_\kappa$ for `containerExponent κ` and $F_\kappa$ for `freimanDimExponent κ`. If
-$e^{c_\kappa} < |X|$ and $e^{F_\kappa} |X| \le q$, then $X$ lies in a $2$-proper generalized
+Write $F_\kappa$ for `freimanDimExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. If
+$256 d_\kappa \le |X|$ and $e^{F_\kappa} |X| \le q$, then $X$ lies in a $2$-proper generalized
 arithmetic progression of dimension at most `freimanDim X` and of size at most $e^{F_\kappa} |X|$.
 A finite nonempty set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ lies in a $2$-proper
 progression of dimension at most `freimanDim X` and of size at most $e^{E_\kappa} |X|$, where
 $E_\kappa$ is `intFreimanDimExponent κ`.
 
-In `ZMod q` the proof has three stages. `exists_gap_zmod_subset_dim_le_card_le` puts $X$ in a
+Write $c_\kappa$ for `containerExponent κ`. In `ZMod q` the proof has three stages.
+`exists_gap_zmod_subset_dim_le_card_le` puts $X$ in a
 progression of dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$,
 `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul` replaces that progression by a
 $2$-proper one, and `exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul` replaces the $2$-proper
@@ -103,20 +104,20 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [Decidable
   exact ⟨Q, hQ, hXQ, hlen, hQdim, hQcard.trans hP₂X⟩
 
 /-- **Chang's theorem** in `ZMod q` for a prime $q$, with the dimension bounded by the Freiman
-dimension. Write $c_\kappa$ for `containerExponent κ` and $F_\kappa$ for
-`freimanDimExponent κ`. A set $X$ with $|X + X| \le \kappa |X|$, $e^{c_\kappa} < |X|$ and
-$e^{F_\kappa} |X| \le q$ is contained in a $2$-proper generalized arithmetic progression of
-dimension at most `freimanDim X` and of size at most $e^{F_\kappa} |X|$. -/
+dimension. Write $F_\kappa$ for `freimanDimExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. A set
+$X$ with $|X + X| \le \kappa |X|$, $256 d_\kappa \le |X|$ and $e^{F_\kappa} |X| \le q$ is contained
+in a $2$-proper generalized arithmetic progression of dimension at most `freimanDim X` and of size
+at most $e^{F_\kappa} |X|$. -/
 theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : Real.exp (containerExponent κ) < #X)
+    (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (freimanDimExponent κ) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
       Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
   obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
   exact exists_twoProperGAP_dim_le_freimanDim_of_subset_gap
-    (fun _ ↦ GAP.injOn_nsmul_of_prime hq) (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower))
-    hXP hPdim hPcard hXupper
+    (fun _ ↦ GAP.injOn_nsmul_of_prime hq) (nonempty_of_mul_bohrGAPDim_le hXlower) hXP hPdim
+    hPcard hXupper
 
 /-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension.
 Write $E_\kappa$ for `intFreimanDimExponent κ`. A finite nonempty set $X \subseteq \mathbb{Z}$

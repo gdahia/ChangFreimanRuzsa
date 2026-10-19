@@ -160,8 +160,8 @@ private lemma card_image_intCast_add_le (q : ℕ) (X : Finset ℤ) :
 
 /-! ## The progression inside `2X - 2X` -/
 
-/-- Let $c_\kappa$ be `containerExponent κ` and $d_\kappa$ be `bohrGAPDim κ`. A finite set
-$X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $e^{c_\kappa} < |X|$ has a subset $X_1$
+/-- Let $d_\kappa$ be `bohrGAPDim κ`. A finite set
+$X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $256 d_\kappa \le |X|$ has a subset $X_1$
 with $|X| \le 8 |X_1|$ and a proper progression $Q_1 \subseteq 2X - 2X$ of dimension at most
 $d_\kappa$ with $|X| \le 8$ `bohrLoss` $d_\kappa \cdot |Q_1|$.
 
@@ -169,8 +169,7 @@ The progression is the one that `exists_proper_gap_zmod_subset_add_sub_add_card_
 reduction of `X` modulo a large prime, carried back to `ℤ` by
 `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`. -/
 private lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : Finset ℤ)
-    (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : Real.exp (containerExponent κ) < #X) :
+    (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
     ∃ (X₁ : Finset ℤ) (Q₁ : GAP ℤ), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧ Q₁.Proper ∧
       (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧ Q₁.carrier ⊆ (X + X) - (X + X) ∧
       (#X : ℝ) ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q₁.carrier := by
@@ -187,29 +186,29 @@ private lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : F
   exact ⟨X₁, Q₁, hX₁, hY₁card.trans (Nat.mul_le_mul_left 8 card_image_le), hQ₁, by rwa [hQ₁dim],
     hQ₁sub, by rwa [hQ₁card]⟩
 
-/-- Let $c_\kappa$ be `containerExponent κ`. A finite set $X \subseteq \mathbb{Z}$ with
-$|X + X| \le \kappa |X|$ and $e^{c_\kappa} < |X|$ lies in a generalized arithmetic progression of
-dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$. -/
+/-- Let $c_\kappa$ be `containerExponent κ` and $d_\kappa$ be `bohrGAPDim κ`. A finite set
+$X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $256 d_\kappa \le |X|$ lies in a
+generalized arithmetic progression of dimension at most $c_\kappa$ and of size at most
+$e^{c_\kappa} |X|$. -/
 lemma exists_gap_int_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
-    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (containerExponent κ) < #X) :
+    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
     ∃ P : GAP ℤ, X ⊆ P.carrier ∧ (∀ i, 1 < P.length i) ∧
       (P.dim : ℝ) ≤ containerExponent κ ∧
       (#P.carrier : ℝ) ≤ Real.exp (containerExponent κ) * #X := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁, hQ₁dim, hQ₁sub, hQ₁card⟩ :=
     exists_proper_gap_int_subset_add_sub_add_card_le X hκ hXX hXlower
   exact exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
-    (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hκ hXX hX₁X hX₁card hQ₁ hQ₁dim hQ₁sub
-    hQ₁card
+    (nonempty_of_mul_bohrGAPDim_le hXlower) hκ hXX hX₁X hX₁card hQ₁ hQ₁dim hQ₁sub hQ₁card
 
 /-! ## Chang's theorem -/
 
 /-- **Chang's theorem** for sets of integers that are not too small. Write $c_\kappa$ for
-`containerExponent κ` and $C_\kappa$ for `zmodExponent κ`. A finite set
-$X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $e^{c_\kappa} < |X|$ is contained in a
-$2$-proper generalized arithmetic progression of dimension at most $c_\kappa$ and of size at most
-$e^{C_\kappa} |X|$. -/
+`containerExponent κ`, $C_\kappa$ for `zmodExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. A
+finite set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $256 d_\kappa \le |X|$ is
+contained in a $2$-proper generalized arithmetic progression of dimension at most $c_\kappa$ and of
+size at most $e^{C_\kappa} |X|$. -/
 theorem exists_twoProperGAP_int_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
-    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (containerExponent κ) < #X) :
+    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
     ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
       (Q.dim : ℝ) ≤ containerExponent κ ∧
       (#Q.carrier : ℝ) ≤ Real.exp (zmodExponent κ) * #X := by
@@ -237,7 +236,7 @@ theorem exists_twoProperGAP_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hX : X.
   obtain ⟨X', hXX', hX'X', hX'lower, hX'upper⟩ :=
     exists_large_superset_of_card_add_le hX hXX (Real.one_le_exp (containerExponent_pos hκ').le)
   obtain ⟨P, hP, hX'P, -, hdim, hcard⟩ :=
-    exists_twoProperGAP_int_of_small_sumset X' hκ' hX'X' hX'lower
+    exists_twoProperGAP_int_of_small_sumset X' hκ' hX'X' (mul_bohrGAPDim_le_of_exp_lt hκ' hX'lower)
   exact ⟨P, hP, hXX'.trans hX'P, hdim,
     hcard.trans (exp_mul_le_exp_add_add_one_mul (Nat.cast_nonneg _) hX'upper)⟩
 

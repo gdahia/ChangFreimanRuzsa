@@ -12,9 +12,10 @@ public import ChangFreimanRuzsa.Properization.ShortRelationsAndIteration
 # Chang's theorem in `ZMod q`
 
 Let $q$ be a prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$.
-Write $c_\kappa$ for `containerExponent κ` and $C_\kappa$ for `zmodExponent κ`. If
-$e^{c_\kappa} < |X|$ and $e^{C_\kappa} |X| \le q$, then $X$ lies in a $2$-proper generalized
-arithmetic progression of dimension at most $c_\kappa$ and of size at most $e^{C_\kappa} |X|$.
+Write $c_\kappa$ for `containerExponent κ`, $C_\kappa$ for `zmodExponent κ` and $d_\kappa$ for
+`bohrGAPDim κ`. If $256 d_\kappa \le |X|$ and $e^{C_\kappa} |X| \le q$, then $X$ lies in a
+$2$-proper generalized arithmetic progression of dimension at most $c_\kappa$ and of size at most
+$e^{C_\kappa} |X|$.
 
 The proof has two stages. `exists_gap_zmod_subset_dim_le_card_le` puts $X$ in a progression of
 dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$, and
@@ -72,13 +73,13 @@ lemma exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap {G : Type*} [Decid
   exact ⟨Q, hQ, hXP.trans hPQ, hlen, (Nat.cast_le.2 hQdim).trans hPdim, hQcard.trans hP⟩
 
 /-- **Chang's theorem** in `ZMod q` for a prime $q$. Write $c_\kappa$ for
-`containerExponent κ` and $C_\kappa$ for `zmodExponent κ`. A set $X$ with
-$|X + X| \le \kappa |X|$, $e^{c_\kappa} < |X|$ and $e^{C_\kappa} |X| \le q$ is contained in a
-$2$-proper generalized arithmetic progression of dimension at most $c_\kappa$ and of size at most
-$e^{C_\kappa} |X|$. -/
+`containerExponent κ`, $C_\kappa$ for `zmodExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. A set
+$X$ with $|X + X| \le \kappa |X|$, $256 d_\kappa \le |X|$ and $e^{C_\kappa} |X| \le q$ is contained
+in a $2$-proper generalized arithmetic progression of dimension at most $c_\kappa$ and of size at
+most $e^{C_\kappa} |X|$. -/
 theorem exists_twoProperGAP_zmod_of_small_sumset {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : Real.exp (containerExponent κ) < #X)
+    (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (zmodExponent κ) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
       (Q.dim : ℝ) ≤ containerExponent κ ∧

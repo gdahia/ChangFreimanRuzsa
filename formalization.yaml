@@ -154,7 +154,7 @@ fidelity:
     exp(intFreimanDimExponent kappa) in place of exp(10^32 kappa^7).
 
     ZMod q. exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le is for q prime and
-    needs exp(2 * 10^8 kappa^3) < |X| and exp(10^30 kappa^7) |X| <= q. It gives a
+    needs 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7) |X| <= q. It gives a
     2-proper progression of dimension at most freimanDim X with at most
     exp(10^30 kappa^7) |X| points. The library form
     exists_twoProperGAP_zmod_dim_le_freimanDim is written with the exponents
@@ -186,7 +186,7 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: >-
-        For q prime, exp(2 * 10^8 kappa^3) < |X| and exp(10^30 kappa^7) |X| <= q, with
+        For q prime, 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7) |X| <= q, with
         dimension at most 2 kappa - 1.
     - source: "Chang's theorem for sets of integers with dimension at most the Freiman dimension"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_freimanDim_card_le"
@@ -214,7 +214,7 @@ alignment:
       module: "ChangFreimanRuzsa.Integers"
       status: "proved"
       note: >-
-        For exp(containerExponent kappa) < |X|, with the exponents of the statement for
+        For 256 * bohrGAPDim kappa <= |X|, with the exponents of the statement for
         ZMod q. Not in Challenge.lean.
     - source: "Chang's theorem in ZMod q, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_of_small_sumset"
