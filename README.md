@@ -16,9 +16,9 @@ group has an origin $a$, steps $s_0, \dots, s_{d-1}$ and lengths $\ell_0, \dots,
 Its points are $a + \sum_i w_i s_i$ with $0 \le w_i < \ell_i$. It is $2$-proper
 (`GAP.TwoProper`) if the points $2a + \sum_i w_i s_i$ with $0 \le w_i < 2\ell_i$ are distinct.
 
-The Freiman dimension of a finite set $X$ is the largest $d \le |X|$ such that $X$ is Freiman
-isomorphic of order $2$ to a subset of $\mathbb{Q}^d$ that is not contained in a proper affine
-subspace. It is `SumOfSetsInSeveralDimensions.freimanDim`, from
+The Freiman dimension $\mathrm{dim}_\mathrm{F} X$ of a finite set $X$ is the largest
+$d \le |X|$ such that $X$ is Freiman isomorphic of order $2$ to a subset of $\mathbb{Q}^d$ that
+is not contained in a proper affine subspace. It is `SumOfSetsInSeveralDimensions.freimanDim`, from
 [SumOfSetsInSeveralDimensions](https://github.com/gdahia/SumOfSetsInSeveralDimensions), a Lake
 dependency.
 
@@ -26,14 +26,14 @@ dependency.
 $\kappa \ge 2$ and let $X$ be a finite nonempty set of integers with $|X + X| \le \kappa |X|$.
 Then $X$ is contained in a $2$-proper progression $P$ with
 
-$$\dim P \le \operatorname{freimanDim} X, \qquad |P| \le \exp(10^{32} \kappa^7) |X|.$$
+$$\dim P \le \mathrm{dim}_\mathrm{F} X, \qquad |P| \le \exp(10^{32} \kappa^7) |X|.$$
 
 **Theorem 2** (`ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le`).
 Let $q$ be a prime, let $\kappa \ge 2$, and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy
 $|X + X| \le \kappa |X|$, $|X| \ge 7 \cdot 10^7 \kappa^2$ and
 $\exp(10^{30} \kappa^7) |X| \le q$. Then $X$ is contained in a $2$-proper progression $Q$ with
 
-$$\dim Q \le \operatorname{freimanDim} X, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
+$$\dim Q \le \mathrm{dim}_\mathrm{F} X, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
 
 **Corollary** (`ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le` and
 `ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le`). Under the hypotheses of
@@ -71,58 +71,6 @@ The progressions before the reduction of the dimension have the following bounds
 | `exists_twoProperGAP_zmod_of_small_sumset`, dimension | `containerExponent κ` | at most `2 * 10 ^ 8 * κ ^ 3` |
 | `exists_twoProperGAP_zmod_of_small_sumset`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
 | `exists_twoProperGAP_int_of_small_sumset` | the bounds of `exists_twoProperGAP_zmod_of_small_sumset` | for integers with `256 * bohrGAPDim κ ≤ \|X\|` |
-
-## Proof
-
-Let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $|X + X| \le \kappa |X|$. Ruzsa's model lemma gives a
-subset $X_1 \subseteq X$ with $8|X_1| \ge |X|$ and a Freiman isomorphism of order $8$ from $X_1$
-onto a subset $Y$ of $\mathbb{Z}/m\mathbb{Z}$ with $m \le 8 \kappa^{16} |Y|$. By Chang's lemma the
-large spectrum of $Y$ is spanned by a dissociated set $\Delta$ with $|\Delta| = O(\kappa \log \kappa)$,
-and $2Y - 2Y$ contains the Bohr set of $\Delta$. Minkowski's second theorem, applied to the lattice
-of the frequencies of $\Delta$, gives a proper progression $Q$ of dimension $d = |\Delta| + 1$
-inside that Bohr set, with $m \le (8d)^{3d} |Q|$. This needs $m \ge 32 d$, which holds when
-$|X| \ge 256 d$; it is the only lower bound on $|X|$ in the argument. The Freiman isomorphism carries it back to a
-proper progression inside $2X_1 - 2X_1$. Chang's covering argument repeatedly adds to the
-progression a set of $\lceil 3\kappa \rceil$ elements of $X_1$ with disjoint translates. By the
-Plünnecke–Ruzsa inequality this stops after $O(d \log d)$ steps, with $X_1 \subseteq F + (S - S)$
-for the current set $S$ and a set $F$ of at most $\lceil 3\kappa \rceil$ elements. The elements of
-$F$ become further steps, and Ruzsa's covering lemma recovers $X$ with at most $8\kappa$ more. The
-result is a progression containing $X$, not necessarily proper, of dimension at most
-`containerExponent κ` $= O(\kappa^2 \log^2 \kappa)$. The covering argument holds for a finite
-subset of any abelian group, so the group need not be finite.
-
-A progression is $2$-proper when its steps satisfy no short linear relation. If there is one, the
-progression is contained in a progression of smaller dimension whose size is larger by a factor
-$e^{O(D^2 \log D)}$, where $D$ is the dimension: the lattice of short relations is saturated, the
-box of coefficients is projected along it, and the projection is covered by a box in a basis of
-the quotient lattice. Since the dimension decreases, iterating gives a $2$-proper progression, at
-the cost of a factor $e^{3 (D + 2)^3 \log (D + 2)}$ (`properizationExponent`). With
-$D = O(\kappa^2 \log^2 \kappa)$ this is $e^{O(\kappa^6 \log^7 \kappa)}$, which is at most
-$e^{C \kappa^7}$. The saturation step needs the multiples $n a$, for $n$ up to a bound, of every
-nonzero $a$ to be distinct. This holds in $\mathbb{Z}/q\mathbb{Z}$ when the prime $q$ is large
-compared with the progression, and in a torsion-free group.
-
-The dimension is reduced to the Freiman dimension as in Appendix A of Marcelo Campos, Gabriel
-Dahia and João Pedro Marciano, *On the independence number of sparser random Cayley graphs*,
-J. London Math. Soc. 110 (2024). Let $X$ lie in a $2$-proper progression $P$. The coefficient
-vectors of the elements of $X$, translated so that one of them is the origin, span a subspace $H$
-of dimension $r$. In a basis of the lattice of integer points of $H$, these vectors form a Freiman
-model of $X$ of dimension $r$, so $r$ is at most the Freiman dimension of $X$. The integer points
-of $H$ in the box of differences of coefficient vectors are covered by a box in that basis. This
-gives a progression of dimension $r$ containing $X$, and the previous step makes it $2$-proper.
-
-For a finite set $X$ of integers, Theorem 2 cannot be used directly: a progression of
-$\mathbb{Z}/q\mathbb{Z}$ that contains the reduction of $X$ may wrap around, and then it is not
-the reduction of a progression of integers that contains $X$. Instead, only the first step is
-done modulo a prime $q > 16 \max_{x \in X} |x|$. It gives a proper progression inside
-$2X_1 - 2X_1$ for the reduction of $X$. On $X$ the reduction modulo $q$ is a Freiman isomorphism
-of order $8$, so the progression is carried back to a proper progression of integers inside
-$2X_1 - 2X_1$. The covering argument, the passage to a $2$-proper progression and the reduction of
-the dimension then take place in $\mathbb{Z}$. A set $X$ with at most
-$\exp(\mathtt{containerExponent}\ \kappa)$ elements is first replaced by a larger set that
-contains it, its sum with a long progression of large common difference. The reduction of the
-dimension is applied to $X$ itself, inside the $2$-proper progression that contains the larger
-set, so the dimension is at most the Freiman dimension of $X$ for every finite set of integers.
 
 ## Files
 

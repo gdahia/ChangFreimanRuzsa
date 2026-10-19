@@ -48,6 +48,20 @@ sources:
       here are the case t = 2, with weaker bounds.
     license: "unknown"
     author_endorsement: "not-contacted"
+  - title: "On the independence number of sparser random Cayley graphs"
+    authors:
+      - "Marcelo Campos"
+      - "Gabriel Dahia"
+      - "João Pedro Marciano"
+    id: "https://arxiv.org/abs/2406.09361"
+    type: "paper"
+    location: "https://arxiv.org/abs/2406.09361"
+    relationship: "adapts"
+    note: >-
+      J. London Math. Soc. 110 (2024). The reduction of the dimension of a 2-proper
+      progression to the Freiman dimension of the set it contains follows Appendix A.
+    license: "unknown"
+    author_endorsement: "participated"
 
 related_formalizations:
   - id: "https://github.com/leanprover-community/mathlib4"
@@ -151,7 +165,10 @@ fidelity:
     Integers. exists_twoProperGAP_subset_dim_le_freimanDim_card_le takes kappa >= 2 with
     |X + X| <= kappa |X| and gives |P| <= exp(10^32 kappa^7) |X| and dimension at most
     freimanDim X. The library form exists_twoProperGAP_int_dim_le_freimanDim has
-    exp(intFreimanDimExponent kappa) in place of exp(10^32 kappa^7).
+    exp(intFreimanDimExponent kappa) in place of exp(10^32 kappa^7). The statement for
+    ZMod q is not used directly, since a progression of ZMod q containing the reduction of
+    X may wrap around: only the progression inside 2X - 2X is built modulo a prime and
+    carried back to the integers, and the rest of the argument takes place in Z.
 
     ZMod q. exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le is for q prime and
     needs 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7) |X| <= q. It gives a
