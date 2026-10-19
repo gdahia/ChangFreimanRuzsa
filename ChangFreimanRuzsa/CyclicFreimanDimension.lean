@@ -5,10 +5,9 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.Container
 public import ChangFreimanRuzsa.CoordinateReduction
+public import ChangFreimanRuzsa.Integers
 import ChangFreimanRuzsa.Bound
-import SumOfSetsInSeveralDimensions.FreimanDimensionSumsetBounds
 
 /-!
 # Chang's theorem with dimension at most the Freiman dimension
@@ -17,21 +16,23 @@ Let $q$ be a prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X|
 Write $c_\kappa$ for `containerExponent κ` and $F_\kappa$ for `freimanDimExponent κ`. If
 $e^{c_\kappa} < |X|$ and $e^{F_\kappa} |X| \le q$, then $X$ lies in a $2$-proper generalized
 arithmetic progression of dimension at most `freimanDim X` and of size at most $e^{F_\kappa} |X|$.
-The same holds for a finite set $X \subseteq \mathbb{Z}$ with $e^{c_\kappa} < |X|$.
+A finite nonempty set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ lies in a $2$-proper
+progression of dimension at most `freimanDim X` and of size at most $e^{E_\kappa} |X|$, where
+$E_\kappa$ is `intFreimanDimExponent κ`.
 
-The proof has three stages. `exists_gap_zmod_subset_dim_le_card_le` puts $X$ in a progression of
-dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$,
+In `ZMod q` the proof has three stages. `exists_gap_zmod_subset_dim_le_card_le` puts $X$ in a
+progression of dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$,
 `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul` replaces that progression by a
 $2$-proper one, and `exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul` replaces the $2$-proper
-progression by one of dimension at most `freimanDim X`. For sets of integers the first stage is
-`exists_gap_int_subset_dim_le_card_le`.
-
-The Freiman dimension of $X$ is at most $2\kappa - 1$ when $|X + X| \le \kappa |X|$, so the
-progression also has dimension at most $2\kappa - 1$.
+progression by one of dimension at most `freimanDim X`. For sets of integers,
+`exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree` is applied to the $2$-proper
+progression of `exists_twoProperGAP_of_small_sumset`.
 
 ## Main definitions
 
-* `freimanDimExponent κ`: the exponent in the size bound of the progression.
+* `freimanDimExponent κ`: the exponent in the size bound of the progression in `ZMod q`.
+* `intFreimanDimExponent κ`: the exponent in the size bound of the progression for sets of
+  integers.
 
 ## Main statements
 
@@ -39,9 +40,9 @@ progression also has dimension at most $2\kappa - 1$.
   `freimanDim X`.
 * `exists_twoProperGAP_int_dim_le_freimanDim`: Chang's theorem for sets of integers with dimension
   at most `freimanDim X`.
-* `exists_twoProperGAP_zmod_dim_le_two_mul_sub_one` and
-  `exists_twoProperGAP_int_dim_le_two_mul_sub_one`: the same with dimension at most $2\kappa - 1$.
 * `freimanDimExponent_le`: `freimanDimExponent κ` is at most $10^{53} \kappa^{20}$ for
+  $\kappa \ge 2$.
+* `intFreimanDimExponent_le`: `intFreimanDimExponent κ` is at most $10^{59} \kappa^{20}$ for
   $\kappa \ge 2$.
 -/
 
@@ -57,6 +58,11 @@ Freiman dimension. -/
 @[expose] noncomputable def freimanDimExponent (κ : ℝ) : ℝ :=
   (properizationConstant + coordinateReductionConstant) * (containerExponent κ + 2) ^ 4 +
     containerExponent κ
+
+/-- The exponent in the size bound of Chang's theorem for sets of integers with the dimension
+bounded by the Freiman dimension. -/
+@[expose] noncomputable def intFreimanDimExponent (κ : ℝ) : ℝ :=
+  intExponent κ + coordinateReductionConstant * (containerExponent (2 * κ) + 2) ^ 4
 
 /-- The second and third stages of Chang's theorem, in an abelian group in which the multiples
 $n a$ with $n < N$ of every nonzero $a$ are distinct. Write $c_\kappa$ for
@@ -112,44 +118,20 @@ theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Fin
     hXP hPdim hPcard hXupper
 
 /-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension.
-Write $c_\kappa$ for `containerExponent κ` and $F_\kappa$ for `freimanDimExponent κ`. A
-finite set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $e^{c_\kappa} < |X|$ is
-contained in a $2$-proper generalized arithmetic progression of dimension at most `freimanDim X`
-and of size at most $e^{F_\kappa} |X|$. -/
-theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
-    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (containerExponent κ) < #X) :
+Write $E_\kappa$ for `intFreimanDimExponent κ`. A finite nonempty set $X \subseteq \mathbb{Z}$
+with $|X + X| \le \kappa |X|$ is contained in a $2$-proper generalized arithmetic progression of
+dimension at most `freimanDim X` and of size at most $e^{E_\kappa} |X|$. -/
+theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
+    (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
-  obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_gap_int_subset_dim_le_card_le X hκ hXX hXlower
-  exact exists_twoProperGAP_dim_le_freimanDim_of_subset_gap
-    (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _)
-    (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hXP hPdim hPcard (Nat.le_ceil _)
-
-/-- **Chang's theorem** in `ZMod q` for a prime $q$, with dimension at most $2\kappa - 1$. Under the
-hypotheses of `exists_twoProperGAP_zmod_dim_le_freimanDim`, the Freiman dimension of $X$ is at most
-$2\kappa - 1$. -/
-theorem exists_twoProperGAP_zmod_dim_le_two_mul_sub_one {q : ℕ} {κ : ℝ}
-    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : Real.exp (containerExponent κ) < #X)
-    (hXupper : Real.exp (freimanDimExponent κ) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      (Q.dim : ℝ) ≤ 2 * κ - 1 ∧ (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
+      Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (intFreimanDimExponent κ) * #X := by
+  obtain ⟨P, hP, hXP, hPdim, hPcard⟩ := exists_twoProperGAP_of_small_sumset X hX hκ hXX
   obtain ⟨Q, hQ, hXQ, hlen, hQdim, hQcard⟩ :=
-    exists_twoProperGAP_zmod_dim_le_freimanDim X hq hκ hXX hXlower hXupper
-  exact ⟨Q, hQ, hXQ, hlen, (Nat.cast_le.2 hQdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le
-    (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hXX), hQcard⟩
-
-/-- **Chang's theorem** for sets of integers, with dimension at most $2\kappa - 1$. Under the
-hypotheses of `exists_twoProperGAP_int_dim_le_freimanDim`, the Freiman dimension of $X$ is at most
-$2\kappa - 1$. -/
-theorem exists_twoProperGAP_int_dim_le_two_mul_sub_one {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
-    (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : Real.exp (containerExponent κ) < #X) :
-    ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      (Q.dim : ℝ) ≤ 2 * κ - 1 ∧ (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
-  obtain ⟨Q, hQ, hXQ, hlen, hQdim, hQcard⟩ :=
-    exists_twoProperGAP_int_dim_le_freimanDim X hκ hXX hXlower
-  exact ⟨Q, hQ, hXQ, hlen, (Nat.cast_le.2 hQdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le
-    (card_pos.1 (mod_cast (Real.exp_pos _).trans hXlower)) hXX), hQcard⟩
+    exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree hX hP hXP
+  refine ⟨Q, hQ, hXQ, hlen, hQdim, hQcard.trans ?_⟩
+  rw [intFreimanDimExponent, add_comm (intExponent κ), Real.exp_add, mul_assoc]
+  gcongr
+  exact coordinateReductionConstant_pos.le
 
 /-- `freimanDimExponent κ` is at most $10^{53} \kappa^{20}$ for $\kappa \ge 2$. -/
 lemma freimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
@@ -158,5 +140,17 @@ lemma freimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
   linarith [containerExponent_le hκ, containerExponent_add_two_pow_le hκ,
     pow_le_pow_right₀ (one_le_two.trans hκ) (by norm_num : 5 ≤ 20),
     pow_pos (zero_lt_two.trans_le hκ) 20]
+
+/-- `intFreimanDimExponent κ` is at most $10^{59} \kappa^{20}$ for $\kappa \ge 2$. -/
+lemma intFreimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
+    intFreimanDimExponent κ ≤ 10 ^ 59 * κ ^ 20 := by
+  have h := containerExponent_le (by linarith : 2 ≤ 2 * κ)
+  have h' := containerExponent_add_two_pow_le (by linarith : 2 ≤ 2 * κ)
+  unfold intFreimanDimExponent intExponent zmodExponent coordinateReductionConstant
+    properizationConstant
+  rw [mul_pow] at h h'
+  norm_num at h h' ⊢
+  linarith [pow_le_pow_right₀ (by linarith : 1 ≤ κ) (by norm_num : 5 ≤ 20),
+    one_le_pow₀ (n := 20) (by linarith : 1 ≤ κ)]
 
 end ChangFreimanRuzsa
