@@ -192,12 +192,12 @@ alignment:
   statements:
     - source: "Chang's theorem for sets of integers"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'"
-      module: "Challenge"
+      module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: "With at most exp(10^32 kappa^7) |X| points and dimension at most 2 kappa - 1."
     - source: "Chang's theorem in ZMod q"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'"
-      module: "Challenge"
+      module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
         For q prime, 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7) |X| <= q, with

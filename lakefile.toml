@@ -47,9 +47,9 @@ name = "ChangFreimanRuzsa"
 # The statement-only surface a reader audits.
 [[lean_lib]]
 name = "Challenge"
-roots = ["Challenge"]
+roots = ["ChangFreimanRuzsaPalomar.Challenge"]
 
 # Proves the declarations stated in `Challenge.lean`; Comparator checks the two agree.
 [[lean_lib]]
 name = "Solution"
-roots = ["Solution"]
+roots = ["ChangFreimanRuzsaPalomar.Solution"]

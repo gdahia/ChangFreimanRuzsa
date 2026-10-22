@@ -1,6 +1,6 @@
 {
-  "challenge_module": "Challenge",
-  "solution_module": "Solution",
+  "challenge_module": "ChangFreimanRuzsaPalomar.Challenge",
+  "solution_module": "ChangFreimanRuzsaPalomar.Solution",
   "theorem_names": [
     "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'",
     "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'"

@@ -46,11 +46,12 @@ $\exp(C \kappa^2 \log^3 \kappa) |X|$ points and dimension at most the Freiman di
 Theorems 1 and 2 have the same bound on the dimension, and a bound on the size that is linear in
 $|X|$ too, with a larger exponent.
 
-[Challenge.lean](Challenge.lean) contains the two statements of the corollary, under the library
-names with a prime and with `sorry` placeholders, together with the definitions of `gapMap`, `GAP`
-and `GAP.TwoProper`. They are stated in terms of Mathlib, which has no Freiman dimension, so
-Theorems 1 and 2 are not part of `Challenge.lean`. [Solution.lean](Solution.lean) proves each
-statement by the library theorem. The library and the solution contain no `sorry`, and the
+[Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains the two statements of the
+corollary, under the library names with a prime and with `sorry` placeholders, together with the
+definitions of `gapMap`, `GAP` and `GAP.TwoProper`. They are stated in terms of Mathlib, which has
+no Freiman dimension, so Theorems 1 and 2 are not part of `Challenge.lean`.
+[Solution.lean](ChangFreimanRuzsaPalomar/Solution.lean) proves each statement by the library
+theorem. The library and the solution contain no `sorry`, and the
 theorems depend on no axioms other than `propext`, `Classical.choice` and `Quot.sound`.
 
 The library also states the theorems with named exponents, which the explicit bounds above replace:
@@ -93,8 +94,11 @@ scope, and the use of AI coding agents.
 `Challenge.lean` imports only Mathlib. It repeats the library definitions of `gapMap`, `GAP` and
 `GAP.TwoProper` and states `exists_twoProperGAP_subset_dim_le_card_le'` and
 `exists_twoProperGAP_zmod_subset_dim_le_card_le'` with `sorry`. `comparator.json` names these
-two theorems, `Challenge` and `Solution` as the modules to compare, and `propext`,
-`Classical.choice` and `Quot.sound` as the permitted axioms.
+two theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
+modules to compare, and `propext`, `Classical.choice` and `Quot.sound` as the permitted axioms.
+The two modules sit in `ChangFreimanRuzsaPalomar/` rather than at the root, so that they do not
+clash with the `Challenge` and `Solution` modules of the projects this one requires or is
+required by.
 
 ## Build
 
