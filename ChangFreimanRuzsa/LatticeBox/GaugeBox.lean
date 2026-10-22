@@ -41,7 +41,7 @@ induction and proves the elementary facts that the induction uses.
 * `exists_mem_ne_zero_gauge_pos_forall_gauge_le`: a discrete subgroup has a nonzero vector of
   least gauge.
 * `exists_proper_gap_card_le_of_gauge_le`: the integer points $D$ of $K \subseteq \mathbb{R}^s$
-  lie in a proper GAP of dimension $s$ with at most $(2 s a + 1)^s |D|$ elements.
+  lie in a proper GAP of dimension at most $s$ with at most $(2 s a + 1)^s |D|$ elements.
 -/
 
 @[expose] public section
@@ -152,7 +152,7 @@ lemma injective_stepsHom_of_linearIndependent {step : Fin s → (Fin s → ℤ)}
 points $D$. Let $b_1, \dots, b_s$ be linearly independent integer vectors and
 $m_1, \dots, m_s \in \mathbb{N}$ such that every integer point of $K$ is $\sum_i c_i b_i$ with
 $c_i \in \mathbb{Z}$, $|c_i| \le m_i$, and $m_i \, g_K(b_i) \le a$ for every $i$. Then $D$ lies in a
-proper GAP of dimension $s$ with at most $(2 s a + 1)^s |D|$ elements. -/
+proper GAP of dimension at most $s$ with at most $(2 s a + 1)^s |D|$ elements. -/
 lemma exists_proper_gap_card_le_of_gauge_le {D : Finset (Fin s → ℤ)} {K : Set (Fin s → ℝ)}
     (hconv : Convex ℝ K) (hcompact : IsCompact K) (hK₀ : K ∈ 𝓝 0) (hsymm : ∀ x ∈ K, -x ∈ K)
     (hD : ∀ v, v ∈ D ↔ intVectorToReal v ∈ K) {a : ℕ} {b : Fin s → Fin s → ℝ}
@@ -162,18 +162,19 @@ lemma exists_proper_gap_card_le_of_gauge_le {D : Finset (Fin s → ℤ)} {K : Se
     (hcover : ∀ x ∈ K, x ∈ (⊤ : AddSubgroup (Fin s → ℤ)).map intVectorToReal →
       ∃ c ∈ intBox m, ∑ i, (c i : ℝ) • b i = x)
     (hgauge : ∀ i, m i * gauge K (b i) ≤ a) :
-    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.carrier ∧ P.dim = s ∧
+    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.carrier ∧ P.dim ≤ s ∧
       P.carrier.card ≤ (2 * (s * a) + 1) ^ s * D.card := by
   choose step _ hstep using fun i ↦ AddSubgroup.mem_map.mp (hbL i)
   obtain rfl : (fun i ↦ intVectorToReal (step i)) = b := funext hstep
   have hinj := injective_stepsHom_of_linearIndependent hb
-  refine ⟨centeredBoxGAP step m, centeredBoxGAP_proper m hinj, ?_, rfl, ?_⟩
+  refine ⟨centeredBoxGAP step m, centeredBoxGAP_proper m hinj, ?_,
+    dim_centeredBoxGAP_le step m, (card_centeredBoxGAP_le step m).trans ?_⟩
   · intro x hx
     obtain ⟨c, hc, hcx⟩ := hcover _ ((hD x).mp hx)
       (AddSubgroup.mem_map_of_mem _ (AddSubgroup.mem_top x))
     obtain rfl := intVectorToReal_injective ((intVectorToReal_stepsHom step c).trans hcx)
     exact mem_centeredBoxGAP_of_mem_intBox step hc
-  · rw [centeredBoxGAP_card m hinj, ← card_intBox, ← Finset.card_image_of_injective _ hinj]
+  · rw [← card_intBox, ← Finset.card_image_of_injective _ hinj]
     apply card_le_pow_mul_card_of_mem_convex_dilate hconv (mem_of_mem_nhds hK₀) hsymm hD
     intro v hv
     obtain ⟨c, hc, rfl⟩ := Finset.mem_image.mp hv

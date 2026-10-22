@@ -90,14 +90,14 @@ lemma span_image_realBox_inter_standardLattice_eq_top {d s : ℕ} {m : Fin d →
     simp [Pi.basisFun_apply, Pi.single_apply]
 
 /-- The integer points `D` of the image of a positive coordinate box under a surjective integral
-projection $\pi : \mathbb{R}^d \to \mathbb{R}^s$ lie in a proper GAP of dimension $s$ with at most
-`latticeBoxFactor s * D.card` elements. -/
+projection $\pi : \mathbb{R}^d \to \mathbb{R}^s$ lie in a proper GAP of dimension at most $s$ with
+at most `latticeBoxFactor s * D.card` elements. -/
 lemma exists_proper_gap_image_realBox {d s : ℕ} {m : Fin d → ℕ}
     (hm : ∀ i, 0 < m i) {π : (Fin d → ℝ) →ₗ[ℝ] (Fin s → ℝ)} {πz : (Fin d → ℤ) →+ (Fin s → ℤ)}
     (hcast : ∀ v, π (intVectorToReal v) = intVectorToReal (πz v))
     (hπ : Function.Surjective π) {D : Finset (Fin s → ℤ)}
     (hD : ∀ v, v ∈ D ↔ intVectorToReal v ∈ π '' BoxLattice.realBox m) :
-    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.carrier ∧ P.dim = s ∧
+    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.carrier ∧ P.dim ≤ s ∧
       P.carrier.card ≤ latticeBoxFactor s * D.card :=
   exists_proper_gap_of_convex_body ((BoxLattice.convex_realBox m).linear_image π)
     ((BoxLattice.isCompact_realBox m).image (LinearMap.continuous_of_finiteDimensional π))
@@ -235,7 +235,7 @@ lemma smithRealQuotientMap_eq_zero_iff (x : Fin d → ℝ) :
 
 /-! ## Steps on the quotient -/
 
-variable {G : Type*} [DecidableEq G] [AddCommGroup G]
+variable {G : Type*} [AddCommGroup G]
 
 namespace GAP
 

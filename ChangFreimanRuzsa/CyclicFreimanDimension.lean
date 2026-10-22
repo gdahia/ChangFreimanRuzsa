@@ -77,8 +77,8 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [Decidable
     (hXP : X ⊆ P.carrier) (hPdim : (P.dim : ℝ) ≤ containerExponent κ)
     (hPcard : (#P.carrier : ℝ) ≤ Real.exp (containerExponent κ) * #X)
     (hXN : Real.exp (freimanDimExponent κ) * #X ≤ N) :
-    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
+    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
+      (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
   have hc : 0 ≤ containerExponent κ := (Nat.cast_nonneg _).trans hPdim
   have hPX : Real.exp (properizationExponent P.dim) * #P.carrier ≤
       Real.exp (freimanDimExponent κ) * #X := by
@@ -86,7 +86,7 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [Decidable
     gcongr
     exact (properizationExponent_mono (Nat.cast_nonneg _) hPdim).trans
       (le_add_of_nonneg_right (coordinateReductionExponent_nonneg hc))
-  obtain ⟨P₂, hP₂, hPP₂, -, hP₂dim, hP₂card⟩ :=
+  obtain ⟨P₂, hP₂, hPP₂, hP₂dim, hP₂card⟩ :=
     exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P hG (hPX.trans hXN)
   have hP₂X : Real.exp (coordinateReductionExponent P₂.dim) * #P₂.carrier ≤
       Real.exp (freimanDimExponent κ) * #X := by
@@ -98,10 +98,10 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [Decidable
     · refine hP₂card.trans ?_
       gcongr
       exact properizationExponent_mono (Nat.cast_nonneg _) hPdim
-  obtain ⟨Q, hQ, hXQ, hlen, hQdim, hQcard⟩ :=
+  obtain ⟨Q, hQ, hXQ, hQdim, hQcard⟩ :=
     exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul hG hX hP₂ (hXP.trans hPP₂)
       (hP₂X.trans hXN)
-  exact ⟨Q, hQ, hXQ, hlen, hQdim, hQcard.trans hP₂X⟩
+  exact ⟨Q, hQ, hXQ, hQdim, hQcard.trans hP₂X⟩
 
 /-- **Chang's theorem** in `ZMod q` for a prime $q$, with the dimension bounded by the Freiman
 dimension. Write $F_\kappa$ for `freimanDimExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. A set
@@ -112,9 +112,9 @@ theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Fin
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (freimanDimExponent κ) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
-  obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
+    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
+      (#Q.carrier : ℝ) ≤ Real.exp (freimanDimExponent κ) * #X := by
+  obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
   exact exists_twoProperGAP_dim_le_freimanDim_of_subset_gap
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) (nonempty_of_mul_bohrGAPDim_le hXlower) hXP hPdim
     hPcard hXupper
@@ -125,12 +125,12 @@ with $|X + X| \le \kappa |X|$ is contained in a $2$-proper generalized arithmeti
 dimension at most `freimanDim X` and of size at most $e^{E_\kappa} |X|$. -/
 theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
-    ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      Q.dim ≤ freimanDim X ∧ (#Q.carrier : ℝ) ≤ Real.exp (intFreimanDimExponent κ) * #X := by
+    ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
+      (#Q.carrier : ℝ) ≤ Real.exp (intFreimanDimExponent κ) * #X := by
   obtain ⟨P, hP, hXP, hPdim, hPcard⟩ := exists_twoProperGAP_of_small_sumset X hX hκ hXX
-  obtain ⟨Q, hQ, hXQ, hlen, hQdim, hQcard⟩ :=
+  obtain ⟨Q, hQ, hXQ, hQdim, hQcard⟩ :=
     exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree hX hP hXP
-  refine ⟨Q, hQ, hXQ, hlen, hQdim, hQcard.trans ?_⟩
+  refine ⟨Q, hQ, hXQ, hQdim, hQcard.trans ?_⟩
   rw [intFreimanDimExponent, add_comm (intExponent κ), Real.exp_add, mul_assoc]
   gcongr
   exact coordinateReductionExponent_mono (Nat.cast_nonneg _) hPdim
@@ -139,7 +139,7 @@ theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (h
 lemma freimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) : freimanDimExponent κ ≤ 10 ^ 30 * κ ^ 7 := by
   have h := containerExponent_add_two_pow_mul_log_le hκ
   unfold freimanDimExponent properizationExponent coordinateReductionExponent
-  rw [mul_assoc 3, mul_assoc 4]
+  rw [mul_assoc 2, mul_assoc 4]
   linarith [containerExponent_le hκ, one_le_pow₀ (n := 7) (by linarith : (1 : ℝ) ≤ κ),
     pow_le_pow_right₀ (by linarith : (1 : ℝ) ≤ κ) (by norm_num : 3 ≤ 7)]
 

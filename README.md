@@ -3,18 +3,26 @@
 Lean 4 proof of Chang's theorem, the polynomial form of Freiman's theorem from Mei-Chu Chang,
 [*A polynomial bound in Freiman's theorem*](https://doi.org/10.1215/S0012-7094-02-11331-3), Duke
 Math. J. 113 (2002): a set with small doubling lies in a generalized arithmetic progression of
-comparable size. The progression is $2$-proper, as in Proposition 1.3 of Ben Green and Terence
-Tao, [*Compressions, convex geometry and the Freiman–Bilu theorem*](https://arxiv.org/abs/math/0511069).
+comparable size. The progression $P$ is $2$-proper in the sense that $P + P$ is proper, which is
+weaker than the $2$-properness of Proposition 1.3 of Ben Green and Terence Tao,
+[*Compressions, convex geometry and the Freiman–Bilu theorem*](https://arxiv.org/abs/math/0511069).
 The bounds proved here are weaker than Chang's. The proof uses Chang's lemma on large spectra
 from [APAP](https://github.com/YaelDillies/apap) and Minkowski's second theorem from
 [Tau Ceti](https://github.com/TauCetiProject/TauCeti).
 
 ## Results
 
-A generalized arithmetic progression (`ChangFreimanRuzsa.GAP`) of dimension $d$ in an abelian
-group has an origin $a$, steps $s_0, \dots, s_{d-1}$ and lengths $\ell_0, \dots, \ell_{d-1} \ge 1$.
-Its points are $a + \sum_i w_i s_i$ with $0 \le w_i < \ell_i$. It is $2$-proper
-(`GAP.TwoProper`) if the points $2a + \sum_i w_i s_i$ with $0 \le w_i < 2\ell_i$ are distinct.
+A generalized arithmetic progression (`ChangFreimanRuzsa.GAP`) in an abelian group $G$ has an
+origin $a$ and a finitely supported bound $b : G \to \mathbb{N}$. Its points are
+$a + \sum_v c_v v$ with $c \le b$. Its steps are the $v$ with $b_v \ne 0$, the length of the step
+$v$ is $b_v + 1$, and its dimension is the number of steps. It is proper (`GAP.Proper`) if these
+points are distinct. The sum $P + Q$ adds the origins and the bounds, so its points are the sums
+of a point of $P$ and a point of $Q$. A progression $P$ is $2$-proper (`GAP.TwoProper`) if
+$P + P$ is proper, as in Bilu's condition $F_2$ and in Tao and Vu. For steps $s_i$ and lengths
+$\ell_i$, this asks the points $2a + \sum_i w_i s_i$ with $0 \le w_i \le 2\ell_i - 2$ to be
+distinct. Definition 1.1 of Green and Tao with $t = 2$ asks the same for
+$0 \le w_i \le 2\ell_i - 1$, which is stronger: the progression $\{0, 1\}$ in
+$\mathbb{Z}/3\mathbb{Z}$ is $2$-proper here but not in their sense.
 
 The Freiman dimension $\mathrm{dim}_\mathrm{F} X$ of a finite set $X$ is the largest
 $d \le |X|$ such that $X$ is Freiman isomorphic of order $2$ to a subset of $\mathbb{Q}^d$ that
@@ -48,7 +56,8 @@ $|X|$ too, with a larger exponent.
 
 [Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains the two statements of the
 corollary, under the library names with a prime and with `sorry` placeholders, together with the
-definitions of `gapMap`, `GAP` and `GAP.TwoProper`. They are stated in terms of Mathlib, which has
+definitions of `GAP`, of its points, dimension, properness and sum, and of `GAP.TwoProper`. They
+are stated in terms of Mathlib, which has
 no Freiman dimension, so Theorems 1 and 2 are not part of `Challenge.lean`.
 [Solution.lean](ChangFreimanRuzsaPalomar/Solution.lean) proves each statement by the library
 theorem. The library and the solution contain no `sorry`, and the
@@ -91,8 +100,8 @@ scope, and the use of AI coding agents.
 
 ## Verification
 
-`Challenge.lean` imports only Mathlib. It repeats the library definitions of `gapMap`, `GAP` and
-`GAP.TwoProper` and states `exists_twoProperGAP_subset_dim_le_card_le'` and
+`Challenge.lean` imports only Mathlib. It repeats the library definitions of `GAP`, `GAP.eval`,
+`GAP.carrier`, `GAP.dim`, `GAP.Proper`, the sum of progressions and `GAP.TwoProper` and states `exists_twoProperGAP_subset_dim_le_card_le'` and
 `exists_twoProperGAP_zmod_subset_dim_le_card_le'` with `sorry`. `comparator.json` names these
 two theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
 modules to compare, and `propext`, `Classical.choice` and `Quot.sound` as the permitted axioms.

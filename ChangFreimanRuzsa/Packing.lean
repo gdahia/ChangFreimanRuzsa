@@ -6,9 +6,7 @@ Authors: Gabriel Dahia
 module
 
 public import ChangFreimanRuzsa.GapToolkit
-public import Mathlib.Algebra.Group.Pointwise.Finset.Basic
 public import Mathlib.Algebra.Group.Pointwise.Finset.Scalar
-import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Algebra.Group.Action.Pointwise.Finset
 import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Positivity.Finset
@@ -28,10 +26,11 @@ The file also defines progressions containing the sets built in this way.
 
 * `listSubsetSum l`: the subset sums of a list $a_1, \dots, a_n$, that is,
   $\{0, a_1\} + \dots + \{0, a_n\}$.
-* `GAP.consBinary P a`: the progression $P$ with the step $a$ of length $2$ added.
+* `GAP.consBinary P a`: the progression $P + \{0, a\}$.
 * `GAP.consBinaryList P l`: the progression $P$ with one step of length $2$ added for each entry
   of $l$.
-* `GAP.difference P`: a progression containing $P - P$, with the steps of $P$ and doubled lengths.
+* `GAP.difference P`: a progression containing $P - P$, the sum of $P$ and its reflection
+  `GAP.neg P`.
 
 ## Main statements
 
@@ -39,9 +38,9 @@ The file also defines progressions containing the sets built in this way.
   elements of $A$ covers $A$ by $F + (Q - Q)$.
 * `exists_card_add_sum_eq_card_mul_pow_and_subset_add_sub`: the packing process stops when at most
   $B$ steps are possible.
-* `GAP.add_listSubsetSum_subset_consBinaryList` and `GAP.card_consBinaryList_le`: the progression
-  `P.consBinaryList l` contains $P$ plus the subset sums of $l$, and has at most
-  $2^{|l|} \prod_i \ell_i$ elements.
+* `GAP.add_listSubsetSum_subset_consBinaryList` and `GAP.size_consBinaryList_le`: the progression
+  `P.consBinaryList l` contains $P$ plus the subset sums of $l$, and has at most $2^{|l|}$ times
+  as many coefficient vectors as $P$.
 -/
 
 @[expose] public section
@@ -115,47 +114,45 @@ end ListSubsetSum
 
 namespace GAP
 
-variable {G : Type*} [DecidableEq G] [AddCommGroup G]
+variable {G : Type*} [AddCommGroup G]
 
-/-- The progression $P$ with the step $a$ of length $2$ added in front of its steps. It contains
-$P + \{0, a\}$. -/
-def consBinary (P : GAP G) (a : G) : GAP G where
-  dim := P.dim + 1
-  carrier := univ.image (gapMap P.origin (Fin.cons a P.step) (Fin.cons 2 P.length))
-  origin := P.origin
-  step := Fin.cons a P.step
-  length := Fin.cons 2 P.length
-  length_pos i := by cases i using Fin.cases <;> simp [P.length_pos]
-  carrier_eq := rfl
+/-- The progression $\{0, a\}$, with the step $a$ of length $2$. -/
+def pair (a : G) : GAP G := ⟨0, Finsupp.single a 1⟩
 
-lemma add_nsmul_mem_consBinary {P : GAP G} (a : G) {x : G} (hx : x ∈ P.carrier) {k : ℕ}
-    (hk : k < 2) : x + k • a ∈ (P.consBinary a).carrier := by
-  obtain ⟨c, hc, rfl⟩ := P.mem_carrier_iff.1 hx
-  refine mem_image_gapMap_iff.2 ⟨Fin.cons k c, ?_, ?_⟩
-  · intro i
-    cases i using Fin.cases <;> simp [hk, hc]
-  · simp [Fin.sum_univ_succ]
-    abel
+lemma pair_subset_carrier_pair [DecidableEq G] (a : G) : {0, a} ⊆ (pair a).carrier := by
+  rw [insert_subset_iff, singleton_subset_iff]
+  constructor
+  · simpa [pair] using (pair a).origin_mem
+  · simpa [pair, eval] using (pair a).eval_mem_carrier le_rfl
 
-lemma add_pair_subset_consBinary (P : GAP G) (a : G) :
+lemma size_pair (a : G) : (pair a).size = 2 := by
+  simp [pair, size]
+
+lemma dim_pair_le (a : G) : (pair a).dim ≤ 1 := by
+  classical
+  exact (card_le_card Finsupp.support_single_subset).trans_eq (card_singleton a)
+
+/-- The progression $P + \{0, a\}$: the step $a$ of length $2$ is added to $P$. -/
+def consBinary (P : GAP G) (a : G) : GAP G := P + pair a
+
+lemma add_pair_subset_consBinary [DecidableEq G] (P : GAP G) (a : G) :
     P.carrier + {0, a} ⊆ (P.consBinary a).carrier := by
-  intro z hz
-  obtain ⟨x, hx, e, he, rfl⟩ := mem_add.1 hz
-  simp only [mem_insert, mem_singleton] at he
-  obtain rfl | rfl := he
-  · simpa using add_nsmul_mem_consBinary _ hx (k := 0) (by grind)
-  · simpa using add_nsmul_mem_consBinary _ hx (k := 1) (by grind)
+  rw [consBinary, carrier_add]
+  exact add_subset_add_left (pair_subset_carrier_pair a)
 
-lemma one_lt_length_consBinary {P : GAP G} (h : ∀ i, 1 < P.length i) (a : G)
-    (i : Fin (P.dim + 1)) : 1 < (P.consBinary a).length i := by
-  cases i using Fin.cases <;> simp [consBinary, h]
+lemma dim_consBinary_le (P : GAP G) (a : G) : (P.consBinary a).dim ≤ P.dim + 1 :=
+  (P.dim_add_le _).trans (Nat.add_le_add_left (dim_pair_le a) _)
+
+lemma size_consBinary_le (P : GAP G) (a : G) : (P.consBinary a).size ≤ 2 * P.size := by
+  rw [mul_comm, ← size_pair a]
+  exact P.size_add_le _
 
 /-- The progression $P$ with one step of length $2$ added for each entry of the list $l$. -/
 def consBinaryList (P : GAP G) : List G → GAP G
   | [] => P
   | a :: l => (P.consBinaryList l).consBinary a
 
-lemma add_listSubsetSum_subset_consBinaryList (P : GAP G) (l : List G) :
+lemma add_listSubsetSum_subset_consBinaryList [DecidableEq G] (P : GAP G) (l : List G) :
     P.carrier + listSubsetSum l ⊆ (P.consBinaryList l).carrier := by
   induction l with
   | nil => simp [consBinaryList]
@@ -163,83 +160,61 @@ lemma add_listSubsetSum_subset_consBinaryList (P : GAP G) (l : List G) :
     rw [listSubsetSum_cons, add_left_comm, add_comm {0, a}]
     exact (add_subset_add_right ih).trans ((P.consBinaryList l).add_pair_subset_consBinary a)
 
-lemma add_subset_consBinaryList_toList {P : GAP G} {S : Finset G} (hS : S ⊆ P.carrier)
-    (W : Finset G) : S + W ⊆ (P.consBinaryList W.toList).carrier :=
+lemma add_subset_consBinaryList_toList [DecidableEq G] {P : GAP G} {S : Finset G}
+    (hS : S ⊆ P.carrier) (W : Finset G) : S + W ⊆ (P.consBinaryList W.toList).carrier :=
   (add_subset_add hS fun _ hw ↦ mem_listSubsetSum_of_mem (mem_toList.2 hw)).trans
     (P.add_listSubsetSum_subset_consBinaryList W.toList)
 
-lemma dim_consBinaryList (P : GAP G) (l : List G) :
-    (P.consBinaryList l).dim = P.dim + l.length := by
+lemma dim_consBinaryList_le (P : GAP G) (l : List G) :
+    (P.consBinaryList l).dim ≤ P.dim + l.length := by
   induction l with
   | nil => rfl
   | cons a l ih =>
-    simp only [consBinaryList, consBinary, ih, List.length_cons]
-    grind
+    rw [consBinaryList, List.length_cons, ← add_assoc]
+    exact ((P.consBinaryList l).dim_consBinary_le a).trans (Nat.add_le_add_right ih 1)
 
-lemma one_lt_length_consBinaryList {P : GAP G} (h : ∀ i, 1 < P.length i) (l : List G)
-    (i : Fin (P.consBinaryList l).dim) : 1 < (P.consBinaryList l).length i := by
-  induction l with
-  | nil => exact h i
-  | cons a l ih => exact one_lt_length_consBinary ih a i
-
-/-- A progression containing $P - P$. It has the steps $v_i$ of $P$, the lengths $2 \ell_i$ and
-the origin $-\sum_i (\ell_i - 1) v_i$. -/
-def difference (P : GAP G) : GAP G where
-  dim := P.dim
-  carrier := univ.image (gapMap (-∑ i, (P.length i - 1) • P.step i) P.step (2 * P.length ·))
-  origin := -∑ i, (P.length i - 1) • P.step i
-  step := P.step
-  length := (2 * P.length ·)
-  length_pos i := by grind [P.length_pos i]
-  carrier_eq := rfl
-
-@[simp] lemma dim_difference (P : GAP G) : P.difference.dim = P.dim := rfl
-
-lemma sub_subset_difference (P : GAP G) : P.carrier - P.carrier ⊆ P.difference.carrier := by
-  intro z hz
-  obtain ⟨x, hx, y, hy, rfl⟩ := mem_sub.1 hz
-  obtain ⟨c, hc, rfl⟩ := P.mem_carrier_iff.1 hx
-  obtain ⟨c', hc', rfl⟩ := P.mem_carrier_iff.1 hy
-  refine mem_image_gapMap_iff.2
-    ⟨fun i ↦ c i + (P.length i - 1 - c' i), fun i ↦ by grind [hc i, hc' i], ?_⟩
-  have h (i : Fin P.dim) : (P.length i - 1 - c' i) • P.step i =
-      (P.length i - 1) • P.step i - c' i • P.step i := by
-    rw [sub_nsmul _ (Nat.le_sub_one_of_lt (hc' i)), sub_eq_add_neg]
-  simp only [add_nsmul, h, sum_add_distrib, sum_sub_distrib]
-  abel
-
-lemma sub_subset_difference_of_subset {P : GAP G} {S : Finset G} (hS : S ⊆ P.carrier) :
-    S - S ⊆ P.difference.carrier :=
-  (sub_subset_sub hS hS).trans P.sub_subset_difference
-
-lemma one_lt_length_difference (P : GAP G) (i : Fin P.dim) : 1 < P.difference.length i := by
-  simp only [difference]
-  grind [P.length_pos i]
-
-/-- The number $\prod_i \ell_i$ of coefficient vectors of a GAP. -/
-def boxVolume (P : GAP G) : ℕ := ∏ i, P.length i
-
-lemma boxVolume_difference (P : GAP G) : P.difference.boxVolume = 2 ^ P.dim * P.boxVolume := by
-  change ∏ i : Fin P.dim, 2 * P.length i = _
-  rw [prod_mul_distrib, Fin.prod_const, boxVolume]
-
-lemma boxVolume_consBinary (P : GAP G) (a : G) :
-    (P.consBinary a).boxVolume = 2 * P.boxVolume := by
-  change ∏ i : Fin (P.dim + 1), Fin.cons 2 P.length i = _
-  rw [Fin.prod_cons, boxVolume]
-
-lemma boxVolume_consBinaryList (P : GAP G) (l : List G) :
-    (P.consBinaryList l).boxVolume = 2 ^ l.length * P.boxVolume := by
+lemma size_consBinaryList_le (P : GAP G) (l : List G) :
+    (P.consBinaryList l).size ≤ 2 ^ l.length * P.size := by
   induction l with
   | nil => simp [consBinaryList]
   | cons a l ih =>
-    rw [consBinaryList, boxVolume_consBinary, ih, List.length_cons, pow_succ]
-    ring
+    rw [consBinaryList, List.length_cons, pow_succ, mul_comm _ 2, mul_assoc]
+    exact ((P.consBinaryList l).size_consBinary_le a).trans (Nat.mul_le_mul_left 2 ih)
 
-lemma card_consBinaryList_le (P : GAP G) (l : List G) :
-    #(P.consBinaryList l).carrier ≤ 2 ^ l.length * P.boxVolume := by
-  rw [← P.boxVolume_consBinaryList l]
-  exact (P.consBinaryList l).card_le_prod_length
+/-- The reflection $-P$ of a progression $P$, with origin $-x_0 - \sum_v b_v v$ and the bound of
+$P$. -/
+def neg (P : GAP G) : GAP G := ⟨-P.eval P.bound, P.bound⟩
+
+lemma neg_carrier_subset_carrier_neg [DecidableEq G] (P : GAP G) :
+    -P.carrier ⊆ P.neg.carrier := by
+  intro z hz
+  obtain ⟨x, hx, rfl⟩ := mem_neg.1 hz
+  obtain ⟨c, hc, rfl⟩ := mem_carrier.1 hx
+  obtain ⟨e, he⟩ := exists_add_of_le hc
+  refine mem_carrier.2 ⟨e, le_add_self.trans_eq he.symm, ?_⟩
+  simp only [neg, eval_eq_linearCombination, he, map_add]
+  abel
+
+/-- A progression containing $P - P$: the sum of $P$ and its reflection. It has the steps of $P$
+and the bound $2 b$. -/
+def difference (P : GAP G) : GAP G := P + P.neg
+
+lemma sub_subset_difference [DecidableEq G] (P : GAP G) :
+    P.carrier - P.carrier ⊆ P.difference.carrier := by
+  rw [difference, carrier_add, sub_eq_add_neg]
+  exact add_subset_add_left P.neg_carrier_subset_carrier_neg
+
+lemma sub_subset_difference_of_subset [DecidableEq G] {P : GAP G} {S : Finset G}
+    (hS : S ⊆ P.carrier) : S - S ⊆ P.difference.carrier :=
+  (sub_subset_sub hS hS).trans P.sub_subset_difference
+
+lemma dim_difference_le (P : GAP G) : P.difference.dim ≤ P.dim := by
+  classical
+  rw [difference, dim, bound_add, Finsupp.support_add_eq_union, neg, union_self]
+  rfl
+
+lemma size_difference_le (P : GAP G) : P.difference.size ≤ 2 ^ P.dim * P.size :=
+  size_add_le_of_bound_eq rfl
 
 end GAP
 

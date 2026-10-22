@@ -5,7 +5,8 @@ project:
   name: "Chang's theorem"
   description: >-
     Formalization of Chang's polynomial form of Freiman's theorem, with a 2-proper
-    progression as in Green and Tao: a finite set X of integers with |X + X| <= kappa |X| is
+    progression P, one for which P + P is proper: a finite set X of integers with
+    |X + X| <= kappa |X| is
     contained in a 2-proper generalized arithmetic progression of dimension at most the
     Freiman dimension of X, hence at most 2 kappa - 1, with at most exp(10^32 kappa^7) |X|
     points. There is also a statement for subsets of ZMod q with q prime, where the
@@ -27,11 +28,33 @@ sources:
       - "Mei-Chu Chang"
     id: "https://doi.org/10.1215/S0012-7094-02-11331-3"
     type: "paper"
-    location: "https://doi.org/10.1215/S0012-7094-02-11331-3"
+    location: "Theorem 2 of Section 1, proved in Sections 2 to 4"
     relationship: "adapts"
     note: >-
-      The proof follows Chang's: a Ruzsa model, Chang's lemma on large spectra, a progression
-      inside a Bohr set, and a covering argument. The bounds proved are weaker; see
+      Duke Math. J. 113 (2002). Numbers of results and equations are those of the author's
+      preprint. The proof of Theorem 1 follows Chang's: Ruzsa's model (Step 1), a Bohr set
+      inside 2A - 2A (Lemmas 3.1 to 3.4), a proper progression inside the Bohr set (Step 3),
+      its transport back by a Freiman isomorphism (Lemma 1.2), and the packing argument of
+      Section 2. It differs in the following places. Step 1 starts from ZMod q with q prime:
+      a set of integers is first reduced modulo a prime q > 16 max |x|, which is a Freiman
+      8-isomorphism on it, and the model is taken in ZMod m for any m >= |8X - 8X|, not
+      necessarily prime. Lemma 3.1, Chang's bound for a maximal dissociated subset of the large
+      spectrum through Rudin's inequality, is the lemma on large spectra of APAP, which puts the
+      large spectrum in the {-1, 0, 1}-span of a small set of characters, as in Lemma 3.4.
+      Lemmas 3.2 and 3.3 use the chord width |1 - psi(x)| <= 1/4 and the threshold
+      (8 kappa)^(-1/2) in place of ||m x / N|| < 1/10 and 100 alpha < rho^(-2) < 1000 alpha.
+      Step 3, Theorem 8.7 of Nathanson's book in the paper, is proved here with Minkowski's
+      second theorem from Tau Ceti and loses a factor (8 d)^(3 d) in place of (d / epsilon)^d.
+      The packing argument of Section 2 runs on the subset X_1 of the model, with sets of
+      ceil(3 kappa) disjoint translates in place of 10 alpha. The elements of these sets and of
+      the final set F become steps of length 2, in place of the lengths 3 and 2 of (2.21), and
+      Ruzsa's covering lemma then covers X by at most 8 kappa translates. Sets too small for
+      the Bohr step are first replaced by their sum with a long arithmetic progression. Section
+      4, the passage to a proper progression of dimension at most [alpha - 1] through the
+      convex bodies of Bilu, is replaced by two other arguments: a properization that divides
+      the coefficient lattice by the saturated span of the short relations, through a Smith
+      normal form, until the progression is 2-proper, and the reduction to the Freiman
+      dimension of Appendix A of Campos, Dahia and Marciano. The bounds proved are weaker; see
       fidelity.divergences.
     license: "unknown"
     author_endorsement: "not-contacted"
@@ -45,7 +68,7 @@ sources:
     relationship: "background"
     note: >-
       Proposition 1.3 states Chang's theorem with a t-proper progression. The statements
-      here are the case t = 2, with weaker bounds.
+      here are the case t = 2, with a weaker notion of 2-proper and weaker bounds.
     license: "unknown"
     author_endorsement: "not-contacted"
   - title: "On the independence number of sparser random Cayley graphs"
@@ -127,7 +150,11 @@ automation:
         and the bound on the Freiman dimension the statements with dimension at most
         2 kappa - 1. Later, one instruction to lower the exponent of the size bound from
         kappa^20 to kappa^7. Later, one instruction to remove the copies of APAP modules that
-        allowed importing this library next to PFR.
+        allowed importing this library next to PFR. Later, one instruction to compare the
+        definitions of proper and 2-proper progressions with those of Chang, Green and Tao and
+        other sources, and to record the numbering of Chang's results; one to make 2-proper
+        mean that P + P is proper, with a structure for which P + P is the sum of
+        progressions; and one to use the 2-dilate of the coefficient box in properization.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -148,13 +175,26 @@ automation:
     Later, agents lowered the exponent from kappa^20 to kappa^7: they sharpened the
     estimates of the Bohr progression, of Chang's lemma and of properization, and added the
     elements of the last packing set as steps of the progression instead of covering by
-    their differences. Every proof is checked by Lean.
+    their differences. Later, the agent replaced the structure GAP by an origin and a
+    finitely supported bound, defined the sum of two progressions and 2-properness as the
+    properness of P + P, and adapted the proofs; properization now uses the 2-dilate of the
+    coefficient box, no longer doubles the lengths, and has the exponent
+    2 (d + 2)^3 log (d + 2) in place of 3 (d + 2)^3 log (d + 2). Every proof is checked by
+    Lean.
 
 fidelity:
   divergences: >-
-    Chang's theorem, as in Green and Tao, Proposition 1.3 with t = 2, gives a 2-proper
-    progression P containing A with |P| <= exp(C K^2 log^3 K) |A| and dimension at most the
-    Freiman dimension of A, where K = |A + A| / |A|.
+    Chang's Theorem 2 (Section 1) puts a finite set A of integers with |A + A| <= alpha |A|
+    in a proper progression P of dimension at most [alpha - 1] with
+    log (|P| / |A|) <= C alpha^2 (log alpha)^3 for an absolute constant C. Her Theorem 1
+    gives a progression that need not be proper, with dimension and log (|P| / |A|) at most
+    C alpha^2 (log alpha)^2. Green and Tao, Proposition 1.3 with t = 2, state Theorem 2 with a
+    2-proper progression of dimension at most the Freiman dimension of A and
+    |P| <= exp(C K^2 log^3 K) |A|, where K = |A + A| / |A|. The statements here take the form
+    of Green and Tao: the progression is 2-proper in a sense weaker than theirs that still
+    implies proper, the dimension is bounded by freimanDim X or by 2 kappa - 1 in place of
+    [alpha - 1], the constants are explicit and the exponent of the size bound is a multiple
+    of kappa^7.
 
     Here freimanDim X is the largest d <= |X| such that X is Freiman isomorphic of order 2
     to a subset of Q^d whose affine span over the reals has dimension d.
@@ -172,15 +212,27 @@ fidelity:
     2-proper progression of dimension at most freimanDim X with at most
     exp(10^30 kappa^7) |X| points. The library form
     exists_twoProperGAP_zmod_dim_le_freimanDim is written with the exponents
-    containerExponent and freimanDimExponent.
+    containerExponent and freimanDimExponent. Chang works in Z only, so these statements have
+    no counterpart in her paper.
 
     Dimension at most 2 kappa - 1. The statements of Challenge.lean are the same with
     dimension at most 2 kappa - 1 in place of freimanDim X. Green and Tao get
     floor(K - 1 + epsilon) for |A| >= C K^2 / epsilon.
 
-    A progression is a structure GAP with a dimension, an origin, steps and lengths; its
-    points are origin + sum_i w_i step_i with 0 <= w_i < length_i. It is 2-proper if the
-    points with 0 <= w_i < 2 length_i, starting from twice the origin, are distinct.
+    A progression is a structure GAP with an origin x_0 and a finitely supported bound
+    b : G -> N; its points are x_0 + sum_v c_v v with c <= b. Its steps are the v with
+    b_v > 0, of length b_v + 1, and its dimension is their number. Numbering the steps gives
+    the points x_0 + sum_i w_i s_i with 0 <= w_i < l_i of (1.1) of Chang, with all lengths
+    at least 2. A progression is proper if these points are distinct. Chang calls a
+    progression proper if |P| is the product of the lengths, which is GAP.Proper by
+    GAP.proper_iff_card_eq_prod_length. The sum P + Q adds origins and bounds, so its points
+    are the sums of a point of P and a point of Q, and P is 2-proper if P + P is proper: the
+    points 2 x_0 + sum_i w_i s_i with 0 <= w_i <= 2 l_i - 2 are distinct. This is the
+    condition F_2 of Bilu and the 2-proper progression of Tao and Vu. The t-proper progression
+    of Green and Tao, Definition 1.1, for t = 2 asks the same for 0 <= w_i <= 2 l_i - 1, which
+    is stronger: {0, 1} in ZMod 3 is 2-proper here but not in their sense. The statements
+    here are therefore weaker than Proposition 1.3 of Green and Tao with t = 2 in this
+    respect.
 
 review:
   status: "unchecked"
@@ -190,26 +242,26 @@ review:
 alignment:
   namespace: "ChangFreimanRuzsa"
   statements:
-    - source: "Chang's theorem for sets of integers"
+    - source: "Chang, Theorem 2, with a 2-proper progression"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: "With at most exp(10^32 kappa^7) |X| points and dimension at most 2 kappa - 1."
-    - source: "Chang's theorem in ZMod q"
+    - source: "Chang, Theorem 2, in ZMod q with a 2-proper progression"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
         For q prime, 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7) |X| <= q, with
         dimension at most 2 kappa - 1.
-    - source: "Chang's theorem for sets of integers with dimension at most the Freiman dimension"
+    - source: "Green and Tao, Proposition 1.3 with t = 2, for sets of integers"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_freimanDim_card_le"
       module: "ChangFreimanRuzsa.ExplicitBounds"
       status: "proved"
       note: >-
         With at most exp(10^32 kappa^7) |X| points. Not in Challenge.lean, since Mathlib has
         no Freiman dimension.
-    - source: "Chang's theorem in ZMod q with dimension at most the Freiman dimension"
+    - source: "Green and Tao, Proposition 1.3 with t = 2, in ZMod q"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le"
       module: "ChangFreimanRuzsa.ExplicitBounds"
       status: "proved"
@@ -249,6 +301,84 @@ alignment:
       note: >-
         With the exponent intFreimanDimExponent kappa <= 10^32 kappa^7. Not in
         Challenge.lean.
+    - source: "Chang, Theorem 1"
+      lean: "ChangFreimanRuzsa.exists_gap_int_subset_dim_le_card_le"
+      module: "ChangFreimanRuzsa.Integers"
+      status: "proved"
+      note: >-
+        For 256 * bohrGAPDim kappa <= |X|. The dimension and log (|P| / |X|) are at most
+        containerExponent kappa <= 1.3 * 10^8 kappa^2 (1 + log kappa)^2, which has the form
+        C alpha^2 (log alpha)^2 of Theorem 1. Not in Challenge.lean.
+    - source: "Chang, Proposition 2.1, in ZMod q"
+      lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_card_le"
+      module: "ChangFreimanRuzsa.Container"
+      status: "proved"
+      note: >-
+        For q prime and 256 * bohrGAPDim kappa <= |X|. The dimension is at most
+        bohrGAPDim kappa, of order kappa log kappa as in (2.1), and
+        |X| <= 8 (8 d)^(3 d) |Q| in place of (2.2). The version for integers is the private
+        lemma exists_proper_gap_int_subset_add_sub_add_card_le of Integers.lean.
+    - source: "Chang, Section 1, Step 1 (Ruzsa's model)"
+      lean: "ChangFreimanRuzsa.exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le"
+      module: "ChangFreimanRuzsa.RuzsaModel"
+      status: "proved"
+      note: "From ZMod q with q prime, in place of Z, into ZMod m for any m >= |sX - sX|."
+    - source: "Chang, Lemma 3.1"
+      lean: "ChangFreimanRuzsa.exists_card_le_largeSpec_subset_addSpan"
+      module: "ChangFreimanRuzsa.Fourier"
+      status: "proved"
+      note: >-
+        Applies the lemma on large spectra of APAP, which bounds a set whose {-1, 0, 1}-span
+        contains the large spectrum, in place of a maximal dissociated subset of it.
+    - source: "Chang, Lemma 3.2"
+      lean: "ChangFreimanRuzsa.mem_add_sub_add_of_card_add_le_of_forall_largeSpec"
+      module: "ChangFreimanRuzsa.Fourier"
+      status: "proved"
+      note: "With the threshold (8 kappa)^(-1/2) and the chord width 1/4."
+    - source: "Chang, Lemma 3.3"
+      lean: "ChangFreimanRuzsa.card_pow_three_le_mul_addEnergy"
+      module: "ChangFreimanRuzsa.Fourier"
+      status: "proved"
+      note: "Stated as |X|^3 <= kappa E(X) for the additive energy E(X)."
+    - source: "Chang, Lemma 3.4"
+      lean: "ChangFreimanRuzsa.mem_add_sub_add_of_largeSpec_subset_addSpan"
+      module: "ChangFreimanRuzsa.Fourier"
+      status: "proved"
+      note: "With the chord width (4 (|Delta| + 1))^(-1)."
+    - source: "Chang, Section 1, Step 3 (a proper progression in a Bohr set)"
+      lean: "ChangFreimanRuzsa.exists_proper_gap_chordSet"
+      module: "ChangFreimanRuzsa.BohrProgression"
+      status: "proved"
+      note: "Through Minkowski's second theorem from Tau Ceti; ZMod q need not have q prime."
+    - source: "Chang, Lemma 1.2"
+      lean: "ChangFreimanRuzsa.GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso"
+      module: "ChangFreimanRuzsa.FreimanRigidity"
+      status: "proved"
+      note: >-
+        For Freiman 2-isomorphisms on a proper progression. The transport of (1.22), from
+        2B - 2B to 2A - 2A along a Freiman 8-isomorphism, is
+        exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso.
+    - source: "Chang, Section 2"
+      lean: "ChangFreimanRuzsa.exists_gap_subset_dim_le_card_le_of_subset_add_sub_add"
+      module: "ChangFreimanRuzsa.Container"
+      status: "proved"
+      note: >-
+        In an arbitrary abelian group, with sets of ceil(3 kappa) translates and a final
+        application of Ruzsa's covering lemma.
+    - source: "Chang, Section 4"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap"
+      module: "ChangFreimanRuzsa.Cyclic"
+      status: "proved"
+      note: >-
+        A different argument: properization through the short relations of the progression,
+        followed by the reduction to the Freiman dimension,
+        exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree in
+        ChangFreimanRuzsa.CoordinateReduction.
+    - source: "Chang, Section 1, definition of a proper progression"
+      lean: "ChangFreimanRuzsa.GAP.proper_iff_card_eq_prod_length"
+      module: "ChangFreimanRuzsa.GapToolkit"
+      status: "proved"
+      note: "Chang's |P| = l(P) is equivalent to GAP.Proper, the distinctness of the points."
 
 acknowledgements: >-
   Lean 4 and Mathlib; the APAP project of Yaël Dillies and Bhavik Mehta; the Tau Ceti

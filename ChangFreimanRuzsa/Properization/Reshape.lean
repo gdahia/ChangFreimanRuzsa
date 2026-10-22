@@ -9,15 +9,12 @@ public import ChangFreimanRuzsa.GapToolkit
 public import ChangFreimanRuzsa.GeometryOfNumbers
 import ChangFreimanRuzsa.Properization.Relations
 
-/-! # Replacing the steps and lengths of a progression
+/-! # Enlarging the lengths of a progression
 
-This file builds progressions from prescribed data and bounds the size of the progression obtained
-by enlarging all lengths by the same factor.
+This file bounds the size of the progression obtained by enlarging all lengths by the same factor.
 
 ## Main definitions
 
-* `GAP.ofData`: the GAP with prescribed dimension, origin, steps and lengths.
-* `GAP.reshape`: a GAP with the dimension and origin of a given one and new steps and lengths.
 * `GAP.scaleLengths`: the GAP whose lengths are those of a given one multiplied by $k$.
 * `GAP.boundedStepImage`: the image under the step homomorphism of the $m$-dilate of the symmetric
   coefficient box.
@@ -38,50 +35,22 @@ variable {G : Type*} [DecidableEq G] [AddCommGroup G]
 
 namespace GAP
 
-/-- The GAP with prescribed dimension, origin, steps and lengths. -/
-def ofData (d : ℕ) (origin : G) (step : Fin d → G) (length : Fin d → ℕ)
-    (hlength : ∀ i, 0 < length i) : GAP G where
-  dim := d
-  carrier := Finset.univ.image (gapMap origin step length)
-  origin := origin
-  step := step
-  length := length
-  length_pos := hlength
-  carrier_eq := rfl
+/-- Multiply every length of a progression by the same integer. -/
+noncomputable def scaleLengths (P : GAP G) (k : ℕ) : GAP G :=
+  ofSteps P.origin P.step fun i ↦ k * P.length i
 
-lemma mem_ofData {d : ℕ} (origin : G) (step : Fin d → G) {length : Fin d → ℕ}
-    (hlength : ∀ i, 0 < length i) (k : (i : Fin d) → Fin (length i)) :
-    gapMap origin step length k ∈ (ofData d origin step length hlength).carrier :=
-  Finset.mem_image_of_mem _ (Finset.mem_univ k)
-
-/-- Replace the steps and lengths of a GAP, keeping its dimension and origin. -/
-def reshape (P : GAP G) (step : Fin P.dim → G) (length : Fin P.dim → ℕ)
-    (hlength : ∀ i, 0 < length i) : GAP G :=
-  ofData P.dim P.origin step length hlength
-
-/-- Enlarging the lengths of a progression enlarges its carrier. -/
-lemma carrier_subset_reshape (P : GAP G) {length : Fin P.dim → ℕ} (hlength : ∀ i, 0 < length i)
-    (hle : ∀ i, P.length i ≤ length i) :
-    P.carrier ⊆ (P.reshape P.step length hlength).carrier := by
-  intro x hx
-  rw [P.carrier_eq, Finset.mem_image] at hx
-  obtain ⟨w, -, rfl⟩ := hx
-  exact mem_ofData _ _ _ fun i ↦ ⟨w i, (w i).isLt.trans_le (hle i)⟩
-
-/-- Multiply every length of a progression by the same positive integer. -/
-def scaleLengths (P : GAP G) (k : ℕ) (hk : 0 < k) : GAP G :=
-  P.reshape P.step (fun i ↦ k * P.length i) fun i ↦ Nat.mul_pos hk (P.length_pos i)
-
-@[simp] lemma scaleLengths_length (P : GAP G) (k : ℕ) (hk : 0 < k) :
-    (P.scaleLengths k hk).length = fun i ↦ k * P.length i := rfl
+lemma carrier_scaleLengths (P : GAP G) {k : ℕ} (hk : 0 < k) :
+    (P.scaleLengths k).carrier = Finset.univ.image (gapMap P.origin P.step (k * P.length ·)) :=
+  carrier_ofSteps fun i ↦ Nat.mul_pos hk (P.length_pos i)
 
 /-- Multiplying all lengths of a progression $P$ of dimension $d$ by $k$ gives a progression covered
 by $k^d$ translates of $P$. -/
 lemma card_scaleLengths_le (P : GAP G) {k : ℕ} (hk : 0 < k) :
-    (P.scaleLengths k hk).carrier.card ≤ k ^ P.dim * P.carrier.card := by
-  have hsub : (P.scaleLengths k hk).carrier ⊆ (Finset.univ ×ˢ P.carrier).image
+    (P.scaleLengths k).carrier.card ≤ k ^ P.dim * P.carrier.card := by
+  have hsub : (P.scaleLengths k).carrier ⊆ (Finset.univ ×ˢ P.carrier).image
       fun ((b : Fin P.dim → Fin k), x) ↦ ∑ i, (b i * P.length i) • P.step i + x := by
     intro x hx
+    rw [carrier_scaleLengths P hk] at hx
     obtain ⟨w, -, rfl⟩ := Finset.mem_image.mp hx
     refine Finset.mem_image.mpr ⟨(fun i ↦ ⟨w i / P.length i,
       Nat.div_lt_of_lt_mul ((w i).isLt.trans_eq (mul_comm _ _))⟩,
@@ -93,7 +62,7 @@ lemma card_scaleLengths_le (P : GAP G) {k : ℕ} (hk : 0 < k) :
   simp
 
 /-- The step-homomorphism image of the box dilated by `m`. -/
-def boundedStepImage (P : GAP G) (m : ℕ) : Finset G :=
+noncomputable def boundedStepImage (P : GAP G) (m : ℕ) : Finset G :=
   (intBox fun i ↦ m * (P.length i - 1)).image (stepHom P)
 
 /-- The image of the $m$-dilate of the symmetric coefficient box of a progression $P$ of dimension
@@ -106,11 +75,11 @@ lemma card_boundedStepImage_le (P : GAP G) (m : ℕ) :
   intro z hz
   obtain ⟨v, hv, rfl⟩ := Finset.mem_image.mp hz
   rw [mem_intBox] at hv
-  rw [Finset.mem_coe, mem_carrier_iff_exists_intCoeffs]
+  rw [Finset.mem_coe, carrier_scaleLengths P (by grind), mem_image_gapMap_iff_exists_intCoeffs]
   refine ⟨fun i ↦ m * (P.length i - 1 : ℤ) + v i, ?_, ?_⟩
   · intro i
     obtain ⟨h₁, h₂⟩ := abs_le.mp (hv i)
-    push_cast [scaleLengths_length, Nat.cast_sub (P.length_pos i)] at h₁ h₂ ⊢
+    push_cast [Nat.cast_sub (P.length_pos i)] at h₁ h₂ ⊢
     constructor <;> grind [P.length_pos i]
   · beta_reduce
     rw [add_assoc, ← map_add]

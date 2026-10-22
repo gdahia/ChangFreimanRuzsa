@@ -60,17 +60,16 @@ lemma exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap {G : Type*} [Decid
     (hPdim : (P.dim : ℝ) ≤ containerExponent κ)
     (hPcard : (#P.carrier : ℝ) ≤ Real.exp (containerExponent κ) * #X)
     (hN : Real.exp (zmodExponent κ) * #X ≤ N) :
-    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      (Q.dim : ℝ) ≤ containerExponent κ ∧
+    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ containerExponent κ ∧
       (#Q.carrier : ℝ) ≤ Real.exp (zmodExponent κ) * #X := by
   have hP : Real.exp (properizationExponent P.dim) * #P.carrier ≤
       Real.exp (zmodExponent κ) * #X := by
     rw [zmodExponent, Real.exp_add, mul_assoc]
     gcongr
     exact properizationExponent_mono (Nat.cast_nonneg _) hPdim
-  obtain ⟨Q, hQ, hPQ, hlen, hQdim, hQcard⟩ :=
+  obtain ⟨Q, hQ, hPQ, hQdim, hQcard⟩ :=
     exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P hG (hP.trans hN)
-  exact ⟨Q, hQ, hXP.trans hPQ, hlen, (Nat.cast_le.2 hQdim).trans hPdim, hQcard.trans hP⟩
+  exact ⟨Q, hQ, hXP.trans hPQ, (Nat.cast_le.2 hQdim).trans hPdim, hQcard.trans hP⟩
 
 /-- **Chang's theorem** in `ZMod q` for a prime $q$. Write $c_\kappa$ for
 `containerExponent κ`, $C_\kappa$ for `zmodExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. A set
@@ -81,10 +80,9 @@ theorem exists_twoProperGAP_zmod_of_small_sumset {q : ℕ} {κ : ℝ} (X : Finse
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (zmodExponent κ) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      (Q.dim : ℝ) ≤ containerExponent κ ∧
+    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ containerExponent κ ∧
       (#Q.carrier : ℝ) ≤ Real.exp (zmodExponent κ) * #X := by
-  obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
+  obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
   exact exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) hXP hPdim hPcard hXupper
 

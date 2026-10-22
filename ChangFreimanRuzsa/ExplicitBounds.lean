@@ -5,7 +5,7 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GapToolkit
+public import ChangFreimanRuzsa.GeneralizedArithmeticProgression
 public import Mathlib.Analysis.Complex.Exponential
 public import SumOfSetsInSeveralDimensions.FreimanDimension
 import ChangFreimanRuzsa.Bound
@@ -50,7 +50,7 @@ theorem exists_twoProperGAP_subset_dim_le_freimanDim_card_le {κ : ℝ} (X : Fin
     (hX : X.Nonempty) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ P.dim ≤ freimanDim X ∧
       (#P.carrier : ℝ) ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X := by
-  obtain ⟨P, hP, hXP, -, hdim, hcard⟩ := exists_twoProperGAP_int_dim_le_freimanDim X hX hκ hXX
+  obtain ⟨P, hP, hXP, hdim, hcard⟩ := exists_twoProperGAP_int_dim_le_freimanDim X hX hκ hXX
   refine ⟨P, hP, hXP, hdim, hcard.trans ?_⟩
   grw [intFreimanDimExponent_le hκ]
 
@@ -67,7 +67,7 @@ theorem exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le {q : ℕ} {κ 
       (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
   have he : Real.exp (freimanDimExponent κ) * #X ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
     grw [freimanDimExponent_le hκ]
-  obtain ⟨Q, hQ, hXQ, -, hdim, hcard⟩ := exists_twoProperGAP_zmod_dim_le_freimanDim X hq hκ hXX
+  obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ := exists_twoProperGAP_zmod_dim_le_freimanDim X hq hκ hXX
     ((mul_bohrGAPDim_le hκ).trans hXlower) (he.trans hXupper)
   exact ⟨Q, hQ, hXQ, hdim, hcard.trans he⟩
 

@@ -183,8 +183,8 @@ private lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : F
     exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso hiso hQ hQsub
   obtain ⟨X₁, hX₁, rfl⟩ := subset_image_iff.1 hY₁
   rw [hcard] at hY₁card hQcard
-  exact ⟨X₁, Q₁, hX₁, hY₁card.trans (Nat.mul_le_mul_left 8 card_image_le), hQ₁, by rwa [hQ₁dim],
-    hQ₁sub, by rwa [hQ₁card]⟩
+  exact ⟨X₁, Q₁, hX₁, hY₁card.trans (Nat.mul_le_mul_left 8 card_image_le), hQ₁,
+    (Nat.cast_le.2 hQ₁dim).trans hQdim, hQ₁sub, by rwa [hQ₁card]⟩
 
 /-- Let $c_\kappa$ be `containerExponent κ` and $d_\kappa$ be `bohrGAPDim κ`. A finite set
 $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $256 d_\kappa \le |X|$ lies in a
@@ -192,8 +192,7 @@ generalized arithmetic progression of dimension at most $c_\kappa$ and of size a
 $e^{c_\kappa} |X|$. -/
 lemma exists_gap_int_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
-    ∃ P : GAP ℤ, X ⊆ P.carrier ∧ (∀ i, 1 < P.length i) ∧
-      (P.dim : ℝ) ≤ containerExponent κ ∧
+    ∃ P : GAP ℤ, X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ containerExponent κ ∧
       (#P.carrier : ℝ) ≤ Real.exp (containerExponent κ) * #X := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁, hQ₁dim, hQ₁sub, hQ₁card⟩ :=
     exists_proper_gap_int_subset_add_sub_add_card_le X hκ hXX hXlower
@@ -209,10 +208,9 @@ contained in a $2$-proper generalized arithmetic progression of dimension at mos
 size at most $e^{C_\kappa} |X|$. -/
 theorem exists_twoProperGAP_int_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
-    ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      (Q.dim : ℝ) ≤ containerExponent κ ∧
+    ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ containerExponent κ ∧
       (#Q.carrier : ℝ) ≤ Real.exp (zmodExponent κ) * #X := by
-  obtain ⟨P, hXP, -, hPdim, hPcard⟩ := exists_gap_int_subset_dim_le_card_le X hκ hXX hXlower
+  obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_int_subset_dim_le_card_le X hκ hXX hXlower
   exact exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap
     (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _) hXP hPdim hPcard (Nat.le_ceil _)
 
@@ -235,7 +233,7 @@ theorem exists_twoProperGAP_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hX : X.
   have hκ' : (2 : ℝ) ≤ 2 * κ := by linarith
   obtain ⟨X', hXX', hX'X', hX'lower, hX'upper⟩ :=
     exists_large_superset_of_card_add_le hX hXX (Real.one_le_exp (containerExponent_pos hκ').le)
-  obtain ⟨P, hP, hX'P, -, hdim, hcard⟩ :=
+  obtain ⟨P, hP, hX'P, hdim, hcard⟩ :=
     exists_twoProperGAP_int_of_small_sumset X' hκ' hX'X' (mul_bohrGAPDim_le_of_exp_lt hκ' hX'lower)
   exact ⟨P, hP, hXX'.trans hX'P, hdim,
     hcard.trans (exp_mul_le_exp_add_add_one_mul (Nat.cast_nonneg _) hX'upper)⟩

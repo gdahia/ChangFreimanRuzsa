@@ -5,7 +5,8 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.Properization.Reshape
+public import ChangFreimanRuzsa.GapToolkit
+public import ChangFreimanRuzsa.GeometryOfNumbers
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import ChangFreimanRuzsa.Fourier
@@ -298,17 +299,20 @@ Progressions whose $i$-th coefficient ranges over $[-L_i, L_i]$. -/
 section SymmetricGAP
 
 /-- The progression with steps $x$ whose $i$-th coefficient ranges over $[-L_i, L_i]$. -/
-def symmetricGAP {G : Type*} [DecidableEq G] [AddCommGroup G] {d : ℕ} (x : Fin d → G)
+def symmetricGAP {G : Type*} [AddCommGroup G] {d : ℕ} (x : Fin d → G)
     (L : Fin d → ℕ) : GAP G :=
-  GAP.ofData d (stepsHom x fun i ↦ -(L i : ℤ)) x (fun i ↦ 2 * L i + 1) fun _ ↦ Nat.succ_pos _
+  GAP.ofSteps (stepsHom x fun i ↦ -(L i : ℤ)) x fun i ↦ 2 * L i + 1
 
-variable {G : Type*} [DecidableEq G] [AddCommGroup G] {d : ℕ} {x : Fin d → G} {L : Fin d → ℕ}
+variable {G : Type*} [AddCommGroup G] {d : ℕ} {x : Fin d → G} {L : Fin d → ℕ}
 
-@[simp] lemma symmetricGAP_dim : (symmetricGAP x L).dim = d := rfl
+lemma carrier_symmetricGAP [DecidableEq G] :
+    (symmetricGAP x L).carrier =
+      Finset.univ.image (gapMap (stepsHom x fun i ↦ -(L i : ℤ)) x fun i ↦ 2 * L i + 1) :=
+  GAP.carrier_ofSteps fun _ ↦ Nat.succ_pos _
 
-@[simp] lemma symmetricGAP_length : (symmetricGAP x L).length = fun i ↦ 2 * L i + 1 := rfl
+lemma dim_symmetricGAP_le : (symmetricGAP x L).dim ≤ d :=
+  GAP.dim_ofSteps_le
 
-omit [DecidableEq G] in
 /-- The point of the symmetric progression with coordinates $w$ is the combination of its steps
 with coefficients $w_i - L_i$. -/
 lemma gapMap_symmetricGAP (w : (i : Fin d) → Fin (2 * L i + 1)) :
@@ -321,20 +325,21 @@ lemma gapMap_symmetricGAP (w : (i : Fin d) → Fin (2 * L i + 1)) :
 
 /-- Every element of the symmetric progression is a combination of its steps with coefficients in
 $[-L_i, L_i]$. -/
-lemma exists_coeff_of_mem_symmetricGAP {y : G} (hy : y ∈ (symmetricGAP x L).carrier) :
+lemma exists_coeff_of_mem_symmetricGAP [DecidableEq G] {y : G}
+    (hy : y ∈ (symmetricGAP x L).carrier) :
     ∃ n : Fin d → ℤ, (∀ i, |n i| ≤ L i) ∧ y = stepsHom x n := by
-  rw [(symmetricGAP x L).carrier_eq] at hy
+  rw [carrier_symmetricGAP] at hy
   obtain ⟨w, -, rfl⟩ := Finset.mem_image.mp hy
   refine ⟨fun i ↦ (w i : ℤ) - L i, ?_, gapMap_symmetricGAP w⟩
   intro i
   rw [abs_le]
   grind [(by simpa using (w i).isLt : (w i : ℕ) < 2 * L i + 1)]
 
-/-- The symmetric progression is proper as soon as its steps admit no nonzero relation with
-coefficients in the doubled range. -/
-lemma proper_symmetricGAP
+/-- The points of the symmetric progression with distinct coordinates are distinct as soon as its
+steps admit no nonzero relation with coefficients in the doubled range. -/
+lemma injective_gapMap_symmetricGAP
     (h : ∀ n : Fin d → ℤ, (∀ i, |n i| ≤ 2 * L i) → stepsHom x n = 0 → ∀ i, n i = 0) :
-    (symmetricGAP x L).Proper := by
+    Function.Injective (gapMap (stepsHom x fun i ↦ -(L i : ℤ)) x fun i ↦ 2 * L i + 1) := by
   intro w w' hww'
   have hrel : stepsHom x
       ((fun i : Fin d ↦ (w i : ℤ) - L i) - fun i : Fin d ↦ (w' i : ℤ) - L i) = 0 := by
@@ -348,10 +353,18 @@ lemma proper_symmetricGAP
   funext i
   exact Fin.ext (by grind [h _ hbound hrel i, Pi.sub_apply])
 
-lemma card_symmetricGAP (h : (symmetricGAP x L).Proper) :
+/-- The symmetric progression is proper as soon as its steps admit no nonzero relation with
+coefficients in the doubled range. -/
+lemma proper_symmetricGAP
+    (h : ∀ n : Fin d → ℤ, (∀ i, |n i| ≤ 2 * L i) → stepsHom x n = 0 → ∀ i, n i = 0) :
+    (symmetricGAP x L).Proper :=
+  GAP.proper_ofSteps (fun _ ↦ Nat.succ_pos _) (injective_gapMap_symmetricGAP h)
+
+lemma card_symmetricGAP [DecidableEq G]
+    (h : ∀ n : Fin d → ℤ, (∀ i, |n i| ≤ 2 * L i) → stepsHom x n = 0 → ∀ i, n i = 0) :
     (symmetricGAP x L).carrier.card = ∏ i, (2 * L i + 1) := by
-  rw [GAP.card_eq_prod_length _ h]
-  rfl
+  rw [carrier_symmetricGAP, Finset.card_image_of_injective _ (injective_gapMap_symmetricGAP h)]
+  simp
 
 end SymmetricGAP
 
@@ -389,17 +402,24 @@ lemma eq_zero_of_mem_freqLattice [NeZero q] (hDq : D ≤ q) {y : Fin (k + 1) →
     rw [← ZMod.intCast_zmod_eq_zero_iff_dvd, mem_freqLattice.mp hy j, hy0]
     simp
 
-/-- The progression `freqGAP q v t` is proper. -/
-lemma proper_freqGAP [NeZero q] (hDq : D ≤ q) (hv : LinearIndependent ℤ v)
+/-- The steps of `freqGAP q v t` admit no nonzero relation with coefficients in the doubled
+range. -/
+lemma apply_eq_zero_of_stepsHom_eq_zero [NeZero q] (hDq : D ≤ q) (hv : LinearIndependent ℤ v)
     (hmem : ∀ i, v i ∈ freqLattice r) (ht : ∀ i, 0 < t i)
-    (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) : (freqGAP q v t).Proper := by
-  apply proper_symmetricGAP
-  intro n hn hzero
+    (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) (n : Fin (k + 1) → ℤ)
+    (hn : ∀ i, |n i| ≤ 2 * coeffBound t i)
+    (hzero : stepsHom (fun i ↦ ((v i 0 : ℤ) : ZMod q)) n = 0) : ∀ i, n i = 0 := by
   apply Fintype.linearIndependent_iff.mp hv n
   refine eq_zero_of_mem_freqLattice hDq
     (AddSubgroup.sum_mem _ fun i _ ↦ AddSubgroup.zsmul_mem _ (hmem i) _)
     (two_mul_abs_sum_zsmul_le hshort ht hn) ?_
   rwa [← stepsHom_intCast_apply_zero]
+
+/-- The progression `freqGAP q v t` is proper. -/
+lemma proper_freqGAP [NeZero q] (hDq : D ≤ q) (hv : LinearIndependent ℤ v)
+    (hmem : ∀ i, v i ∈ freqLattice r) (ht : ∀ i, 0 < t i)
+    (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) : (freqGAP q v t).Proper :=
+  proper_symmetricGAP (apply_eq_zero_of_stepsHom_eq_zero hDq hv hmem ht hshort)
 
 /-- Every element $y$ of `freqGAP q v t` satisfies $r_j y \equiv a_j \pmod q$ for integers
 $|a_j| \le D$. -/
@@ -417,19 +437,18 @@ lemma exists_intCast_eq_mul_of_mem_freqGAP [NeZero q] (hmem : ∀ i, v i ∈ fre
 end FrequencyGAP
 
 /-- For frequencies $r_1, \dots, r_k$ of $\mathbb{Z}/q\mathbb{Z}$ and a width $0 < D \le q$,
-there is a proper progression of dimension $k + 1$ all of whose elements $y$ satisfy
+there is a proper progression of dimension at most $k + 1$ all of whose elements $y$ satisfy
 $r_j y \equiv a_j \pmod q$ for integers $|a_j| \le D$, and whose size is at least
 $q ((D + 1) / q)^k$ up to the factor $(4 (k + 1))^{2 (k + 1)}$. -/
 lemma exists_proper_gap_forall_exists_intCast_eq_mul {q k : ℕ} [NeZero q] (r : Fin k → ZMod q)
     {D : ℕ} (hD : 0 < D) (hDq : D ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim = k + 1 ∧
+    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ k + 1 ∧
       (∀ y ∈ Q.carrier, ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
       q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * Q.carrier.card := by
   obtain ⟨v, t, hv, hmem, ht, hshort, hprod⟩ := exists_linearIndependent_isShort_freqLattice r hD
-  have hQ := proper_freqGAP hDq hv hmem ht hshort
-  refine ⟨freqGAP q v t, hQ, rfl,
+  refine ⟨freqGAP q v t, proper_freqGAP hDq hv hmem ht hshort, dim_symmetricGAP_le,
     fun y hy j ↦ exists_intCast_eq_mul_of_mem_freqGAP hmem ht hshort hy j, ?_⟩
-  rw [freqGAP, card_symmetricGAP hQ]
+  rw [freqGAP, card_symmetricGAP (apply_eq_zero_of_stepsHom_eq_zero hDq hv hmem ht hshort)]
   push_cast
   calc (q : ℝ) * (D + 1 : ℝ) ^ k
       ≤ q * (D + 1 : ℝ) ^ k * ∏ i, (2 * coeffBound t i + 1 : ℝ) * (4 * (k + 1 : ℕ) * t i) :=
@@ -443,14 +462,15 @@ lemma exists_proper_gap_forall_exists_intCast_eq_mul {q k : ℕ} [NeZero q] (r :
     _ = _ := by ring
 
 /-- The Bohr set of chord width $\varepsilon$ of a finite set $\Delta$ of characters of
-$\mathbb{Z}/q\mathbb{Z}$ contains a proper progression of dimension $|\Delta| + 1$ and density at
-least $(\varepsilon / 2\pi)^{|\Delta|}$, up to the factor $(4 (|\Delta| + 1))^{2 (|\Delta| + 1)}$.
+$\mathbb{Z}/q\mathbb{Z}$ contains a proper progression of dimension at most $|\Delta| + 1$ and
+density at least $(\varepsilon / 2\pi)^{|\Delta|}$, up to the factor
+$(4 (|\Delta| + 1))^{2 (|\Delta| + 1)}$.
 
 The hypothesis $2\pi \le \varepsilon q$ makes the Bohr set wider than one step of
 $\mathbb{Z}/q\mathbb{Z}$. Without it the Bohr set can be $\{0\}$. -/
 lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMod q) ℂ)) {ε : ℝ}
     (hεq : 2 * Real.pi ≤ ε * q) (hε : ε ≤ 1) :
-    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim = Δ.card + 1 ∧
+    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ Δ.card + 1 ∧
       (Q.carrier : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
       (q : ℝ) * (ε / (2 * Real.pi)) ^ Δ.card ≤
         (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * Q.carrier.card := by

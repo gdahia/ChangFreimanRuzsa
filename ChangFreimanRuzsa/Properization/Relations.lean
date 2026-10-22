@@ -17,7 +17,7 @@ $\sum_i v_i s_i = 0$. They form the kernel of the step homomorphism $\mathbb{Z}^
 * `injective_gapMap_iff`: a progression is proper if and only if no nonzero relation has
   $|v_i| < L_i$ for all $i$.
 * `GAP.twoProper_iff`: a progression is $2$-proper if and only if no nonzero relation has
-  $|v_i| < 2 L_i$ for all $i$.
+  $|v_i| < 2 L_i - 1$ for all $i$.
 * `GAP.mem_carrier_iff_exists_intCoeffs`: membership in a progression through integer
   coefficients.
 -/
@@ -57,30 +57,13 @@ lemma injective_gapMap_iff {d : ℕ} (origin : G) (step : Fin d → G) (length :
     ext i
     simpa [sub_eq_zero] using congr_fun (hrel _ hw fun j ↦ by grind [Pi.sub_apply, abs_lt]) i
 
-end Steps
-
-variable {G : Type*} [DecidableEq G] [AddCommGroup G]
-
-namespace GAP
-
-/-- The lattice of relations among the steps of a GAP. -/
-def relations (P : GAP G) : AddSubgroup (Fin P.dim → ℤ) := (stepHom P).ker
-
-lemma mem_relations {P : GAP G} {v : Fin P.dim → ℤ} :
-    v ∈ P.relations ↔ ∑ i, v i • P.step i = 0 := Iff.rfl
-
-/-- A progression is $2$-proper if and only if no nonzero relation $v$ has $|v_i| < 2 L_i$ for
-all $i$. -/
-lemma twoProper_iff (P : GAP G) :
-    P.TwoProper ↔ ∀ v ∈ P.relations, (∀ i, |v i| < 2 * P.length i) → v = 0 := by
-  rw [TwoProper, injective_gapMap_iff]
-  simp [relations, stepHom]
-
-/-- Membership in a progression, in terms of integer coefficients in the coefficient box. -/
-lemma mem_carrier_iff_exists_intCoeffs (P : GAP G) {x : G} :
-    x ∈ P.carrier ↔ ∃ c : Fin P.dim → ℤ, (∀ i, 0 ≤ c i ∧ c i < P.length i) ∧
-      x = P.origin + stepsHom P.step c := by
-  rw [P.carrier_eq, Finset.mem_image]
+/-- Membership in the image of `gapMap`, in terms of integer coefficients in the coefficient
+box. -/
+lemma mem_image_gapMap_iff_exists_intCoeffs [DecidableEq G] {d : ℕ} {origin : G}
+    {step : Fin d → G} {length : Fin d → ℕ} {x : G} :
+    x ∈ Finset.univ.image (gapMap origin step length) ↔
+      ∃ c : Fin d → ℤ, (∀ i, 0 ≤ c i ∧ c i < length i) ∧ x = origin + stepsHom step c := by
+  rw [Finset.mem_image]
   constructor
   · rintro ⟨w, -, rfl⟩
     exact ⟨fun i ↦ ((w i : ℕ) : ℤ), by simp, gapMap_eq_stepsHom _ _ _ _⟩
@@ -89,6 +72,34 @@ lemma mem_carrier_iff_exists_intCoeffs (P : GAP G) {x : G} :
     rw [gapMap_eq_stepsHom]
     congr with i
     grind [hc i]
+
+end Steps
+
+variable {G : Type*} [AddCommGroup G]
+
+namespace GAP
+
+/-- The lattice of relations among the steps of a GAP. -/
+noncomputable def relations (P : GAP G) : AddSubgroup (Fin P.dim → ℤ) := (stepHom P).ker
+
+lemma mem_relations {P : GAP G} {v : Fin P.dim → ℤ} :
+    v ∈ P.relations ↔ ∑ i, v i • P.step i = 0 := Iff.rfl
+
+/-- A progression is $2$-proper if and only if no nonzero relation $v$ has $|v_i| < 2 L_i - 1$
+for all $i$. -/
+lemma twoProper_iff (P : GAP G) :
+    P.TwoProper ↔ ∀ v ∈ P.relations, (∀ i, |v i| < 2 * P.length i - 1) → v = 0 := by
+  have h (i : Fin P.dim) : ((2 * P.length i - 1 : ℕ) : ℤ) = 2 * P.length i - 1 := by
+    grind [P.length_pos i]
+  rw [twoProper_iff_injective, injective_gapMap_iff]
+  simp [relations, stepHom, h]
+
+/-- Membership in a progression, in terms of integer coefficients in the coefficient box. -/
+lemma mem_carrier_iff_exists_intCoeffs [DecidableEq G] (P : GAP G) {x : G} :
+    x ∈ P.carrier ↔ ∃ c : Fin P.dim → ℤ, (∀ i, 0 ≤ c i ∧ c i < P.length i) ∧
+      x = P.origin + stepsHom P.step c := by
+  rw [P.carrier_eq]
+  exact mem_image_gapMap_iff_exists_intCoeffs
 
 end GAP
 

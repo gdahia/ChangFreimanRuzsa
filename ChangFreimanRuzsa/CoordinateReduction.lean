@@ -63,7 +63,7 @@ namespace ChangFreimanRuzsa
 
 noncomputable section
 
-variable {G : Type*} [DecidableEq G] [AddCommGroup G]
+variable {G : Type*} [AddCommGroup G]
 
 /-! ## The symmetric coefficient box -/
 
@@ -73,14 +73,14 @@ private lemma card_symBox_le (P : GAP G) : #(symBox P) ≤ 2 ^ P.dim * ∏ i, P.
   rw [Int.card_Icc]
   grind
 
-private lemma sub_coordinateMap_mem_symBox (P : GAP G) (x y : G) :
+private lemma sub_coordinateMap_mem_symBox [DecidableEq G] (P : GAP G) (x y : G) :
     P.coordinateMap x - P.coordinateMap y ∈ symBox P := by
   rw [mem_symBox]
   intro i
   change |(P.coeff x i : ℤ) - P.coeff y i| < _
   grind [(P.coeff x i).isLt, (P.coeff y i).isLt]
 
-private lemma translatedCoords_subset_symBox (P : GAP G) (X : Finset G) (x₀ : G) :
+private lemma translatedCoords_subset_symBox [DecidableEq G] (P : GAP G) (X : Finset G) (x₀ : G) :
     translatedCoords P X x₀ ⊆ symBox P :=
   image_subset_iff.2 fun x _ ↦ sub_coordinateMap_mem_symBox P x x₀
 
@@ -117,7 +117,7 @@ private lemma latticeCoordinates_mem_sliceCoords {y : Fin P.dim → ℤ}
     latticeCoordinates S y ∈ sliceCoords P S := by
   rwa [sliceCoords, mem_preimage, ofLatticeCoordinates_latticeCoordinates hy]
 
-private lemma card_sliceCoords_le (hP : P.Proper) :
+private lemma card_sliceCoords_le [DecidableEq G] (hP : P.Proper) :
     (#(sliceCoords P S) : ℝ) ≤ 2 ^ P.dim * #P.carrier := by
   rw [P.card_eq_prod_length hP]
   exact_mod_cast (card_le_card_of_injOn _ (fun _ hv ↦ mem_preimage.1 hv)
@@ -138,20 +138,7 @@ private lemma isCompact_sliceBody : IsCompact (sliceBody P S) := by
     ((BoxLattice.isClosed_realBox _).preimage (LinearMap.continuous_of_finiteDimensional _))
     (hK.isBounded_preimage (BoxLattice.isBounded_realBox _))
 
-variable {P S}
-
-/-- If $S$ lies in the symmetric box of $P$, then the span of $S$ lies in every coordinate
-hyperplane along which $P$ has length $1$. -/
-private lemma apply_eq_zero_of_mem_integerGeneratedSubspace (hS : S ⊆ symBox P)
-    {x : Fin P.dim → ℝ} (hx : x ∈ integerGeneratedSubspace S) {i : Fin P.dim}
-    (hi : P.length i = 1) : x i = 0 := by
-  refine (Submodule.span_le (p := LinearMap.ker (LinearMap.proj i : (Fin P.dim → ℝ) →ₗ[ℝ] ℝ))).2
-    ?_ hx
-  rintro _ ⟨v, hv, rfl⟩
-  simp [(by grind [abs_lt.1 (mem_symBox.1 (hS hv) i)] : v i = 0)]
-
-private lemma sliceBody_mem_nhds (hS : S ⊆ symBox P) :
-    sliceBody P S ∈ 𝓝 (0 : Fin (integerGeneratedRank S) → ℝ) := by
+private lemma sliceBody_mem_nhds : sliceBody P S ∈ 𝓝 (0 : Fin (integerGeneratedRank S) → ℝ) := by
   refine Filter.mem_of_superset ((LinearMap.continuous_of_finiteDimensional
     (realOfLatticeCoordinates S)).continuousAt.preimage_mem_nhds
       (by simpa using Metric.ball_mem_nhds (0 : Fin P.dim → ℝ) one_pos)) ?_
@@ -159,13 +146,11 @@ private lemma sliceBody_mem_nhds (hS : S ⊆ symBox P) :
   rw [Set.mem_preimage, mem_ball_zero_iff] at hx
   rw [sliceBody, Set.mem_preimage, BoxLattice.mem_realBox]
   intro i
-  by_cases hi : P.length i = 1
-  · rw [apply_eq_zero_of_mem_integerGeneratedSubspace hS (realOfLatticeCoordinates_mem S x) hi,
-      abs_zero]
-    exact Nat.cast_nonneg _
-  · linarith [norm_le_pi_norm (realOfLatticeCoordinates S x) i,
-      Real.norm_eq_abs (realOfLatticeCoordinates S x i),
-      (Nat.one_le_cast.2 (by grind [GAP.halfWidth, P.length_pos i]) : (1 : ℝ) ≤ P.halfWidth i)]
+  linarith [norm_le_pi_norm (realOfLatticeCoordinates S x) i,
+    Real.norm_eq_abs (realOfLatticeCoordinates S x i),
+    (Nat.one_le_cast.2 (P.halfWidth_pos i) : (1 : ℝ) ≤ P.halfWidth i)]
+
+variable {P S}
 
 private lemma span_sliceBody_inter_eq_top (hS : S ⊆ symBox P) :
     Submodule.span ℝ (sliceBody P S ∩
@@ -180,16 +165,18 @@ private lemma span_sliceBody_inter_eq_top (hS : S ⊆ symBox P) :
 
 /-! ## The progression of dimension `modelDim` -/
 
+variable [DecidableEq G]
+
 /-- Let $P$ be a proper progression of dimension $d$ and let $S$ lie in the symmetric box of $P$.
 The integer points of the slice of the box by the span of $S$, in lattice coordinates, lie in a
-progression of dimension `integerGeneratedRank S` and of size at most
+progression of dimension at most `integerGeneratedRank S` and of size at most
 $e^{2 (d + 2)^2 \log (d + 2)} |P|$. -/
 private lemma exists_gap_sliceCoords_subset (hP : P.Proper) (hS : S ⊆ symBox P) :
     ∃ R : GAP (Fin (integerGeneratedRank S) → ℤ), sliceCoords P S ⊆ R.carrier ∧
-      R.dim = integerGeneratedRank S ∧ (#R.carrier : ℝ) ≤
+      R.dim ≤ integerGeneratedRank S ∧ (#R.carrier : ℝ) ≤
         Real.exp (2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * #P.carrier := by
   obtain ⟨R, -, hR, hdim, hcard⟩ := exists_proper_gap_of_convex_body (convex_sliceBody P S)
-    (isCompact_sliceBody P S) (sliceBody_mem_nhds hS) (fun _ ↦ neg_mem_sliceBody P S)
+    (isCompact_sliceBody P S) (sliceBody_mem_nhds P S) (fun _ ↦ neg_mem_sliceBody P S)
     (span_sliceBody_inter_eq_top hS) fun _ ↦ mem_sliceCoords_iff P S
   refine ⟨R, hR, hdim, (Nat.cast_le.2 hcard).trans ?_⟩
   push_cast
@@ -210,20 +197,23 @@ private lemma subset_carrier_shift_map_of_sliceCoords_subset (hXP : X ⊆ P.carr
       x₀).carrier := by
   intro x hx
   have hmem := sub_coordinateMap_mem_saturatedSpan P x₀ hx
+  rw [GAP.carrier_shift, GAP.carrier_map]
   refine mem_image.2 ⟨x - x₀, mem_image.2 ⟨_, hR (latticeCoordinates_mem_sliceCoords P _ hmem
     (sub_coordinateMap_mem_symBox P x x₀)), ?_⟩, sub_add_cancel x x₀⟩
   rw [AddMonoidHom.comp_apply, ofLatticeCoordinates_latticeCoordinates hmem, map_sub,
     stepHom_coordinateMap P (hXP hx), stepHom_coordinateMap P (hXP hx₀), sub_sub_sub_cancel_right]
 
 /-- A finite subset $X$ of a proper progression $P$ of dimension $d$ lies in a progression of
-dimension `modelDim P X x₀` and of size at most $e^{2 (d + 2)^2 \log (d + 2)} |P|$. -/
-private lemma exists_gap_dim_eq_modelDim (hP : P.Proper) (hXP : X ⊆ P.carrier) (hx₀ : x₀ ∈ X) :
-    ∃ Q : GAP G, X ⊆ Q.carrier ∧ Q.dim = modelDim P X x₀ ∧ (#Q.carrier : ℝ) ≤
+dimension at most `modelDim P X x₀` and of size at most $e^{2 (d + 2)^2 \log (d + 2)} |P|$. -/
+private lemma exists_gap_dim_le_modelDim (hP : P.Proper) (hXP : X ⊆ P.carrier) (hx₀ : x₀ ∈ X) :
+    ∃ Q : GAP G, X ⊆ Q.carrier ∧ Q.dim ≤ modelDim P X x₀ ∧ (#Q.carrier : ℝ) ≤
       Real.exp (2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * #P.carrier := by
   obtain ⟨R, hR, hdim, hcard⟩ :=
     exists_gap_sliceCoords_subset hP (translatedCoords_subset_symBox P X x₀)
-  exact ⟨_, subset_carrier_shift_map_of_sliceCoords_subset hXP hx₀ hR, hdim,
-    (Nat.cast_le.2 (card_image_le.trans card_image_le)).trans hcard⟩
+  refine ⟨_, subset_carrier_shift_map_of_sliceCoords_subset hXP hx₀ hR,
+    (GAP.dim_map_le _ R).trans hdim, (Nat.cast_le.2 ?_).trans hcard⟩
+  rw [GAP.carrier_shift]
+  exact card_image_le.trans (GAP.card_map_le _ R)
 
 /-! ## The reduction -/
 
@@ -246,7 +236,8 @@ lemma properizationExponent_add_le_coordinateReductionExponent {d : ℝ} (hd : 0
     properizationExponent d + 2 * (d + 2) ^ 2 * Real.log (d + 2) ≤
       coordinateReductionExponent d := by
   rw [properizationExponent, coordinateReductionExponent]
-  linarith [two_mul_add_two_sq_mul_log_le hd]
+  linarith [two_mul_add_two_sq_mul_log_le hd,
+    mul_nonneg (pow_nonneg (by linarith : 0 ≤ d + 2) 3) (log_add_two_pos hd).le]
 
 /-- Let $P$ be a $2$-proper progression of dimension $d$ in an abelian group in which the
 multiples $n a$ with $n < N$ of every nonzero $a$ are distinct. Write $E$ for
@@ -257,23 +248,22 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul {N : ℕ} {X : Finset
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hX : X.Nonempty)
     (hP : P.TwoProper) (hXP : X ⊆ P.carrier)
     (hPN : Real.exp (coordinateReductionExponent P.dim) * #P.carrier ≤ N) :
-    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      Q.dim ≤ freimanDim X ∧
+    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
       (#Q.carrier : ℝ) ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier := by
   obtain ⟨x₀, hx₀⟩ := hX
-  obtain ⟨Q₀, hXQ₀, hdim, hcard⟩ := exists_gap_dim_eq_modelDim hP.proper hXP hx₀
+  obtain ⟨Q₀, hXQ₀, hdim, hcard⟩ := exists_gap_dim_le_modelDim hP.proper hXP hx₀
   have hQ₀P : Real.exp (properizationExponent Q₀.dim) * #Q₀.carrier ≤
       Real.exp (coordinateReductionExponent P.dim) * #P.carrier := by
     refine (mul_le_mul (Real.exp_le_exp.2 (properizationExponent_mono (Nat.cast_nonneg _)
-      (Nat.cast_le.2 (hdim.trans_le (integerGeneratedRank_le _))))) hcard (Nat.cast_nonneg _)
+      (Nat.cast_le.2 (hdim.trans (integerGeneratedRank_le _))))) hcard (Nat.cast_nonneg _)
       (Real.exp_nonneg _)).trans ?_
     rw [← mul_assoc, ← Real.exp_add]
     gcongr
     exact properizationExponent_add_le_coordinateReductionExponent (Nat.cast_nonneg _)
-  obtain ⟨Q, hQ, hQ₀Q, hlen, hQdim, hQcard⟩ :=
+  obtain ⟨Q, hQ, hQ₀Q, hQdim, hQcard⟩ :=
     exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul Q₀ hG (hQ₀P.trans hPN)
-  exact ⟨Q, hQ, hXQ₀.trans hQ₀Q, hlen,
-    hQdim.trans (hdim.trans_le (modelDim_le_freimanDim hP hXP hx₀)), hQcard.trans hQ₀P⟩
+  exact ⟨Q, hQ, hXQ₀.trans hQ₀Q, hQdim.trans (hdim.trans (modelDim_le_freimanDim hP hXP hx₀)),
+    hQcard.trans hQ₀P⟩
 
 /-- Let $q$ be a prime and let $P$ be a $2$-proper progression of dimension $d$ in `ZMod q`. Write
 $E$ for `coordinateReductionExponent` and suppose that $e^{E(d)} |P| \le q$. A nonempty set
@@ -282,8 +272,7 @@ size at most $e^{E(d)} |P|$. -/
 lemma exists_twoProperGAP_dim_le_freimanDim {q : ℕ} {X : Finset (ZMod q)} {P : GAP (ZMod q)}
     (hq : q.Prime) (hX : X.Nonempty) (hP : P.TwoProper) (hXP : X ⊆ P.carrier)
     (hPq : Real.exp (coordinateReductionExponent P.dim) * #P.carrier ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      Q.dim ≤ freimanDim X ∧
+    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
       (#Q.carrier : ℝ) ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier :=
   exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) hX hP hXP hPq
@@ -294,8 +283,7 @@ $X \subseteq P$ is contained in a $2$-proper progression of dimension at most `f
 size at most $e^{E(d)} |P|$. -/
 lemma exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree [IsAddTorsionFree G]
     {X : Finset G} {P : GAP G} (hX : X.Nonempty) (hP : P.TwoProper) (hXP : X ⊆ P.carrier) :
-    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (∀ i, 1 < Q.length i) ∧
-      Q.dim ≤ freimanDim X ∧
+    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
       (#Q.carrier : ℝ) ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier :=
   exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul
     (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _) hX hP hXP (Nat.le_ceil _)

@@ -5,7 +5,6 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import Mathlib.Algebra.Group.Pointwise.Finset.Basic
 public import ChangFreimanRuzsa.GapToolkit
 import Mathlib.Data.DFinsupp.WellFounded
 import Mathlib.Tactic.Abel
@@ -25,12 +24,12 @@ groups.
   $d_i$, a Freiman $2$-homomorphism $f$ is affine. It sends $x_0 + \sum_i w_i d_i$ to
   $f(x_0) + \sum_i w_i (f(x_0 + d_i) - f(x_0))$.
 * `GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso`: a Freiman $2$-isomorphism defined on
-  the carrier of a proper GAP maps it onto a proper GAP of the same dimension.
+  the carrier of a proper GAP maps it onto a proper GAP of at most the same dimension.
 * `card_add_le_of_isAddFreimanIso`: a Freiman $2$-isomorphism from $B$ onto $A$ satisfies
   $|B + B| \le |A + A|$.
 * `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`: a Freiman $8$-isomorphism from $A$
-  onto $B$ transports a proper GAP contained in $(B + B) - (B + B)$ to a proper GAP of the same
-  dimension and cardinality contained in $(A + A) - (A + A)$.
+  onto $B$ transports a proper GAP contained in $(B + B) - (B + B)$ to a proper GAP of at most the
+  same dimension and of the same cardinality contained in $(A + A) - (A + A)$.
 
 The order $8$ is needed because a relation $z_1 + z_2 = z_3 + z_4$ between elements of
 $(B + B) - (B + B)$ unfolds into a relation between eight elements of $B$ on each side.
@@ -63,9 +62,6 @@ lemma origin_add_linearCombination_mem (Q : GAP H) {w : Fin Q.dim → ℕ}
     (hw : ∀ i, w i < Q.length i) : Q.origin + Fintype.linearCombination ℕ Q.step w ∈ Q.carrier := by
   rw [Q.carrier_eq, mem_image]
   exact ⟨fun i ↦ ⟨w i, hw i⟩, mem_univ _, rfl⟩
-
-lemma origin_mem (Q : GAP H) : Q.origin ∈ Q.carrier := by
-  simpa using Q.origin_add_linearCombination_mem (w := 0) Q.length_pos
 
 omit [DecidableEq G] in
 /-- Adding the $i$-th step inside the carrier of a GAP changes the image under a Freiman
@@ -109,17 +105,16 @@ lemma image_gapMap_eq_image (Q : GAP H) {B : Set G} {f : H → G}
   exact (Q.apply_origin_add_linearCombination hf fun i ↦ (w i).isLt).symm
 
 /-- A Freiman $2$-isomorphism defined on the carrier of a proper GAP maps it onto a proper GAP of
-the same dimension and the same lengths.
+at most the same dimension, with the same lengths.
 
 The image is proper because it has $\prod_i \ell_i$ elements, so its coefficient map is
 injective. -/
 lemma exists_proper_carrier_eq_image_of_isAddFreimanIso {Q : GAP H} (hQ : Q.Proper) {B : Set G}
     {f : H → G} (hf : IsAddFreimanIso 2 (Q.carrier : Set H) B f) :
-    ∃ R : GAP G, R.Proper ∧ R.dim = Q.dim ∧ R.carrier = Q.carrier.image f := by
+    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.carrier = Q.carrier.image f := by
   have himage := Q.image_gapMap_eq_image hf.isAddFreimanHom
-  refine ⟨⟨Q.dim, Q.carrier.image f, f Q.origin, _, Q.length, Q.length_pos, himage.symm⟩, ?_, rfl,
-    rfl⟩
-  dsimp only [Proper]
+  refine ⟨ofSteps (f Q.origin) (fun i ↦ f (Q.origin + Q.step i) - f Q.origin) Q.length,
+    proper_ofSteps Q.length_pos ?_, dim_ofSteps_le, (carrier_ofSteps Q.length_pos).trans himage⟩
   rw [← Set.injOn_univ, ← coe_univ]
   apply injOn_of_card_image_eq
   rw [himage, card_image_of_injOn hf.bijOn.injOn, Q.card_eq_prod_length hQ, card_univ,
@@ -208,12 +203,12 @@ private lemma isAddFreimanIso_signedTransport {A : Finset G} {B : Finset H} {ψ 
   exact add_right_cancel ((h x hx y hy y hy y hy).1 (by rw [hxy]))
 
 /-- A Freiman $8$-isomorphism from $A$ onto $B$ transports a proper progression contained in
-$(B + B) - (B + B)$ to a proper progression of the same dimension and cardinality contained in
-$(A + A) - (A + A)$. -/
+$(B + B) - (B + B)$ to a proper progression of at most the same dimension and of the same
+cardinality contained in $(A + A) - (A + A)$. -/
 lemma exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso {A : Finset G} {B : Finset H}
     {φ : G → H} (hφ : IsAddFreimanIso 8 (A : Set G) (B : Set H) φ) {Q : GAP H} (hQ : Q.Proper)
     (hQB : Q.carrier ⊆ (B + B) - (B + B)) :
-    ∃ R : GAP G, R.Proper ∧ R.dim = Q.dim ∧ R.carrier.card = Q.carrier.card ∧
+    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.carrier.card = Q.carrier.card ∧
       R.carrier ⊆ (A + A) - (A + A) := by
   have hf := isAddFreimanIso_signedTransport hφ.invFunOn (coe_subset.2 hQB)
   obtain ⟨R, hR, hRdim, hRQ⟩ := GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso hQ hf

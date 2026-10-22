@@ -11,7 +11,8 @@ public import ChangFreimanRuzsa.ExplicitBounds
 # Chang's theorem
 
 The statements of `Challenge.lean`, which are the results of the library with the same names
-without the prime. The definitions `gapMap`, `GAP` and `GAP.TwoProper` are those of the library.
+without the prime. The definitions `GAP`, `GAP.eval`, `GAP.carrier`, `GAP.dim`, `GAP.Proper`, the
+sum of two progressions and `GAP.TwoProper` are those of the library.
 -/
 
 public section

@@ -31,7 +31,7 @@ gauge, and $v$ is added as a new vector whose half-width covers the multiples of
   $A_n$.
 * `exists_proper_gap_of_convex_body`: the integer points of a compact symmetric convex
   neighbourhood of $0$ in $\mathbb{R}^s$ whose integer points span $\mathbb{R}^s$ lie in a proper
-  GAP of dimension $s$ with at most `latticeBoxFactor s` times as many elements.
+  GAP of dimension at most $s$ with at most `latticeBoxFactor s` times as many elements.
 -/
 
 public section
@@ -209,13 +209,13 @@ lemma exists_linearIndependent_mem_intBox_gauge_le {n : ℕ} {E : Type u} [Norme
 
 /-- Let $K \subseteq \mathbb{R}^s$ be a compact symmetric convex neighbourhood of $0$ whose integer
 points span $\mathbb{R}^s$, and let $D$ be the set of integer points of $K$. Then $D$ lies in a
-proper GAP of dimension $s$ with at most `latticeBoxFactor s` times as many elements. -/
+proper GAP of dimension at most $s$ with at most `latticeBoxFactor s` times as many elements. -/
 lemma exists_proper_gap_of_convex_body {s : ℕ} {K : Set (Fin s → ℝ)} (hconv : Convex ℝ K)
     (hcompact : IsCompact K) (hK₀ : K ∈ 𝓝 0) (hsymm : ∀ x ∈ K, -x ∈ K)
     (hspan : Submodule.span ℝ (K ∩
       ((⊤ : AddSubgroup (Fin s → ℤ)).map intVectorToReal : Set (Fin s → ℝ))) = ⊤)
     {D : Finset (Fin s → ℤ)} (hD : ∀ v, v ∈ D ↔ intVectorToReal v ∈ K) :
-    ∃ Q : GAP (Fin s → ℤ), Q.Proper ∧ D ⊆ Q.carrier ∧ Q.dim = s ∧
+    ∃ Q : GAP (Fin s → ℤ), Q.Proper ∧ D ⊆ Q.carrier ∧ Q.dim ≤ s ∧
       Q.carrier.card ≤ latticeBoxFactor s * D.card := by
   have := BoxLattice.discreteTopology_map (⊤ : AddSubgroup (Fin s → ℤ))
   obtain ⟨b, m, hbL, hb, hcover, hgauge⟩ :=

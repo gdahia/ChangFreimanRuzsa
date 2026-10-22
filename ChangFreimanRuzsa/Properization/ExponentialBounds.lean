@@ -19,8 +19,8 @@ writing each factor as a power of $d + 2$.
 
 * `latticeBoxFactor_le_add_two_pow`: `latticeBoxFactor k` is at most $(d + 2)^{2 (d + 1)^2}$ for
   $k \le d$.
-* `latticeBoxFactor_mul_pow_le_exp`, `latticeBoxFactor_mul_two_pow_le_exp`,
-  `pow_mul_two_pow_le_exp` and `two_pow_le_exp`: the factors of one step are at most
+* `latticeBoxFactor_mul_pow_le_exp`, `latticeBoxFactor_mul_two_pow_le_exp` and
+  `two_mul_two_mul_add_one_pow_le_exp`: the factors of one step are at most
   $e^{2 (d + 2)^2 \log (d + 2)}$.
 * `mul_pow_three_mul_log_add_le`: for $e < d$,
   $A (e + 2)^3 \log (e + 2) + A (d + 2)^2 \log (d + 2) \le A (d + 2)^3 \log (d + 2)$.
@@ -59,19 +59,13 @@ lemma latticeBoxFactor_le_add_two_pow {k d : ℕ} (hkd : k ≤ d) :
     ((Nat.pow_le_pow_left (by nlinarith : 4 * k + 1 ≤ (d + 2) ^ 2) _).trans
       (Nat.pow_le_pow_right (by positivity) (by nlinarith : (k + 2) * k ≤ (d + 1) ^ 2)))
 
-/-- $2^d \le e^{(d + 2)^2 \log (d + 2)}$. -/
-lemma two_pow_le_exp (d : ℕ) :
-    (2 : ℝ) ^ d ≤ Real.exp (((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) :=
-  (pow_le_pow_left₀ zero_le_two (by linarith [d.cast_nonneg (α := ℝ)]) d).trans
-    (add_two_pow_le_exp_mul_log (by nlinarith))
-
-/-- For $r \le d$, the factor `latticeBoxFactor (d - r)` $\cdot ((2r + 4)(2(3r + 1) + 1))^d$ of one
+/-- For $r \le d$, the factor `latticeBoxFactor (d - r)` $\cdot ((2r + 4)(2(2r + 1) + 1))^d$ of one
 quotient step is at most $e^{2 (d + 2)^2 \log (d + 2)}$. -/
 lemma latticeBoxFactor_mul_pow_le_exp {r d : ℕ} (hrd : r ≤ d) :
-    (latticeBoxFactor (d - r) : ℝ) * ((2 * (r : ℝ) + 4) * (2 * (3 * (r : ℝ) + 1) + 1)) ^ d ≤
+    (latticeBoxFactor (d - r) : ℝ) * ((2 * (r : ℝ) + 4) * (2 * (2 * (r : ℝ) + 1) + 1)) ^ d ≤
       Real.exp (2 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) := by
   have hr : (r : ℝ) ≤ d := Nat.cast_le.mpr hrd
-  calc (latticeBoxFactor (d - r) : ℝ) * ((2 * (r : ℝ) + 4) * (2 * (3 * (r : ℝ) + 1) + 1)) ^ d
+  calc (latticeBoxFactor (d - r) : ℝ) * ((2 * (r : ℝ) + 4) * (2 * (2 * (r : ℝ) + 1) + 1)) ^ d
       ≤ ((d : ℝ) + 2) ^ (2 * (d + 1) ^ 2) * (((d : ℝ) + 2) ^ 4) ^ d := by
         gcongr
         · exact_mod_cast latticeBoxFactor_le_add_two_pow (Nat.sub_le d r)
@@ -95,14 +89,11 @@ lemma latticeBoxFactor_mul_two_pow_le_exp {k d : ℕ} (hkd : k ≤ d) :
         rw [← pow_add]
         exact add_two_pow_le_exp_mul_log (by push_cast; nlinarith)
 
-/-- $(6d + 1)^d \cdot 2^d \le e^{(d + 2)^2 \log (d + 2)}$. -/
-lemma pow_mul_two_pow_le_exp (d : ℕ) :
-    (2 * (3 * (d : ℝ)) + 1) ^ d * (2 : ℝ) ^ d ≤
-      Real.exp (((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) := by
-  rw [← mul_pow]
+/-- $(4d + 1)^d \le e^{(d + 2)^2 \log (d + 2)}$. -/
+lemma two_mul_two_mul_add_one_pow_le_exp (d : ℕ) :
+    (2 * (2 * (d : ℝ)) + 1) ^ d ≤ Real.exp (((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) := by
   refine (pow_le_pow_left₀ (by positivity)
-    (by nlinarith [pow_nonneg (Nat.cast_nonneg (α := ℝ) d) 3] :
-      (2 * (3 * (d : ℝ)) + 1) * 2 ≤ ((d : ℝ) + 2) ^ 3) d).trans ?_
+    (by nlinarith : 2 * (2 * (d : ℝ)) + 1 ≤ ((d : ℝ) + 2) ^ 2) d).trans ?_
   rw [← pow_mul]
   exact add_two_pow_le_exp_mul_log (by push_cast; nlinarith)
 

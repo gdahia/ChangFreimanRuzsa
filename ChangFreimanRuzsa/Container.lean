@@ -250,7 +250,7 @@ lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (Ad
     ring
   obtain ⟨Q, hQ, hdim, hsub, hcard⟩ :=
     exists_proper_gap_chordSet Δ hε (inv_le_one_of_one_le₀ (by linarith))
-  refine ⟨Q, hQ, hdim.trans_le hΔ, hsub, ?_⟩
+  refine ⟨Q, hQ, hdim.trans hΔ, hsub, ?_⟩
   rw [hε', inv_pow, ← div_eq_mul_inv, div_le_iff₀ (by positivity)] at hcard
   refine hcard.trans ?_
   rw [mul_right_comm, bohrLoss]
@@ -283,7 +283,7 @@ lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X 
   obtain ⟨Q₁, hQ₁, hQ₁dim, hQ₁card, hQ₁sub⟩ :=
     exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso hφ hQ
       (coe_subset.1 (hQsub.trans hchord))
-  refine ⟨X₁, Q₁, hX₁X, hX₁, hQ₁, by exact_mod_cast hQ₁dim.trans_le hQdim,
+  refine ⟨X₁, Q₁, hX₁X, hX₁, hQ₁, by exact_mod_cast hQ₁dim.trans hQdim,
     hQ₁sub.trans (by gcongr), ?_⟩
   rw [hQ₁card]
   linarith
@@ -410,21 +410,30 @@ lemma sub_sub_add_subset_packingContainer {Q : GAP G} {l : List G} {S : Finset G
   add_subset_consBinaryList_toList (sub_subset_difference_of_subset
     (sub_subset_difference_of_subset (hS.trans (Q.add_listSubsetSum_subset_consBinaryList l)))) W
 
-lemma one_lt_length_packingContainer (Q : GAP G) (l : List G) (W : Finset G)
-    (i : Fin (Q.packingContainer l W).dim) : 1 < (Q.packingContainer l W).length i :=
-  one_lt_length_consBinaryList (one_lt_length_difference (Q.consBinaryList l).difference) _ i
+omit [DecidableEq G] in
+lemma dim_packingContainer_le (Q : GAP G) (l : List G) (W : Finset G) :
+    (Q.packingContainer l W).dim ≤ Q.dim + l.length + #W := by
+  refine (dim_consBinaryList_le _ _).trans ?_
+  rw [length_toList]
+  exact Nat.add_le_add_right ((dim_difference_le _).trans
+    ((dim_difference_le _).trans (dim_consBinaryList_le _ _))) _
 
-lemma dim_packingContainer (Q : GAP G) (l : List G) (W : Finset G) :
-    (Q.packingContainer l W).dim = Q.dim + l.length + #W := by
-  simp [packingContainer, dim_consBinaryList]
-
-lemma card_packingContainer_le (Q : GAP G) (l : List G) (W : Finset G) :
-    #(Q.packingContainer l W).carrier ≤
-      2 ^ (#W + 2 * (Q.dim + l.length) + l.length) * Q.boxVolume := by
-  refine (card_consBinaryList_le _ _).trans_eq ?_
-  rw [length_toList, boxVolume_difference, boxVolume_difference, dim_difference,
-    boxVolume_consBinaryList, dim_consBinaryList]
-  ring
+omit [DecidableEq G] in
+lemma size_packingContainer_le (Q : GAP G) (l : List G) (W : Finset G) :
+    (Q.packingContainer l W).size ≤
+      2 ^ (#W + 2 * (Q.dim + l.length) + l.length) * Q.size := by
+  rw [(by ring : 2 ^ (#W + 2 * (Q.dim + l.length) + l.length) * Q.size =
+    2 ^ #W * (2 ^ (Q.dim + l.length) * (2 ^ (Q.dim + l.length) * (2 ^ l.length * Q.size))))]
+  refine (size_consBinaryList_le _ _).trans ?_
+  rw [length_toList]
+  gcongr
+  refine (size_difference_le _).trans ?_
+  gcongr
+  · exact (dim_difference_le _).trans (dim_consBinaryList_le _ _)
+  refine (size_difference_le _).trans ?_
+  gcongr
+  · exact dim_consBinaryList_le _ _
+  exact size_consBinaryList_le _ _
 
 end GAP
 
@@ -454,8 +463,8 @@ private lemma two_pow_mul_le_exp_containerExponent_mul {κ x y : ℝ} {a b n : �
 /-- Let $X$ be a nonempty finite subset of an abelian group with $|X + X| \le \kappa |X|$. Given a
 subset $X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a proper progression $Q_1 \subseteq 2X - 2X$
 with the bounds of `exists_proper_gap_zmod_subset_add_sub_add_card_le`, the set $X$ lies in a
-progression with all lengths at least $2$, of dimension at most $E$ and of size at most
-$e^{E} |X|$, where $E$ is `containerExponent κ`. The group may be infinite. -/
+progression of dimension at most $E$ and of size at most $e^{E} |X|$, where $E$ is
+`containerExponent κ`. The group may be infinite. -/
 lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
@@ -464,7 +473,6 @@ lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     (hQlow : (X.card : ℝ) ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card) :
     ∃ P : GAP G,
       X ⊆ P.carrier ∧
-        (∀ i, 1 < P.length i) ∧
         ((P.dim : ℝ) ≤ containerExponent κ) ∧
         (P.carrier.card : ℝ) ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨l, F, hl, hlen, hQ₁X, hF, hcover⟩ := exists_length_le_iterationBound_subset_add_sub
@@ -481,24 +489,22 @@ lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     linarith [mul_le_mul_of_nonneg_left hlen (Nat.cast_nonneg (α := ℝ) (translateCount κ)),
       (by exact_mod_cast hF : (#F : ℝ) ≤ translateCount κ)]
   refine ⟨Q₁.packingContainer (l.flatMap Finset.toList ++ F.toList) W,
-    hXW.trans (GAP.sub_sub_add_subset_packingContainer ?_ W),
-    GAP.one_lt_length_packingContainer _ _ _, ?_, ?_⟩
+    hXW.trans (GAP.sub_sub_add_subset_packingContainer ?_ W), ?_, ?_⟩
   · rw [listSubsetSum_append, ← add_assoc]
     exact add_subset_add_right (add_subset_add_left (sum_subset_listSubsetSum_flatMap_toList l))
-  · rw [GAP.dim_packingContainer]
+  · refine (Nat.cast_le.2 (GAP.dim_packingContainer_le _ _ _)).trans ?_
     push_cast
     linarith [mul_add_bohrGAPDim_add_le_containerExponent hκ]
-  · refine (Nat.cast_le.2 (Q₁.card_packingContainer_le _ W)).trans ?_
-    rw [GAP.boxVolume, ← Q₁.card_eq_prod_length hQ₁proper]
+  · refine (Nat.cast_le.2 ((GAP.card_le_size _).trans (Q₁.size_packingContainer_le _ W))).trans ?_
+    rw [← GAP.card_eq_size hQ₁proper]
     push_cast
     exact two_pow_mul_le_exp_containerExponent_mul hκ hW hQ₁dimle hlength (by positivity) hQ₁X
 
 end Packing
 
 /-- Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$
-and $|X| \ge 256 d$, where $d$ is `bohrGAPDim κ`. Then $X$ lies in a GAP with all lengths at
-least $2$, of dimension at most $E$ and of size at most $e^{E} |X|$, where $E$ is
-`containerExponent κ`.
+and $|X| \ge 256 d$, where $d$ is `bohrGAPDim κ`. Then $X$ lies in a GAP of dimension at most $E$
+and of size at most $e^{E} |X|$, where $E$ is `containerExponent κ`.
 
 No upper bound on $|X|$ in terms of $q$ is needed, because the Fourier-analytic steps take place in
 $\mathbb{Z}/m\mathbb{Z}$ with $m \le \kappa^{16} |X|$. The lemma
@@ -510,7 +516,6 @@ lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZM
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ P : GAP (ZMod q),
       X ⊆ P.carrier ∧
-        (∀ i, 1 < P.length i) ∧
         ((P.dim : ℝ) ≤ containerExponent κ) ∧
         (P.carrier.card : ℝ) ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=

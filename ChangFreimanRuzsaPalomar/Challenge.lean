@@ -10,13 +10,13 @@ public import Mathlib
 /-!
 # Chang's theorem
 
-Chang's polynomial form of Freiman's theorem, with the $2$-proper progression of Green and Tao, for
-finite sets of integers and for subsets of `ZMod q` with $q$ prime: a set with small doubling lies
-in a $2$-proper generalized arithmetic progression of comparable size.
+Chang's polynomial form of Freiman's theorem for finite sets of integers and for subsets of
+`ZMod q` with $q$ prime: a set with small doubling lies in a $2$-proper generalized arithmetic
+progression of comparable size.
 
-A generalized arithmetic progression of dimension $d$ consists of the points
-$a + \sum_i w_i s_i$ with $0 \le w_i < \ell_i$ for each $i < d$. It is $2$-proper when the points
-$2a + \sum_i w_i s_i$ with $0 \le w_i < 2 \ell_i$ are distinct.
+A generalized arithmetic progression has an origin $x_0$ and a finitely supported bound $b$, and
+its points are $x_0 + \sum_v c_v v$ with $c \le b$. It is $2$-proper when $P + P$ is proper, a
+weaker condition than the $2$-properness of Green and Tao.
 
 The proofs are in `Solution.lean`.
 -/
@@ -28,30 +28,45 @@ open scoped Pointwise
 
 namespace ChangFreimanRuzsa
 
-/-- The point `origin + ∑ i, w i • step i`. -/
-def gapMap {G : Type*} [AddCommMonoid G] {d : ℕ} (origin : G) (step : Fin d → G)
-    (length : Fin d → ℕ) (w : (i : Fin d) → Fin (length i)) : G := origin + ∑ i, (w i : ℕ) • step i
+noncomputable section
 
 /-- A generalized arithmetic progression, not necessarily proper: the set of the points
-`origin + ∑ i, w i • step i` with `w i < length i`. -/
-structure GAP (G : Type*) [DecidableEq G] [AddCommMonoid G] where
-  /-- The dimension. -/
-  dim : ℕ
-  /-- The set of points. -/
-  carrier : Finset G
+`origin + ∑ v, c v • v` with `c ≤ bound`. -/
+structure GAP (G : Type*) [AddCommMonoid G] where
   /-- The base point. -/
   origin : G
-  /-- The steps. -/
-  step : Fin dim → G
-  /-- The side lengths. -/
-  length : Fin dim → ℕ
-  length_pos : ∀ i, 0 < length i
-  carrier_eq : carrier = Finset.univ.image (gapMap origin step length)
+  /-- The bound on the coefficient of each step. -/
+  bound : G →₀ ℕ
 
-/-- A progression is `2`-proper if the points of the progression with doubled origin and doubled
-lengths are distinct. -/
-def GAP.TwoProper {G : Type*} [DecidableEq G] [AddCommMonoid G] (P : GAP G) : Prop :=
-  Function.Injective (gapMap (2 • P.origin) P.step (fun i ↦ 2 * P.length i))
+namespace GAP
+
+variable {G : Type*} [AddCommMonoid G]
+
+/-- The point `origin + ∑ v, c v • v`. -/
+def eval (P : GAP G) (c : G →₀ ℕ) : G := P.origin + c.sum fun v n ↦ n • v
+
+/-- The set of points of a progression. -/
+def carrier [DecidableEq G] (P : GAP G) : Finset G := (Finset.Iic P.bound).image P.eval
+
+/-- The dimension of a progression: the number of its steps. -/
+def dim (P : GAP G) : ℕ := P.bound.support.card
+
+/-- A progression is proper if the points `origin + ∑ v, c v • v` with `c ≤ bound` are
+distinct. -/
+def Proper (P : GAP G) : Prop := Set.InjOn P.eval (Set.Iic P.bound)
+
+/-- The sum of two progressions adds the origins and the bounds. -/
+instance : Add (GAP G) where
+  add P Q := ⟨P.origin + Q.origin, P.bound + Q.bound⟩
+
+/-- A progression is `2`-proper if the progression `P + P` is proper. Green and Tao ask instead
+that the points `2 • origin + ∑ i, w i • s i` with `w i < 2 * ℓ i` be distinct, for the steps
+`s i` and the lengths `ℓ i`, which is a stronger condition. -/
+def TwoProper (P : GAP G) : Prop := (P + P).Proper
+
+end GAP
+
+end
 
 /-- **Chang's theorem** for sets of integers. A finite nonempty set $X$ of integers with
 $|X + X| \le \kappa |X|$, where $\kappa \ge 2$, is contained in a $2$-proper generalized
