@@ -11,12 +11,12 @@ public import Mathlib
 # Chang's theorem
 
 Chang's polynomial form of Freiman's theorem for finite sets of integers and for subsets of
-`ZMod q` with $q$ prime: a set with small doubling lies in a $2$-proper generalized arithmetic
+`ZMod q` with `q` prime: a set with small doubling lies in a `2`-proper generalized arithmetic
 progression of comparable size.
 
-A generalized arithmetic progression has an origin $x_0$ and a finitely supported bound $b$, and
-its points are $x_0 + \sum_v c_v v$ with $c \le b$. It is $2$-proper when $P + P$ is proper, a
-weaker condition than the $2$-properness of Green and Tao.
+A generalized arithmetic progression has an `origin` and a finitely supported `bound`, and its
+points are `origin + ∑ v, c v • v` with `c ≤ bound`. It is `2`-proper when `P + P` is proper, a
+weaker condition than the `2`-properness of Green and Tao.
 
 The proofs are in `Solution.lean`.
 -/
@@ -68,20 +68,20 @@ end GAP
 
 end
 
-/-- **Chang's theorem** for sets of integers. A finite nonempty set $X$ of integers with
-$|X + X| \le \kappa |X|$, where $\kappa \ge 2$, is contained in a $2$-proper generalized
-arithmetic progression of dimension at most $2\kappa - 1$ with at most
-$\exp(10^{32} \kappa^7) |X|$ points. -/
+/-- **Chang's theorem** for sets of integers. A finite nonempty set `X` of integers with
+`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, is contained in a `2`-proper generalized arithmetic
+progression of dimension at most `2 * κ - 1` with at most `Real.exp (10 ^ 32 * κ ^ 7) * #X`
+points. -/
 theorem exists_twoProperGAP_subset_dim_le_card_le' {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ 2 * κ - 1 ∧
       (#P.carrier : ℝ) ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X :=
   sorry
 
-/-- **Chang's theorem** in `ZMod q` for a prime $q$. A set $X$ with $|X + X| \le \kappa |X|$,
-where $\kappa \ge 2$, with at least $7 \cdot 10^7 \kappa^2$ elements and with
-$\exp(10^{30} \kappa^7) |X| \le q$, is contained in a $2$-proper generalized arithmetic
-progression of dimension at most $2\kappa - 1$ with at most $\exp(10^{30} \kappa^7) |X|$
+/-- **Chang's theorem** in `ZMod q` for a prime `q`. A set `X` with `#(X + X) ≤ κ * #X`, where
+`2 ≤ κ`, with at least `7 * 10 ^ 7 * κ ^ 2` elements and with
+`Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q`, is contained in a `2`-proper generalized arithmetic
+progression of dimension at most `2 * κ - 1` with at most `Real.exp (10 ^ 30 * κ ^ 7) * #X`
 points. -/
 theorem exists_twoProperGAP_zmod_subset_dim_le_card_le' {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)

@@ -17,11 +17,11 @@ import ChangFreimanRuzsa.Properization.SaturatedSpan
 
 /-! # Quotients of the coefficient lattice by a saturated span
 
-The properization of a GAP divides the coefficient lattice $\mathbb{Z}^d$ by the saturated span of
-its short relations. Every Smith coefficient of a saturated submodule is nonzero, so a Smith normal
-form adapted to it splits a basis of $\mathbb{Z}^d$ into a basis of the submodule and free
-coordinates on the quotient. The base change of that basis to $\mathbb{R}$ gives the real-linear
-projection that extends these coordinates.
+The properization of a GAP divides the coefficient lattice `ℤ ^ d` by the saturated span of its
+short relations. Every Smith coefficient of a saturated submodule is nonzero, so a Smith normal
+form adapted to it splits a basis of `ℤ ^ d` into a basis of the submodule and free coordinates on
+the quotient. The base change of that basis to `ℝ` gives the real-linear projection that extends
+these coordinates.
 
 ## Main definitions
 
@@ -90,7 +90,7 @@ lemma span_image_realBox_inter_standardLattice_eq_top {d s : ℕ} {m : Fin d →
     simp [Pi.basisFun_apply, Pi.single_apply]
 
 /-- The integer points `D` of the image of a positive coordinate box under a surjective integral
-projection $\pi : \mathbb{R}^d \to \mathbb{R}^s$ lie in a proper GAP of dimension at most $s$ with
+projection `π : ℝ ^ d →ₗ[ℝ] ℝ ^ s` lie in a proper GAP of dimension at most `s` with
 at most `latticeBoxFactor s * D.card` elements. -/
 lemma exists_proper_gap_image_realBox {d s : ℕ} {m : Fin d → ℕ}
     (hm : ∀ i, 0 < m i) {π : (Fin d → ℝ) →ₗ[ℝ] (Fin s → ℝ)} {πz : (Fin d → ℤ) →+ (Fin s → ℤ)}
@@ -215,7 +215,7 @@ lemma smithRealQuotientMap_surjective : Function.Surjective (smithRealQuotientMa
   ext i
   simp [smithRealQuotientMap, Finsupp.single_apply, Subtype.val_inj]
 
-/-- The kernel of the real quotient map is the real span of $S$. -/
+/-- The kernel of the real quotient map is the real span of `S`. -/
 lemma smithRealQuotientMap_eq_zero_iff (x : Fin d → ℝ) :
     smithRealQuotientMap snf x = 0 ↔ x ∈ integerGeneratedSubspace S := by
   constructor

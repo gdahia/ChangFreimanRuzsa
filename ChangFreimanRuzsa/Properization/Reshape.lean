@@ -15,16 +15,16 @@ This file bounds the size of the progression obtained by enlarging all lengths b
 
 ## Main definitions
 
-* `GAP.scaleLengths`: the GAP whose lengths are those of a given one multiplied by $k$.
-* `GAP.boundedStepImage`: the image under the step homomorphism of the $m$-dilate of the symmetric
+* `GAP.scaleLengths`: the GAP whose lengths are those of a given one multiplied by `k`.
+* `GAP.boundedStepImage`: the image under the step homomorphism of the `m`-dilate of the symmetric
   coefficient box.
 
 ## Main statements
 
-* `GAP.card_scaleLengths_le`: multiplying the lengths of a progression $P$ of dimension $d$ by $k$
-  gives at most $k^d |P|$ elements.
-* `GAP.card_boundedStepImage_le`: the image of the $m$-dilate of the symmetric coefficient box has
-  at most $(2m + 1)^d |P|$ elements.
+* `GAP.card_scaleLengths_le`: multiplying the lengths of a progression `P` by `k` gives at most
+  `k ^ P.dim * #P.carrier` elements.
+* `GAP.card_boundedStepImage_le`: the image of the `m`-dilate of the symmetric coefficient box has
+  at most `(2 * m + 1) ^ P.dim * #P.carrier` elements.
 -/
 
 @[expose] public section
@@ -43,8 +43,8 @@ lemma carrier_scaleLengths (P : GAP G) {k : ℕ} (hk : 0 < k) :
     (P.scaleLengths k).carrier = Finset.univ.image (gapMap P.origin P.step (k * P.length ·)) :=
   carrier_ofSteps fun i ↦ Nat.mul_pos hk (P.length_pos i)
 
-/-- Multiplying all lengths of a progression $P$ of dimension $d$ by $k$ gives a progression covered
-by $k^d$ translates of $P$. -/
+/-- Multiplying all lengths of a progression `P` by `k` gives a progression covered by
+`k ^ P.dim` translates of `P`. -/
 lemma card_scaleLengths_le (P : GAP G) {k : ℕ} (hk : 0 < k) :
     (P.scaleLengths k).carrier.card ≤ k ^ P.dim * P.carrier.card := by
   have hsub : (P.scaleLengths k).carrier ⊆ (Finset.univ ×ˢ P.carrier).image
@@ -65,9 +65,10 @@ lemma card_scaleLengths_le (P : GAP G) {k : ℕ} (hk : 0 < k) :
 noncomputable def boundedStepImage (P : GAP G) (m : ℕ) : Finset G :=
   (intBox fun i ↦ m * (P.length i - 1)).image (stepHom P)
 
-/-- The image of the $m$-dilate of the symmetric coefficient box of a progression $P$ of dimension
-$d$ has at most $(2m + 1)^d |P|$ elements: its translate by
-$a + \sum_i m (L_i - 1) s_i$ lies in the progression with lengths $(2m + 1) L_i$. -/
+/-- The image of the `m`-dilate of the symmetric coefficient box of a progression `P` has at most
+`(2 * m + 1) ^ P.dim * #P.carrier` elements: its translate by
+`P.origin + ∑ i, (m * (P.length i - 1)) • P.step i` lies in the progression with lengths
+`(2 * m + 1) * P.length i`. -/
 lemma card_boundedStepImage_le (P : GAP G) (m : ℕ) :
     (P.boundedStepImage m).card ≤ (2 * m + 1) ^ P.dim * P.carrier.card := by
   refine (Finset.card_le_card_of_injOn (P.origin + stepHom P (fun i ↦ m * (P.length i - 1 : ℤ)) + ·)

@@ -12,16 +12,16 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-! # Cardinality control for dilates of convex lattice sets
 
-Let $K \subseteq \mathbb{R}^s$ be a symmetric convex set containing $0$, and let $E$ be the set
-of integer points of $K$. Then every finite set of integer points of $n K$ has at most
-$(2n + 1)^s |E|$ elements.
+Let `K ⊆ ℝ ^ s` be a symmetric convex set containing `0`, and let `E` be the set of integer points
+of `K`. Then every finite set of integer points of `n • K` has at most `(2 * n + 1) ^ s * #E`
+elements.
 
-The proof reduces coordinates modulo $2n + 1$. If two integer points $x, y \in n K$ are congruent
-modulo $2n + 1$, then $(x - y) / (2n + 1)$ is an integer point of $K$.
+The proof reduces coordinates modulo `2 * n + 1`. If two integer points `x, y ∈ n • K` are
+congruent modulo `2 * n + 1`, then `(2 * n + 1)⁻¹ • (x - y)` is an integer point of `K`.
 
 ## Main statements
 
-* `card_le_pow_mul_card_of_mem_convex_dilate`: the bound $(2n + 1)^s |E|$.
+* `card_le_pow_mul_card_of_mem_convex_dilate`: the bound `(2 * n + 1) ^ s * #E`.
 -/
 
 public section
@@ -34,16 +34,16 @@ noncomputable section
 
 variable {s : ℕ}
 
-/-- The coordinatewise reduction of an integer vector modulo $N$. -/
+/-- The coordinatewise reduction of an integer vector modulo `N`. -/
 def residueVector (N : ℕ) (x : Fin s → ℤ) : Fin s → ZMod N :=
   fun i ↦ x i
 
-/-- The vector of the integer quotients $\lfloor (x_i - y_i) / N \rfloor$. -/
+/-- The vector of the integer quotients `(x i - y i) / N`. -/
 def quotientDifference (N : ℕ) (x y : Fin s → ℤ) : Fin s → ℤ :=
   fun i ↦ (x i - y i).ediv N
 
-/-- If $K$ is a symmetric convex set containing $0$ and $x, y \in nK$, then
-$(x - y) / (2n + 1) \in K$. -/
+/-- If `K` is a symmetric convex set containing `0` and `x, y ∈ n • K`, then
+`(2 * n + 1)⁻¹ • (x - y) ∈ K`. -/
 lemma inv_smul_sub_mem_of_mem_smul {K : Set (Fin s → ℝ)}
     (hconv : Convex ℝ K) (h0 : (0 : Fin s → ℝ) ∈ K)
     (hsymm : ∀ x ∈ K, -x ∈ K) {n : ℕ} {x y : Fin s → ℝ}
@@ -84,8 +84,8 @@ lemma intVectorToReal_quotientDifference {N : ℕ} (hN : N ≠ 0) {x y : Fin s �
   rw [inv_mul_eq_div, eq_div_iff (by positivity), mul_comm]
   exact_mod_cast congr_fun (natCast_mul_quotientDifference hxy) i
 
-/-- Let $K \subseteq \mathbb{R}^s$ be a symmetric convex set containing $0$ and let $E$ be the set
-of integer points of $K$. A finite set $T$ of integer points of $nK$ has at most $(2n + 1)^s |E|$
+/-- Let `K ⊆ ℝ ^ s` be a symmetric convex set containing `0` and let `E` be the set of integer
+points of `K`. A finite set `T` of integer points of `n • K` has at most `(2 * n + 1) ^ s * #E`
 elements. -/
 lemma card_le_pow_mul_card_of_mem_convex_dilate
     {E T : Finset (Fin s → ℤ)} {K : Set (Fin s → ℝ)}

@@ -14,13 +14,13 @@ import Mathlib.Data.Rat.Floor
 /-! # Geometry of numbers for the relation lattice of a progression
 
 This file contains the geometry of numbers used to make generalized arithmetic progressions proper.
-The ambient lattice is $\mathbb{Z}^d$, the convex body is a box, and the sublattice is the lattice
-of relations among the steps of a progression.
+The ambient lattice is `ℤ ^ d`, the convex body is a box, and the sublattice is the lattice of
+relations among the steps of a progression.
 
 ## Main definitions and statements
 
-- `intBox` and `natBox`: the symmetric and the nonnegative integer boxes, as intervals of
-  $\mathbb{Z}^d$ for the pointwise order, with their cardinalities.
+- `intBox` and `natBox`: the symmetric and the nonnegative integer boxes, as intervals of `ℤ ^ d`
+  for the pointwise order, with their cardinalities.
 - `card_mul_prod_le_of_separated`: the packing bound. A set of points of a box that are pairwise
   far apart is small.
 - `IsShort` and `HasIndependentShort`: a dilate of a box contains a vector, or a given number of
@@ -43,11 +43,11 @@ section Box
 
 variable {d : ℕ}
 
-/-- The symmetric box of the integer vectors $v$ with $|v_i| \le m_i$ for every $i$. -/
+/-- The symmetric box of the integer vectors `v` with `|v i| ≤ m i` for every `i`. -/
 def intBox (m : Fin d → ℕ) : Finset (Fin d → ℤ) :=
   Finset.Icc (fun i ↦ -(m i : ℤ)) fun i ↦ (m i : ℤ)
 
-/-- The nonnegative box of the integer vectors $v$ with $0 \le v_i \le m_i$ for every $i$. -/
+/-- The nonnegative box of the integer vectors `v` with `0 ≤ v i ≤ m i` for every `i`. -/
 def natBox (m : Fin d → ℕ) : Finset (Fin d → ℤ) :=
   Finset.Icc 0 fun i ↦ (m i : ℤ)
 
@@ -71,8 +71,8 @@ lemma card_natBox (m : Fin d → ℕ) : (natBox m).card = ∏ i, (m i + 1) := by
   congr with i
   simp
 
-/-- The difference of two points of the nonnegative box of half-widths $m$ lies in the symmetric
-box of half-widths $m$. -/
+/-- The difference of two points of the nonnegative box of half-widths `m` lies in the symmetric
+box of half-widths `m`. -/
 lemma sub_mem_intBox {m : Fin d → ℕ} {v w : Fin d → ℤ} (hv : v ∈ natBox m) (hw : w ∈ natBox m) :
     v - w ∈ intBox m := by
   rw [mem_natBox] at hv hw
@@ -81,8 +81,8 @@ lemma sub_mem_intBox {m : Fin d → ℕ} {v w : Fin d → ℤ} (hv : v ∈ natBo
   simp only [Pi.sub_apply, abs_le]
   grind [hv i, hw i]
 
-/-- The sum of a point of the symmetric box of half-widths $m$ and a point of the nonnegative box of
-half-widths $m'$ lies in the symmetric box of half-widths $m + m'$. -/
+/-- The sum of a point of the symmetric box of half-widths `m` and a point of the nonnegative box of
+half-widths `m'` lies in the symmetric box of half-widths `m + m'`. -/
 lemma add_mem_intBox {m m' : Fin d → ℕ} {v w : Fin d → ℤ} (hv : v ∈ intBox m)
     (hw : w ∈ natBox m') : v + w ∈ intBox fun i ↦ m i + m' i := by
   rw [mem_intBox] at hv ⊢
@@ -95,16 +95,16 @@ end Box
 
 /-! ## The packing bound
 
-A set $s$ of integer points that are pairwise far apart in the box metric is sparse: the
-translates of the nonnegative box of half-widths $m$ by the points of $s$ are disjoint, hence fit
+A set `s` of integer points that are pairwise far apart in the box metric is sparse: the
+translates of the nonnegative box of half-widths `m` by the points of `s` are disjoint, hence fit
 in an enlarged box. This is the counting form of the volume packing argument. -/
 
 section Packing
 
 variable {d : ℕ}
 
-/-- If any two distinct points of $s$ differ by more than $m_i$ in some coordinate $i$, then the
-translates of the nonnegative box of half-widths $m$ by the points of $s$ are disjoint. -/
+/-- If any two distinct points of `s` differ by more than `m i` in some coordinate `i`, then the
+translates of the nonnegative box of half-widths `m` by the points of `s` are disjoint. -/
 lemma injOn_add_of_separated {s : Finset (Fin d → ℤ)} {m : Fin d → ℕ}
     (hsep : ∀ u ∈ s, ∀ w ∈ s, u ≠ w → ∃ i, m i < |u i - w i|) :
     Set.InjOn (fun ((u, a) : (Fin d → ℤ) × (Fin d → ℤ)) ↦ u + a) ↑(s ×ˢ natBox m) := by
@@ -118,9 +118,9 @@ lemma injOn_add_of_separated {s : Finset (Fin d → ℤ)} {m : Fin d → ℕ}
       Pi.add_apply, Pi.sub_apply]
   simpa using hsum
 
-/-- The packing bound: if $s$ lies in the symmetric box of half-widths $M$ and any two distinct
-points of $s$ differ by more than $m_i$ in some coordinate $i$, then
-$|s| \prod_i (m_i + 1) \le \prod_i (2 (M_i + m_i) + 1)$. -/
+/-- The packing bound: if `s` lies in the symmetric box of half-widths `M` and any two distinct
+points of `s` differ by more than `m i` in some coordinate `i`, then
+`#s * ∏ i, (m i + 1) ≤ ∏ i, (2 * (M i + m i) + 1)`. -/
 lemma card_mul_prod_le_of_separated {s : Finset (Fin d → ℤ)} {m M : Fin d → ℕ}
     (hbox : s ⊆ intBox M) (hsep : ∀ u ∈ s, ∀ w ∈ s, u ≠ w → ∃ i, m i < |u i - w i|) :
     s.card * ∏ i, (m i + 1) ≤ ∏ i, (2 * (M i + m i) + 1) := by
@@ -134,26 +134,25 @@ end Packing
 
 /-! ## Short independent vectors
 
-`HasIndependentShort Λ L k t` says that the $t$-dilate of the box of half-widths $L$ contains $k$
-linearly independent vectors of a subgroup $\Lambda$ of $\mathbb{Z}^d$. Linear independence is
-taken over $\mathbb{Z}$, which for integer vectors is the same as linear independence over
-$\mathbb{R}$.
+`HasIndependentShort Λ L k t` says that the `t`-dilate of the box of half-widths `L` contains `k`
+linearly independent vectors of a subgroup `Λ` of `ℤ ^ d`. Linear independence is taken over `ℤ`,
+which for integer vectors is the same as linear independence over `ℝ`.
 
-The properization does not use the successive minima of $\Lambda$. The relation lattice of a
-progression in $\mathbb{Z}$ does not have full rank, so only the first few minima would be defined.
-The largest $k$ with `HasIndependentShort Λ L k t` for a fixed $t$ is defined for every $\Lambda$,
-and it is what `GAP.shortRelationRank` uses. -/
+The properization does not use the successive minima of `Λ`. The relation lattice of a
+progression in `ℤ` does not have full rank, so only the first few minima would be defined. The
+largest `k` with `HasIndependentShort Λ L k t` for a fixed `t` is defined for every `Λ`, and it is
+what `GAP.shortRelationRank` uses. -/
 
 section ShortVectors
 
 variable {d : ℕ}
 
-/-- `IsShort L t v` says that $|v_i| \le t L_i$ for every $i$, that is, $v$ lies in the $t$-dilate
-of the box of half-widths $L$. -/
+/-- `IsShort L t v` says that `|v i| ≤ t * L i` for every `i`, that is, `v` lies in the `t`-dilate
+of the box of half-widths `L`. -/
 def IsShort (L : Fin d → ℕ) (t : ℝ) (v : Fin d → ℤ) : Prop := ∀ i, |(v i : ℝ)| ≤ t * L i
 
-/-- `HasIndependentShort Λ L k t` says that the $t$-dilate of the box of half-widths $L$ contains
-$k$ linearly independent vectors of $\Lambda$. -/
+/-- `HasIndependentShort Λ L k t` says that the `t`-dilate of the box of half-widths `L` contains
+`k` linearly independent vectors of `Λ`. -/
 def HasIndependentShort (Λ : AddSubgroup (Fin d → ℤ)) (L : Fin d → ℕ) (k : ℕ) (t : ℝ) : Prop :=
   ∃ v : Fin k → (Fin d → ℤ), LinearIndependent ℤ v ∧ ∀ j, v j ∈ Λ ∧ IsShort L t (v j)
 

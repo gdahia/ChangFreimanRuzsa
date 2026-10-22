@@ -19,29 +19,28 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-! # Gauge bounds for lattice coefficient boxes
 
-Let $L$ be a subgroup of a real normed space $E$ and let $K \subseteq E$ be a symmetric convex
-neighbourhood of $0$ with gauge $g_K$. Consider linearly independent vectors
-$b_1, \dots, b_s \in L$ and half-widths $m_1, \dots, m_s \in \mathbb{N}$ such that every point of
-$K \cap L$ is $\sum_i c_i b_i$ with $c_i \in \mathbb{Z}$ and $|c_i| \le m_i$, and
-$m_i \, g_K(b_i) \le A$ for every $i$. Then every combination $\sum_i c_i b_i$ with
-$|c_i| \le m_i$ has gauge at most $s A$. For the lattice $\mathbb{Z}^s \subseteq \mathbb{R}^s$ and
-$A = a \in \mathbb{N}$, the coefficient box therefore maps into $s a K$, and the residue estimate
+Let `L` be a subgroup of a real normed space `E` and let `K ⊆ E` be a symmetric convex
+neighbourhood of `0`. Consider linearly independent vectors `b : Fin s → E` in `L` and half-widths
+`m : Fin s → ℕ` such that every point of `K ∩ L` is `∑ i, c i • b i` with `c ∈ intBox m`, and
+`m i * gauge K (b i) ≤ A` for every `i`. Then every combination `∑ i, c i • b i` with
+`c ∈ intBox m` has gauge at most `s * A`. For the lattice `ℤ ^ s ⊆ ℝ ^ s` and `A = a : ℕ`, the
+coefficient box therefore maps into `(s * a) • K`, and the residue estimate
 `card_le_pow_mul_card_of_mem_convex_dilate` bounds the size of the centered GAP of the box.
 
-The file also defines the gauge bounds $A_0 = 0$, $A_{s+1} = 1 + 4 s A_s$ of the shortest-vector
-induction and proves the elementary facts that the induction uses.
+The file also defines the gauge bounds `A 0 = 0`, `A (s + 1) = 1 + 4 * s * A s` of the
+shortest-vector induction and proves the elementary facts that the induction uses.
 
 ## Main definitions
 
-* `latticeBoxGaugeBound`: the gauge bounds $A_s$.
-* `latticeBoxFactor`: the factor $(2 s A_s + 1)^s$.
+* `latticeBoxGaugeBound`: the gauge bounds `A s`.
+* `latticeBoxFactor`: the factor `(2 * (s * A s) + 1) ^ s`.
 
 ## Main statements
 
 * `exists_mem_ne_zero_gauge_pos_forall_gauge_le`: a discrete subgroup has a nonzero vector of
   least gauge.
-* `exists_proper_gap_card_le_of_gauge_le`: the integer points $D$ of $K \subseteq \mathbb{R}^s$
-  lie in a proper GAP of dimension at most $s$ with at most $(2 s a + 1)^s |D|$ elements.
+* `exists_proper_gap_card_le_of_gauge_le`: the integer points `D` of `K ⊆ ℝ ^ s` lie in a proper
+  GAP of dimension at most `s` with at most `(2 * (s * a) + 1) ^ s * #D` elements.
 -/
 
 @[expose] public section
@@ -57,12 +56,13 @@ noncomputable section
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
   {s : ℕ} {K : Set E}
 
-/-- The gauge bounds $A_0 = 0$ and $A_{s+1} = 1 + 4 s A_s$ of the shortest-vector induction. -/
+/-- The gauge bounds `A 0 = 0` and `A (s + 1) = 1 + 4 * s * A s` of the shortest-vector
+induction. -/
 def latticeBoxGaugeBound : ℕ → ℕ
   | 0 => 0
   | s + 1 => 1 + 4 * s * latticeBoxGaugeBound s
 
-/-- The factor $(2 s A_s + 1)^s$, where $A_s$ is `latticeBoxGaugeBound s`. -/
+/-- The factor `(2 * (s * latticeBoxGaugeBound s) + 1) ^ s`. -/
 def latticeBoxFactor (s : ℕ) : ℕ :=
   (2 * (s * latticeBoxGaugeBound s) + 1) ^ s
 
@@ -85,8 +85,7 @@ lemma latticeBoxFactor_le_pow (s : ℕ) :
     Nat.mul_le_mul_left ((4 * s + 1) ^ s) (by nlinarith : 2 * s + 1 ≤ (4 * s + 1) ^ 2),
     (one_le_pow₀ (by grind) : 1 ≤ (4 * s + 1) ^ s)]
 
-/-- If $K \cap L$ spans $E$ and $\pi : E \to F$ is a surjective linear map, then
-$\pi(K) \cap \pi(L)$ spans $F$. -/
+/-- If `K ∩ L` spans `E` and `π : E →ₗ[ℝ] F` is surjective, then `π '' K ∩ L.map π` spans `F`. -/
 lemma span_inter_image_map_eq_top
     {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     {L : AddSubgroup E} {π : E →ₗ[ℝ] F} (hπ : Function.Surjective π)
@@ -99,8 +98,8 @@ lemma span_inter_image_map_eq_top
   rintro _ ⟨x, ⟨hxK, hxL⟩, rfl⟩
   exact ⟨⟨x, hxK, rfl⟩, AddSubgroup.mem_map_of_mem _ hxL⟩
 
-/-- If $K$ is a compact convex neighbourhood of $0$ and $K \cap L$ spans $E \ne 0$, then $L$ has
-a nonzero point $v$ of positive minimal gauge among the nonzero points of $L$. -/
+/-- If `K` is a compact convex neighbourhood of `0` and `K ∩ L` spans the nontrivial space `E`,
+then `L` has a nonzero point `v` of positive minimal gauge among the nonzero points of `L`. -/
 lemma exists_mem_ne_zero_gauge_pos_forall_gauge_le [FiniteDimensional ℝ E] [Nontrivial E]
     {L : AddSubgroup E} [DiscreteTopology L] (hconv : Convex ℝ K)
     (hcompact : IsCompact K) (hK₀ : K ∈ 𝓝 0)
@@ -114,8 +113,8 @@ lemma exists_mem_ne_zero_gauge_pos_forall_gauge_le [FiniteDimensional ℝ E] [No
   exact ⟨v, hvL, hv₀, (gauge_pos (absorbent_nhds_zero hK₀)
     ((NormedSpace.isVonNBounded_iff ℝ).mpr hcompact.isBounded)).mpr hv₀, hmin⟩
 
-/-- If $m_i \, g_K(b_i) \le A$ for every $i$, then every combination $\sum_i c_i b_i$ with
-$|c_i| \le m_i$ has gauge at most $s A$. -/
+/-- If `m i * gauge K (step i) ≤ A` for every `i`, then every combination `∑ i, c i • step i` with
+`c ∈ intBox m` has gauge at most `s * A`. -/
 lemma gauge_sum_intCast_smul_le_mul
     (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0) (hsymm : ∀ x ∈ K, -x ∈ K)
     {step : Fin s → E} {m : Fin s → ℕ} {A : ℝ}
@@ -136,8 +135,7 @@ lemma intVectorToReal_stepsHom (step : Fin s → (Fin s → ℤ)) (c : Fin s →
   congr with i : 1
   rw [map_zsmul, Int.cast_smul_eq_zsmul]
 
-/-- Integer vectors that are linearly independent over $\mathbb{R}$ are independent over
-$\mathbb{Z}$. -/
+/-- Integer vectors that are linearly independent over `ℝ` are independent over `ℤ`. -/
 lemma injective_stepsHom_of_linearIndependent {step : Fin s → (Fin s → ℤ)}
     (h : LinearIndependent ℝ fun i ↦ intVectorToReal (step i)) :
     Function.Injective (stepsHom step) := by
@@ -148,11 +146,11 @@ lemma injective_stepsHom_of_linearIndependent {step : Fin s → (Fin s → ℤ)}
   simpa [sub_eq_zero] using Fintype.linearIndependent_iff.mp h (fun j ↦ ((c j - c' j : ℤ) : ℝ))
     (by simpa [sub_smul, sub_eq_zero] using hreal) i
 
-/-- Let $K \subseteq \mathbb{R}^s$ be a compact symmetric convex neighbourhood of $0$ with integer
-points $D$. Let $b_1, \dots, b_s$ be linearly independent integer vectors and
-$m_1, \dots, m_s \in \mathbb{N}$ such that every integer point of $K$ is $\sum_i c_i b_i$ with
-$c_i \in \mathbb{Z}$, $|c_i| \le m_i$, and $m_i \, g_K(b_i) \le a$ for every $i$. Then $D$ lies in a
-proper GAP of dimension at most $s$ with at most $(2 s a + 1)^s |D|$ elements. -/
+/-- Let `K ⊆ ℝ ^ s` be a compact symmetric convex neighbourhood of `0` with integer points `D`.
+Let `b : Fin s → ℝ ^ s` be linearly independent integer vectors and `m : Fin s → ℕ` such that
+every integer point of `K` is `∑ i, c i • b i` with `c ∈ intBox m`, and `m i * gauge K (b i) ≤ a`
+for every `i`. Then `D` lies in a proper GAP of dimension at most `s` with at most
+`(2 * (s * a) + 1) ^ s * #D` elements. -/
 lemma exists_proper_gap_card_le_of_gauge_le {D : Finset (Fin s → ℤ)} {K : Set (Fin s → ℝ)}
     (hconv : Convex ℝ K) (hcompact : IsCompact K) (hK₀ : K ∈ 𝓝 0) (hsymm : ∀ x ∈ K, -x ∈ K)
     (hD : ∀ v, v ∈ D ↔ intVectorToReal v ∈ K) {a : ℕ} {b : Fin s → Fin s → ℝ}

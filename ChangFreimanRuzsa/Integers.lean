@@ -11,24 +11,24 @@ import ChangFreimanRuzsa.FreimanRigidity
 /-!
 # Chang's theorem for sets of integers
 
-A finite set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ lies in a $2$-proper
-generalized arithmetic progression of dimension at most `containerExponent (2 * κ)` and of
-size at most $e^{C} |X|$, where $C$ is `intExponent κ`. This is Chang's form of Freiman's
-theorem, Proposition 1.3 of Green and Tao, *Compressions, convex geometry and the Freiman–Bilu
-theorem*. The exponent `intExponent κ` is bounded by a polynomial in $\kappa$.
+A finite set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` lies in a `2`-proper generalized arithmetic
+progression of dimension at most `containerExponent (2 * κ)` and of size at most `exp C * #X`,
+where `C` is `intExponent κ`. This is Chang's form of Freiman's theorem, Proposition 1.3 of Green
+and Tao, *Compressions, convex geometry and the Freiman–Bilu theorem*. The exponent
+`intExponent κ` is bounded by a polynomial in `κ`.
 
-A progression of $\mathbb{Z}/q\mathbb{Z}$ that contains the reduction of $X$ modulo $q$ need not
-come from a progression of $\mathbb{Z}$ that contains $X$, because it may wrap around. So the
-statement for $\mathbb{Z}/q\mathbb{Z}$ in `ChangFreimanRuzsa.Cyclic` is not used. Only the first
-step of its proof is carried out modulo a large prime $q$. It gives a proper progression inside
-$2X - 2X$ in the reduction of $X$ modulo $q$. The reduction is a Freiman isomorphism of order $8$
-on $X$, so `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso` carries this progression back
-to a proper progression of $\mathbb{Z}$ inside $2X - 2X$. The rest of the argument, the covering of
-$X$ by translates and the passage to a $2$-proper progression, takes place in $\mathbb{Z}$. These
-steps are stated for general groups in `ChangFreimanRuzsa.Container` and `ChangFreimanRuzsa.Cyclic`.
+A progression of `ZMod q` that contains the reduction of `X` modulo `q` need not come from a
+progression of `ℤ` that contains `X`, because it may wrap around. So the statement for `ZMod q`
+in `ChangFreimanRuzsa.Cyclic` is not used. Only the first step of its proof is carried out modulo
+a large prime `q`. It gives a proper progression inside `X + X - (X + X)` in the reduction of `X`
+modulo `q`. The reduction is a Freiman isomorphism of order `8` on `X`, so
+`exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso` carries this progression back to a
+proper progression of `ℤ` inside `X + X - (X + X)`. The rest of the argument, the covering of `X`
+by translates and the passage to a `2`-proper progression, takes place in `ℤ`. These steps are
+stated for general groups in `ChangFreimanRuzsa.Container` and `ChangFreimanRuzsa.Cyclic`.
 
 A set too small for this argument is first replaced by its sum with a long arithmetic progression
-$\{0, M, \dots, (N - 1) M\}$.
+`(range N).image (· • M)`.
 
 ## Main definitions
 
@@ -74,8 +74,8 @@ private lemma card_add_add_image_nsmul_range_le (X : Finset ℤ) (M : ℤ) (N : 
   card_add_le.trans (Nat.mul_le_mul_left _ ((card_le_card (image_nsmul_range_add_subset M N)).trans
     (card_image_le.trans_eq (card_range _))))
 
-/-- If $M$ exceeds the diameter of $X$, then the sum of $X$ and $\{0, M, \dots, (N - 1) M\}$ has
-$|X| N$ elements. -/
+/-- If `M` exceeds the diameter of `X`, then the sum of `X` and `(range N).image (· • M)` has
+`#X * N` elements. -/
 private lemma card_add_image_nsmul_range {X : Finset ℤ} {M : ℤ}
     (hM : ∀ x ∈ X, ∀ y ∈ X, |x - y| < M) (N : ℕ) : #(X + (range N).image (· • M)) = #X * N := by
   rcases X.eq_empty_or_nonempty with rfl | ⟨x₀, hx₀⟩
@@ -97,9 +97,9 @@ private lemma lt_mul_floor_add_one {E : ℝ} {n : ℕ} (hn : 0 < n) (hE : 1 ≤ 
     Nat.floor_le (div_nonneg (by linarith) (by linarith) : 0 ≤ E / n),
     div_mul_cancel₀ E (by positivity : (n : ℝ) ≠ 0)]
 
-/-- A nonempty set $X$ with $|X + X| \le \kappa |X|$ lies in a set $X'$ with
-$|X' + X'| \le 2 \kappa |X'|$ and $E < |X'| \le 2 E |X|$, namely the sum of $X$ and an arithmetic
-progression whose common difference exceeds the diameter of $X$. -/
+/-- A nonempty set `X` with `#(X + X) ≤ κ * #X` lies in a set `X'` with
+`#(X' + X') ≤ 2 * κ * #X'` and `E < #X' ≤ 2 * E * #X`, namely the sum of `X` and an arithmetic
+progression whose common difference exceeds the diameter of `X`. -/
 private lemma exists_large_superset_of_card_add_le {κ E : ℝ} {X : Finset ℤ} (hX : X.Nonempty)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hE : 1 ≤ E) :
     ∃ X' : Finset ℤ, X ⊆ X' ∧ (#(X' + X') : ℝ) ≤ 2 * κ * #X' ∧ E < #X' ∧
@@ -131,8 +131,8 @@ private lemma intCast_inj_of_abs_sub_lt {q : ℕ} {a b : ℤ} (h : |b - a| < q) 
   ⟨fun hab ↦ (sub_eq_zero.1 (Int.eq_zero_of_abs_lt_dvd
     ((ZMod.intCast_eq_intCast_iff_dvd_sub a b q).1 hab) h)).symm, fun hab ↦ by rw [hab]⟩
 
-/-- Reduction modulo $q$ is a Freiman isomorphism of order $8$ on a set of integers of absolute
-value less than $q / 16$. -/
+/-- Reduction modulo `q` is a Freiman isomorphism of order `8` on a set of integers of absolute
+value less than `q / 16`. -/
 private lemma isAddFreimanIso_intCast {q : ℕ} {X : Finset ℤ} (hq : 16 * X.sup Int.natAbs < q) :
     IsAddFreimanIso 8 (X : Set ℤ) (X.image (Int.cast : ℤ → ZMod q) : Set (ZMod q)) Int.cast where
   bijOn := by
@@ -160,10 +160,9 @@ private lemma card_image_intCast_add_le (q : ℕ) (X : Finset ℤ) :
 
 /-! ## The progression inside `2X - 2X` -/
 
-/-- Let $d_\kappa$ be `bohrGAPDim κ`. A finite set
-$X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $256 d_\kappa \le |X|$ has a subset $X_1$
-with $|X| \le 8 |X_1|$ and a proper progression $Q_1 \subseteq 2X - 2X$ of dimension at most
-$d_\kappa$ with $|X| \le 8$ `bohrLoss` $d_\kappa \cdot |Q_1|$.
+/-- Let `d` be `bohrGAPDim κ`. A finite set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` and
+`256 * d ≤ #X` has a subset `X₁` with `#X ≤ 8 * #X₁` and a proper progression `Q₁` in
+`X + X - (X + X)` of dimension at most `d` with `#X ≤ 8 * bohrLoss d * #Q₁.carrier`.
 
 The progression is the one that `exists_proper_gap_zmod_subset_add_sub_add_card_le` gives for the
 reduction of `X` modulo a large prime, carried back to `ℤ` by
@@ -186,10 +185,9 @@ private lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : F
   exact ⟨X₁, Q₁, hX₁, hY₁card.trans (Nat.mul_le_mul_left 8 card_image_le), hQ₁,
     (Nat.cast_le.2 hQ₁dim).trans hQdim, hQ₁sub, by rwa [hQ₁card]⟩
 
-/-- Let $c_\kappa$ be `containerExponent κ` and $d_\kappa$ be `bohrGAPDim κ`. A finite set
-$X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $256 d_\kappa \le |X|$ lies in a
-generalized arithmetic progression of dimension at most $c_\kappa$ and of size at most
-$e^{c_\kappa} |X|$. -/
+/-- Let `c` be `containerExponent κ` and `d` be `bohrGAPDim κ`. A finite set `X : Finset ℤ` with
+`#(X + X) ≤ κ * #X` and `256 * d ≤ #X` lies in a generalized arithmetic progression of dimension
+at most `c` and of size at most `exp c * #X`. -/
 lemma exists_gap_int_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
     ∃ P : GAP ℤ, X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ containerExponent κ ∧
@@ -201,11 +199,10 @@ lemma exists_gap_int_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 
 
 /-! ## Chang's theorem -/
 
-/-- **Chang's theorem** for sets of integers that are not too small. Write $c_\kappa$ for
-`containerExponent κ`, $C_\kappa$ for `zmodExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. A
-finite set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ and $256 d_\kappa \le |X|$ is
-contained in a $2$-proper generalized arithmetic progression of dimension at most $c_\kappa$ and of
-size at most $e^{C_\kappa} |X|$. -/
+/-- **Chang's theorem** for sets of integers that are not too small. Write `c` for
+`containerExponent κ`, `C` for `zmodExponent κ` and `d` for `bohrGAPDim κ`. A finite set
+`X : Finset ℤ` with `#(X + X) ≤ κ * #X` and `256 * d ≤ #X` is contained in a `2`-proper
+generalized arithmetic progression of dimension at most `c` and of size at most `exp C * #X`. -/
 theorem exists_twoProperGAP_int_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
     ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ containerExponent κ ∧
@@ -221,9 +218,9 @@ private lemma exp_mul_le_exp_add_add_one_mul {z c x y : ℝ} (hx : 0 ≤ x)
   nlinarith [Real.add_one_le_exp (1 : ℝ),
     mul_nonneg (mul_nonneg (Real.exp_nonneg z) (Real.exp_nonneg c)) hx]
 
-/-- **Chang's theorem** for sets of integers. A finite nonempty set $X \subseteq \mathbb{Z}$ with
-$|X + X| \le \kappa |X|$ is contained in a $2$-proper generalized arithmetic progression of
-dimension at most `containerExponent (2 * κ)` and of size at most $e^{C} |X|$, where $C$ is
+/-- **Chang's theorem** for sets of integers. A finite nonempty set `X : Finset ℤ` with
+`#(X + X) ≤ κ * #X` is contained in a `2`-proper generalized arithmetic progression of dimension
+at most `containerExponent (2 * κ)` and of size at most `exp C * #X`, where `C` is
 `intExponent κ`. -/
 theorem exists_twoProperGAP_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :

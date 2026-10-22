@@ -11,19 +11,19 @@ import Mathlib.Analysis.Complex.ExponentialBounds
 /-!
 # Polynomial bounds for the exponents in Chang's theorem
 
-For $\kappa \ge 2$, the exponents defined in `ChangFreimanRuzsa.Container`,
+For `2 ≤ κ`, the exponents defined in `ChangFreimanRuzsa.Container`,
 `ChangFreimanRuzsa.Cyclic` and `ChangFreimanRuzsa.Integers` satisfy the following bounds.
 
-* `containerExponent κ` is at most $1.3 \cdot 10^8 \kappa^2 (1 + \log \kappa)^2$, hence at most
-  $2 \cdot 10^8 \kappa^3$.
-* `containerExponent (2 * κ)` is at most $1.6 \cdot 10^9 \kappa^3$.
-* $256$ `bohrGAPDim κ` is at most $7 \cdot 10^7 \kappa^2$.
-* $(c + 2)^3 \log (c + 2)$, where $c$ is `containerExponent κ`, is at most
-  $8.8 \cdot 10^{28} \kappa^7$. This bounds the cost of properization.
-* `zmodExponent κ` is at most $3 \cdot 10^{29} \kappa^7$.
-* `intExponent κ` is at least $\kappa^2$ and at most $4 \cdot 10^{31} \kappa^7$.
+* `containerExponent κ` is at most `13 * 10 ^ 7 * κ ^ 2 * (1 + log κ) ^ 2`, hence at most
+  `2 * 10 ^ 8 * κ ^ 3`.
+* `containerExponent (2 * κ)` is at most `16 * 10 ^ 8 * κ ^ 3`.
+* `256 * bohrGAPDim κ` is at most `7 * 10 ^ 7 * κ ^ 2`.
+* `(c + 2) ^ 3 * log (c + 2)`, where `c` is `containerExponent κ`, is at most
+  `88 * 10 ^ 27 * κ ^ 7`. This bounds the cost of properization.
+* `zmodExponent κ` is at most `3 * 10 ^ 29 * κ ^ 7`.
+* `intExponent κ` is at least `κ ^ 2` and at most `4 * 10 ^ 31 * κ ^ 7`.
 
-The logarithms are removed by $(1 + \log \kappa)^n \le n^n e^{1 - n} \kappa$.
+The logarithms are removed by `(1 + log κ) ^ n ≤ n ^ n * exp (1 - n) * κ`.
 -/
 
 public section
@@ -34,7 +34,7 @@ variable {κ : ℝ}
 
 /-! ## Powers of the logarithm -/
 
-/-- For $\kappa \ge 1$ and $n \ge 1$, $(1 + \log \kappa)^n \le n^n e^{1 - n} \kappa$. -/
+/-- For `1 ≤ κ` and `1 ≤ n`, `(1 + log κ) ^ n ≤ n ^ n * exp (1 - n) * κ`. -/
 lemma one_add_log_pow_le (hκ : 1 ≤ κ) {n : ℕ} (hn : 1 ≤ n) :
     (1 + Real.log κ) ^ n ≤ n ^ n * Real.exp (1 - n) * κ := by
   have hn' : (0 : ℝ) < n := by exact_mod_cast hn
@@ -47,13 +47,13 @@ lemma one_add_log_pow_le (hκ : 1 ≤ κ) {n : ℕ} (hn : 1 ≤ n) :
     Real.exp_add, Real.exp_log (by linarith)]
   ring
 
-/-- $(1 + \log \kappa)^2 \le 3 \kappa / 2$ for $\kappa \ge 1$. -/
+/-- `(1 + log κ) ^ 2 ≤ 3 / 2 * κ` for `1 ≤ κ`. -/
 lemma one_add_log_sq_le (hκ : 1 ≤ κ) : (1 + Real.log κ) ^ 2 ≤ 3 / 2 * κ := by
   have h := one_add_log_pow_le hκ one_le_two
   norm_num at h
   nlinarith [Real.exp_neg_one_lt_d9]
 
-/-- $(1 + \log \kappa)^7 \le 2050 \kappa$ for $\kappa \ge 1$. -/
+/-- `(1 + log κ) ^ 7 ≤ 2050 * κ` for `1 ≤ κ`. -/
 lemma one_add_log_pow_seven_le (hκ : 1 ≤ κ) : (1 + Real.log κ) ^ 7 ≤ 2050 * κ := by
   have h := one_add_log_pow_le hκ (n := 7) (by norm_num)
   have he : Real.exp (-6) ≤ 0.002479 := by
@@ -65,7 +65,7 @@ lemma one_add_log_pow_seven_le (hκ : 1 ≤ κ) : (1 + Real.log κ) ^ 7 ≤ 2050
 
 /-! ## The lower bound -/
 
-/-- `containerExponent κ` is at least $\kappa^2$. -/
+/-- `containerExponent κ` is at least `κ ^ 2`. -/
 lemma sq_le_containerExponent (hκ : 0 ≤ κ) : κ ^ 2 ≤ containerExponent κ := by
   have ht : 3 * κ ≤ translateCount κ := Nat.le_ceil _
   have hI : 4 * κ ≤ iterationBound κ := by
@@ -82,7 +82,7 @@ lemma zmodExponent_nonneg (hκ : 0 ≤ κ) : 0 ≤ zmodExponent κ := by
   unfold zmodExponent
   linarith [properizationExponent_nonneg hc]
 
-/-- `intExponent κ` is at least $\kappa^2$. -/
+/-- `intExponent κ` is at least `κ ^ 2`. -/
 lemma sq_le_intExponent (hκ : 2 ≤ κ) : κ ^ 2 ≤ intExponent κ := by
   unfold intExponent
   nlinarith [sq_le_containerExponent (by linarith : 0 ≤ 2 * κ),
@@ -95,7 +95,7 @@ private lemma changConst_mul_exp_one_le : changConst * Real.exp 1 ≤ 237 := by
   nlinarith [(pow_le_pow_left₀ (Real.exp_pos 1).le (by linarith [Real.exp_one_lt_d9]) 2 :
     Real.exp 1 ^ 2 ≤ 2.72 ^ 2)]
 
-/-- `deltaBound κ` is at most $2.5 \cdot 10^5 \kappa (1 + \log \kappa)$. -/
+/-- `deltaBound κ` is at most `250000 * κ * (1 + log κ)`. -/
 lemma deltaBound_le (hκ : 2 ≤ κ) :
     (deltaBound κ : ℝ) ≤ 250000 * κ * (1 + Real.log κ) := by
   have hL : Real.log (8 * κ ^ 16) ≤ 3 + 16 * Real.log κ := by
@@ -122,8 +122,8 @@ private lemma bohrGAPDim_le (hκ : 2 ≤ κ) :
   push_cast
   nlinarith [deltaBound_le hκ, Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
 
-/-- $256 d \le 7 \cdot 10^7 \kappa^2$, where $d$ is `bohrGAPDim κ`. This bounds the size that $|X|$
-has to reach in Chang's theorem in `ZMod q`. -/
+/-- `256 * bohrGAPDim κ ≤ 7 * 10 ^ 7 * κ ^ 2`. This bounds the size that `#X` has to reach in
+Chang's theorem in `ZMod q`. -/
 lemma mul_bohrGAPDim_le (hκ : 2 ≤ κ) : 256 * (bohrGAPDim κ : ℝ) ≤ 7 * 10 ^ 7 * κ ^ 2 := by
   nlinarith [bohrGAPDim_le hκ, Real.log_le_sub_one_of_pos (by linarith : 0 < κ)]
 
@@ -151,7 +151,7 @@ private lemma iterationBound_le (hκ : 2 ≤ κ) :
   nlinarith [mul_le_mul_of_nonneg_left (one_le_pow₀ (n := 2)
     (by linarith : (1 : ℝ) ≤ 1 + Real.log κ)) (by linarith : (0 : ℝ) ≤ κ)]
 
-/-- `containerExponent κ` is at most $1.3 \cdot 10^8 \kappa^2 (1 + \log \kappa)^2$. -/
+/-- `containerExponent κ` is at most `13 * 10 ^ 7 * κ ^ 2 * (1 + log κ) ^ 2`. -/
 lemma containerExponent_le_log (hκ : 2 ≤ κ) :
     containerExponent κ ≤ 13 * 10 ^ 7 * κ ^ 2 * (1 + Real.log κ) ^ 2 := by
   have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
@@ -163,12 +163,12 @@ lemma containerExponent_le_log (hκ : 2 ≤ κ) :
     mul_le_mul_of_nonneg_right (by nlinarith : (1 : ℝ) + Real.log κ ≤ (1 + Real.log κ) ^ 2)
       (by positivity : (0 : ℝ) ≤ κ)]
 
-/-- `containerExponent κ` is at most $2 \cdot 10^8 \kappa^3$. -/
+/-- `containerExponent κ` is at most `2 * 10 ^ 8 * κ ^ 3`. -/
 lemma containerExponent_le (hκ : 2 ≤ κ) : containerExponent κ ≤ 2 * 10 ^ 8 * κ ^ 3 := by
   nlinarith [containerExponent_le_log hκ, one_add_log_sq_le (by linarith : (1 : ℝ) ≤ κ),
     pow_pos (by linarith : (0 : ℝ) < κ) 2]
 
-/-- `containerExponent (2 * κ)` is at most $1.6 \cdot 10^9 \kappa^3$. This bounds the dimension in
+/-- `containerExponent (2 * κ)` is at most `16 * 10 ^ 8 * κ ^ 3`. This bounds the dimension in
 `exists_twoProperGAP_of_small_sumset`. -/
 lemma containerExponent_two_mul_le (hκ : 2 ≤ κ) :
     containerExponent (2 * κ) ≤ 16 * 10 ^ 8 * κ ^ 3 := by
@@ -176,8 +176,7 @@ lemma containerExponent_two_mul_le (hκ : 2 ≤ κ) :
   rw [mul_pow] at h
   linarith
 
-/-- Write $c$ for `containerExponent κ`. Then $(c + 2)^3 \log (c + 2) \le 8.8 \cdot 10^{28}
-\kappa^7$. -/
+/-- Write `c` for `containerExponent κ`. Then `(c + 2) ^ 3 * log (c + 2) ≤ 88 * 10 ^ 27 * κ ^ 7`. -/
 lemma containerExponent_add_two_pow_mul_log_le (hκ : 2 ≤ κ) :
     (containerExponent κ + 2) ^ 3 * Real.log (containerExponent κ + 2) ≤ 88 * 10 ^ 27 * κ ^ 7 := by
   have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
@@ -204,7 +203,7 @@ lemma containerExponent_add_two_pow_mul_log_le (hκ : 2 ≤ κ) :
     _ = (131 * 10 ^ 6) ^ 3 * 19 * 2050 * κ ^ 7 := by ring
     _ ≤ 88 * 10 ^ 27 * κ ^ 7 := mul_le_mul_of_nonneg_right (by norm_num) (by positivity)
 
-/-- `zmodExponent κ` is at most $3 \cdot 10^{29} \kappa^7$. -/
+/-- `zmodExponent κ` is at most `3 * 10 ^ 29 * κ ^ 7`. -/
 lemma zmodExponent_le (hκ : 2 ≤ κ) : zmodExponent κ ≤ 3 * 10 ^ 29 * κ ^ 7 := by
   have h := containerExponent_add_two_pow_mul_log_le hκ
   unfold zmodExponent properizationExponent
@@ -212,7 +211,7 @@ lemma zmodExponent_le (hκ : 2 ≤ κ) : zmodExponent κ ≤ 3 * 10 ^ 29 * κ ^ 
   linarith [containerExponent_le hκ, one_le_pow₀ (n := 7) (by linarith : (1 : ℝ) ≤ κ),
     pow_le_pow_right₀ (by linarith : (1 : ℝ) ≤ κ) (by norm_num : 3 ≤ 7)]
 
-/-- `intExponent κ` is at most $4 \cdot 10^{31} \kappa^7$. -/
+/-- `intExponent κ` is at most `4 * 10 ^ 31 * κ ^ 7`. -/
 lemma intExponent_le (hκ : 2 ≤ κ) : intExponent κ ≤ 4 * 10 ^ 31 * κ ^ 7 := by
   have h := zmodExponent_le (κ := 2 * κ) (by linarith)
   rw [mul_pow] at h

@@ -15,32 +15,32 @@ import Mathlib.Tactic.Ring.RingNF
 /-! # The packing argument of Chang's proof
 
 This file contains the combinatorial packing argument of Chang's proof. Starting from a finite set
-$Q$, one repeatedly adds a set $S \subseteq A$ of $m$ elements whose translates of the current set
-are pairwise disjoint, so that each step multiplies the size of the current set by $m$. When no
-such set exists, a maximal family of disjoint translates gives $F \subseteq A$ with $|F| < m$ and
-$A \subseteq F + (Q' - Q')$, where $Q'$ is the current set.
+`Q`, one repeatedly adds a set `S ⊆ A` of `m` elements whose translates of the current set are
+pairwise disjoint, so that each step multiplies the size of the current set by `m`. When no such
+set exists, a maximal family of disjoint translates gives `F ⊆ A` with `#F < m` and
+`A ⊆ F + (Q' - Q')`, where `Q'` is the current set.
 
 The file also defines progressions containing the sets built in this way.
 
 ## Main definitions
 
-* `listSubsetSum l`: the subset sums of a list $a_1, \dots, a_n$, that is,
-  $\{0, a_1\} + \dots + \{0, a_n\}$.
-* `GAP.consBinary P a`: the progression $P + \{0, a\}$.
-* `GAP.consBinaryList P l`: the progression $P$ with one step of length $2$ added for each entry
-  of $l$.
-* `GAP.difference P`: a progression containing $P - P$, the sum of $P$ and its reflection
+* `listSubsetSum l`: the subset sums of a list `l`, that is, the sum of the sets `{0, a}` for the
+  entries `a` of `l`.
+* `GAP.consBinary P a`: the progression `P + {0, a}`.
+* `GAP.consBinaryList P l`: the progression `P` with one step of length `2` added for each entry
+  of `l`.
+* `GAP.difference P`: a progression containing `P - P`, the sum of `P` and its reflection
   `GAP.neg P`.
 
 ## Main statements
 
-* `exists_pairwiseDisjoint_vadd_subset_add_sub`: a maximal family of disjoint translates of $Q$ by
-  elements of $A$ covers $A$ by $F + (Q - Q)$.
+* `exists_pairwiseDisjoint_vadd_subset_add_sub`: a maximal family of disjoint translates of `Q` by
+  elements of `A` covers `A` by `F + (Q - Q)`.
 * `exists_card_add_sum_eq_card_mul_pow_and_subset_add_sub`: the packing process stops when at most
-  $B$ steps are possible.
+  `B` steps are possible.
 * `GAP.add_listSubsetSum_subset_consBinaryList` and `GAP.size_consBinaryList_le`: the progression
-  `P.consBinaryList l` contains $P$ plus the subset sums of $l$, and has at most $2^{|l|}$ times
-  as many coefficient vectors as $P$.
+  `P.consBinaryList l` contains `P` plus the subset sums of `l`, and has at most `2 ^ l.length`
+  times as many coefficient vectors as `P`.
 -/
 
 @[expose] public section
@@ -58,8 +58,8 @@ section ListSubsetSum
 
 variable {G : Type*} [DecidableEq G] [AddCommMonoid G]
 
-/-- The subset sums $\sum_{j \in J} a_j$ of a list $a_1, \dots, a_n$, over all sets $J$ of
-positions. It is the sumset $\{0, a_1\} + \dots + \{0, a_n\}$. -/
+/-- The subset sums of a list `l`, over all sets of positions. It is the sum of the sets `{0, a}`
+for the entries `a` of `l`. -/
 def listSubsetSum (l : List G) : Finset G :=
   (l.map fun a ↦ ({0, a} : Finset G)).sum
 
@@ -90,7 +90,7 @@ lemma mem_listSubsetSum_of_mem {l : List G} {x : G} (hx : x ∈ l) : x ∈ listS
     · simpa using add_mem_add (by simp : 0 ∈ ({0, a} : Finset G)) (ih hx)
 
 omit [DecidableEq G] [AddCommMonoid G] in
-/-- Listing the elements of $k$ sets of $m$ elements each gives a list of length $mk$. -/
+/-- Listing the elements of `k` sets of `m` elements each gives a list of length `m * k`. -/
 lemma length_flatMap_toList {l : List (Finset G)} {m : ℕ} (hl : ∀ S ∈ l, #S = m) :
     (l.flatMap Finset.toList).length = m * l.length := by
   rw [List.length_flatMap, List.map_congr_left (g := fun _ ↦ m) (by simpa using hl),
@@ -116,7 +116,7 @@ namespace GAP
 
 variable {G : Type*} [AddCommGroup G]
 
-/-- The progression $\{0, a\}$, with the step $a$ of length $2$. -/
+/-- The progression `{0, a}`, with the step `a` of length `2`. -/
 def pair (a : G) : GAP G := ⟨0, Finsupp.single a 1⟩
 
 lemma pair_subset_carrier_pair [DecidableEq G] (a : G) : {0, a} ⊆ (pair a).carrier := by
@@ -132,7 +132,7 @@ lemma dim_pair_le (a : G) : (pair a).dim ≤ 1 := by
   classical
   exact (card_le_card Finsupp.support_single_subset).trans_eq (card_singleton a)
 
-/-- The progression $P + \{0, a\}$: the step $a$ of length $2$ is added to $P$. -/
+/-- The progression `P + {0, a}`: the step `a` of length `2` is added to `P`. -/
 def consBinary (P : GAP G) (a : G) : GAP G := P + pair a
 
 lemma add_pair_subset_consBinary [DecidableEq G] (P : GAP G) (a : G) :
@@ -147,7 +147,7 @@ lemma size_consBinary_le (P : GAP G) (a : G) : (P.consBinary a).size ≤ 2 * P.s
   rw [mul_comm, ← size_pair a]
   exact P.size_add_le _
 
-/-- The progression $P$ with one step of length $2$ added for each entry of the list $l$. -/
+/-- The progression `P` with one step of length `2` added for each entry of the list `l`. -/
 def consBinaryList (P : GAP G) : List G → GAP G
   | [] => P
   | a :: l => (P.consBinaryList l).consBinary a
@@ -181,8 +181,8 @@ lemma size_consBinaryList_le (P : GAP G) (l : List G) :
     rw [consBinaryList, List.length_cons, pow_succ, mul_comm _ 2, mul_assoc]
     exact ((P.consBinaryList l).size_consBinary_le a).trans (Nat.mul_le_mul_left 2 ih)
 
-/-- The reflection $-P$ of a progression $P$, with origin $-x_0 - \sum_v b_v v$ and the bound of
-$P$. -/
+/-- The reflection `-P` of a progression `P`, with origin `-P.eval P.bound` and the bound of
+`P`. -/
 def neg (P : GAP G) : GAP G := ⟨-P.eval P.bound, P.bound⟩
 
 lemma neg_carrier_subset_carrier_neg [DecidableEq G] (P : GAP G) :
@@ -195,8 +195,8 @@ lemma neg_carrier_subset_carrier_neg [DecidableEq G] (P : GAP G) :
   simp only [neg, eval_eq_linearCombination, he, map_add]
   abel
 
-/-- A progression containing $P - P$: the sum of $P$ and its reflection. It has the steps of $P$
-and the bound $2 b$. -/
+/-- A progression containing `P - P`: the sum of `P` and its reflection. It has the steps of `P`
+and the bound `2 • P.bound`. -/
 def difference (P : GAP G) : GAP G := P + P.neg
 
 lemma sub_subset_difference [DecidableEq G] (P : GAP G) :
@@ -222,8 +222,8 @@ end GAP
 
 variable {G : Type*} [DecidableEq G] [AddCommGroup G]
 
-/-- If $F \subseteq A$ is maximal such that the translates $f + Q$, $f \in F$, are pairwise
-disjoint, then $A \subseteq F + (Q - Q)$. This is Ruzsa's covering argument. -/
+/-- If `F ⊆ A` is maximal such that the translates `f +ᵥ Q` with `f ∈ F` are pairwise disjoint,
+then `A ⊆ F + (Q - Q)`. This is Ruzsa's covering argument. -/
 lemma exists_pairwiseDisjoint_vadd_subset_add_sub (A : Finset G) {Q : Finset G}
     (hQ : Q.Nonempty) :
     ∃ F ⊆ A, (F : Set G).PairwiseDisjoint (· +ᵥ Q) ∧ A ⊆ F + (Q - Q) := by
@@ -248,8 +248,8 @@ lemma exists_pairwiseDisjoint_vadd_subset_add_sub (A : Finset G) {Q : Finset G}
   rw [vadd_eq_add, vadd_eq_add] at hqbc
   rw [add_sub, hqbc, add_sub_cancel_right]
 
-/-- Either a maximal family of disjoint translates of $Q$ by elements of $A$ has fewer than $m$
-elements, or $A$ contains a set $S$ of $m$ elements with $|Q + S| = |Q| m$. -/
+/-- Either a maximal family of disjoint translates of `Q` by elements of `A` has fewer than `m`
+elements, or `A` contains a set `S` of `m` elements with `#(Q + S) = #Q * m`. -/
 private lemma exists_subset_add_sub_or_card_add_eq (A : Finset G) {Q : Finset G}
     (hQ : Q.Nonempty) (m : ℕ) :
     (∃ F ⊆ A, #F < m ∧ A ⊆ F + (Q - Q)) ∨ ∃ S ⊆ A, #S = m ∧ #(Q + S) = #Q * m := by
@@ -267,11 +267,11 @@ private lemma card_add_sum_cons {Q S : Finset G} {m : ℕ} {l : List (Finset G)}
   rw [List.sum_cons, ← add_assoc, hl, hQS, List.length_cons, pow_succ]
   ring
 
-/-- The packing argument of Chang's proof. Starting from $Q$, each step adds a set
-$S_j \subseteq A$ of $m$ elements whose translates of the current set are pairwise disjoint. If at
-most $B$ such steps are possible, then there are sets $S_1, \dots, S_k \subseteq A$ of size $m$
-with $|Q + S_1 + \dots + S_k| = |Q| m^k$, and a set $F \subseteq A$ with $|F| < m$ and
-$A \subseteq F + (Q' - Q')$, where $Q' = Q + S_1 + \dots + S_k$. The group may be infinite. -/
+/-- The packing argument of Chang's proof. Starting from `Q`, each step adds a set `S ⊆ A` of `m`
+elements whose translates of the current set are pairwise disjoint. If at most `B` such steps are
+possible, then there are a list `l` of subsets of `A` of size `m` with
+`#(Q + l.sum) = #Q * m ^ l.length`, and a set `F ⊆ A` with `#F < m` and `A ⊆ F + (Q' - Q')`,
+where `Q' = Q + l.sum`. The group may be infinite. -/
 lemma exists_card_add_sum_eq_card_mul_pow_and_subset_add_sub {A Q : Finset G} (hQ : Q.Nonempty)
     {m : ℕ} (hm : 0 < m) {B : ℕ} (hB : ∀ l : List (Finset G), (∀ S ∈ l, S ⊆ A ∧ #S = m) →
       #(Q + l.sum) = #Q * m ^ l.length → l.length ≤ B) :

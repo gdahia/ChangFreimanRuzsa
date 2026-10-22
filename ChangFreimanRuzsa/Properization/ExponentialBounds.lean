@@ -10,20 +10,21 @@ public import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-! # Exponential bounds for properization
 
-Each step of the properization of a GAP of dimension $d$ costs a factor
-$e^{O((d + 2)^2 \log (d + 2))}$, and the steps lower the dimension. This file bounds the factors of
-one step and shows that they telescope to $e^{O((d + 2)^3 \log (d + 2))}$. The bounds come from
-writing each factor as a power of $d + 2$.
+Each step of the properization of a GAP of dimension `d` costs a factor
+`exp (C * (d + 2) ^ 2 * log (d + 2))` for a constant `C`, and the steps lower the dimension. This
+file bounds the factors of one step and shows that they telescope to
+`exp (C * (d + 2) ^ 3 * log (d + 2))`. The bounds come from writing each factor as a power of
+`d + 2`.
 
 ## Main statements
 
-* `latticeBoxFactor_le_add_two_pow`: `latticeBoxFactor k` is at most $(d + 2)^{2 (d + 1)^2}$ for
-  $k \le d$.
+* `latticeBoxFactor_le_add_two_pow`: `latticeBoxFactor k` is at most `(d + 2) ^ (2 * (d + 1) ^ 2)`
+  for `k ≤ d`.
 * `latticeBoxFactor_mul_pow_le_exp`, `latticeBoxFactor_mul_two_pow_le_exp` and
   `two_mul_two_mul_add_one_pow_le_exp`: the factors of one step are at most
-  $e^{2 (d + 2)^2 \log (d + 2)}$.
-* `mul_pow_three_mul_log_add_le`: for $e < d$,
-  $A (e + 2)^3 \log (e + 2) + A (d + 2)^2 \log (d + 2) \le A (d + 2)^3 \log (d + 2)$.
+  `exp (2 * (d + 2) ^ 2 * log (d + 2))`.
+* `mul_pow_three_mul_log_add_le`: for `e < d`,
+  `A * (e + 2) ^ 3 * log (e + 2) + A * (d + 2) ^ 2 * log (d + 2) ≤ A * (d + 2) ^ 3 * log (d + 2)`.
 -/
 
 public section
@@ -33,25 +34,25 @@ namespace ChangFreimanRuzsa
 lemma log_add_two_pos {x : ℝ} (hx : 0 ≤ x) : 0 < Real.log (x + 2) :=
   Real.log_pos (by linarith)
 
-/-- For $x \ge 0$, $2 (x + 2)^2 \log (x + 2) \le (x + 2)^3 \log (x + 2)$. -/
+/-- For `0 ≤ x`, `2 * (x + 2) ^ 2 * log (x + 2) ≤ (x + 2) ^ 3 * log (x + 2)`. -/
 lemma two_mul_add_two_sq_mul_log_le {x : ℝ} (hx : 0 ≤ x) :
     2 * (x + 2) ^ 2 * Real.log (x + 2) ≤ (x + 2) ^ 3 * Real.log (x + 2) := by
   nlinarith [mul_nonneg (mul_nonneg hx (sq_nonneg (x + 2))) (log_add_two_pos hx).le]
 
-/-- The map $x \mapsto (x + 2)^3 \log (x + 2)$ is monotone on $[0, \infty)$. -/
+/-- The map `x ↦ (x + 2) ^ 3 * log (x + 2)` is monotone on `Set.Ici 0`. -/
 lemma add_two_pow_three_mul_log_le {x y : ℝ} (hx : 0 ≤ x) (hxy : x ≤ y) :
     (x + 2) ^ 3 * Real.log (x + 2) ≤ (y + 2) ^ 3 * Real.log (y + 2) :=
   mul_le_mul (pow_le_pow_left₀ (by linarith) (by linarith) 3)
     (Real.log_le_log (by linarith) (by linarith)) (log_add_two_pos hx).le
     (pow_nonneg (by linarith) 3)
 
-/-- If $n \le y$, then $(d + 2)^n \le e^{y \log (d + 2)}$. -/
+/-- If `n ≤ y`, then `(d + 2) ^ n ≤ exp (y * log (d + 2))`. -/
 lemma add_two_pow_le_exp_mul_log {d n : ℕ} {y : ℝ} (hny : (n : ℝ) ≤ y) :
     ((d : ℝ) + 2) ^ n ≤ Real.exp (y * Real.log ((d : ℝ) + 2)) := by
   rw [← Real.log_le_iff_le_exp (by positivity), Real.log_pow]
   exact mul_le_mul_of_nonneg_right hny (log_add_two_pos d.cast_nonneg).le
 
-/-- For $k \le d$, `latticeBoxFactor k` is at most $(d + 2)^{2 (d + 1)^2}$. -/
+/-- For `k ≤ d`, `latticeBoxFactor k` is at most `(d + 2) ^ (2 * (d + 1) ^ 2)`. -/
 lemma latticeBoxFactor_le_add_two_pow {k d : ℕ} (hkd : k ≤ d) :
     latticeBoxFactor k ≤ (d + 2) ^ (2 * (d + 1) ^ 2) := by
   rw [pow_mul (d + 2)]
@@ -59,8 +60,8 @@ lemma latticeBoxFactor_le_add_two_pow {k d : ℕ} (hkd : k ≤ d) :
     ((Nat.pow_le_pow_left (by nlinarith : 4 * k + 1 ≤ (d + 2) ^ 2) _).trans
       (Nat.pow_le_pow_right (by positivity) (by nlinarith : (k + 2) * k ≤ (d + 1) ^ 2)))
 
-/-- For $r \le d$, the factor `latticeBoxFactor (d - r)` $\cdot ((2r + 4)(2(2r + 1) + 1))^d$ of one
-quotient step is at most $e^{2 (d + 2)^2 \log (d + 2)}$. -/
+/-- For `r ≤ d`, the factor `latticeBoxFactor (d - r) * ((2 * r + 4) * (2 * (2 * r + 1) + 1)) ^ d`
+of one quotient step is at most `exp (2 * (d + 2) ^ 2 * log (d + 2))`. -/
 lemma latticeBoxFactor_mul_pow_le_exp {r d : ℕ} (hrd : r ≤ d) :
     (latticeBoxFactor (d - r) : ℝ) * ((2 * (r : ℝ) + 4) * (2 * (2 * (r : ℝ) + 1) + 1)) ^ d ≤
       Real.exp (2 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) := by
@@ -76,7 +77,7 @@ lemma latticeBoxFactor_mul_pow_le_exp {r d : ℕ} (hrd : r ≤ d) :
         rw [← pow_mul, ← pow_add]
         exact add_two_pow_le_exp_mul_log (by push_cast; nlinarith)
 
-/-- For $k \le d$, `latticeBoxFactor k` $\cdot 2^d \le e^{2 (d + 2)^2 \log (d + 2)}$. -/
+/-- For `k ≤ d`, `latticeBoxFactor k * 2 ^ d ≤ exp (2 * (d + 2) ^ 2 * log (d + 2))`. -/
 lemma latticeBoxFactor_mul_two_pow_le_exp {k d : ℕ} (hkd : k ≤ d) :
     (latticeBoxFactor k : ℝ) * 2 ^ d ≤
       Real.exp (2 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) := by
@@ -89,7 +90,7 @@ lemma latticeBoxFactor_mul_two_pow_le_exp {k d : ℕ} (hkd : k ≤ d) :
         rw [← pow_add]
         exact add_two_pow_le_exp_mul_log (by push_cast; nlinarith)
 
-/-- $(4d + 1)^d \le e^{(d + 2)^2 \log (d + 2)}$. -/
+/-- `(2 * (2 * d) + 1) ^ d ≤ exp ((d + 2) ^ 2 * log (d + 2))`. -/
 lemma two_mul_two_mul_add_one_pow_le_exp (d : ℕ) :
     (2 * (2 * (d : ℝ)) + 1) ^ d ≤ Real.exp (((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) := by
   refine (pow_le_pow_left₀ (by positivity)
@@ -97,9 +98,9 @@ lemma two_mul_two_mul_add_one_pow_le_exp (d : ℕ) :
   rw [← pow_mul]
   exact add_two_pow_le_exp_mul_log (by push_cast; nlinarith)
 
-/-- For $A \ge 0$ and $e < d$,
-$A (e + 2)^3 \log (e + 2) + A (d + 2)^2 \log (d + 2) \le A (d + 2)^3 \log (d + 2)$. Indeed
-$(e + 2)^3 \le (d + 1)^3$ and $(d + 1)^3 + (d + 2)^2 \le (d + 2)^3$. -/
+/-- For `0 ≤ A` and `e < d`,
+`A * (e + 2) ^ 3 * log (e + 2) + A * (d + 2) ^ 2 * log (d + 2) ≤ A * (d + 2) ^ 3 * log (d + 2)`.
+Indeed `(e + 2) ^ 3 ≤ (d + 1) ^ 3` and `(d + 1) ^ 3 + (d + 2) ^ 2 ≤ (d + 2) ^ 3`. -/
 lemma mul_pow_three_mul_log_add_le {A : ℝ} (hA : 0 ≤ A) {e d : ℕ} (hed : e < d) :
     A * ((e : ℝ) + 2) ^ 3 * Real.log ((e : ℝ) + 2) +
         A * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2) ≤

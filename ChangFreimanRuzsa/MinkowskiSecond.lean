@@ -12,11 +12,12 @@ import Mathlib.Analysis.SpecialFunctions.Gamma.BohrMollerup
 
 /-! # Minkowski's second theorem for a weighted sum of squares
 
-Let $B$ be an integer $n \times n$ matrix with nonzero determinant and let $w_1, \dots, w_n$ be
-positive integer weights. The lattice $B \mathbb{Z}^n$ with the norm $x \mapsto \sum_j w_j x_j^2$
-is a positive definite integral lattice of determinant $\det(B)^2 \prod_j w_j$. Minkowski's second
-theorem, in the form proved in the Tau Ceti library, gives $n$ linearly independent vectors of this
-lattice whose norms have product at most $2^n \, n! \det(B)^2 \prod_j w_j$.
+Let `B : Matrix (Fin n) (Fin n) ℤ` have nonzero determinant and let `w : Fin n → ℕ` be positive
+weights. The lattice of the vectors `B *ᵥ c` with `c : Fin n → ℤ`, with the norm
+`x ↦ ∑ j, w j * x j ^ 2`, is a positive definite integral lattice of determinant
+`B.det ^ 2 * ∏ j, w j`. Minkowski's second theorem, in the form proved in the Tau Ceti library,
+gives `n` linearly independent vectors of this lattice whose norms have product at most
+`2 ^ n * n ! * (B.det ^ 2 * ∏ j, w j)`.
 
 The main result is `exists_linearIndependent_prod_weightedNorm_le`.
 -/
@@ -30,8 +31,8 @@ open scoped Nat
 
 variable {n : ℕ} {B : Matrix (Fin n) (Fin n) ℤ} {w : Fin n → ℕ}
 
-/-- The Gram matrix $B^T \operatorname{diag}(w) B$ of the columns of $B$ for the form
-$x \mapsto \sum_j w_j x_j^2$. -/
+/-- The Gram matrix `Bᵀ * diagonal w * B` of the columns of `B` for the form
+`x ↦ ∑ j, w j * x j ^ 2`. -/
 private def weightedGram (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
     Matrix (Fin n) (Fin n) ℤ :=
   Bᵀ * diagonal (fun j ↦ (w j : ℤ)) * B
@@ -59,7 +60,7 @@ private lemma posDef_weightedGram (hB : B.det ≠ 0) (hw : ∀ j, 0 < w j) :
   exact (PosDef.diagonal (by simpa using hw)).conjTranspose_mul_mul_same
     (mulVec_injective_of_det_ne_zero (by simpa [← Int.cast_det] using hB))
 
-/-- The lattice $\mathbb{Z}^n$ with the form $x \mapsto \sum_j w_j (Bx)_j^2$. -/
+/-- The lattice `ℤ ^ n` with the form `c ↦ ∑ j, w j * (B *ᵥ c) j ^ 2`. -/
 private noncomputable def weightedLattice (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
     IntegralLattice (Fin n → ℚ) :=
   IntegralLattice.ofGramMatrix (Pi.basisFun ℚ (Fin n)) (weightedGram B w) (weightedGram_isSymm B w)
@@ -70,13 +71,13 @@ private lemma determinant_weightedLattice :
     det_transpose, det_diagonal]
   ring
 
-/-- The basis of `weightedLattice B w` given by the standard basis of $\mathbb{Z}^n$. -/
+/-- The basis of `weightedLattice B w` given by the standard basis of `ℤ ^ n`. -/
 private noncomputable def weightedBasis (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
     Basis (Fin n) ℤ (weightedLattice B w) :=
   IntegralLattice.ofGramMatrix.basis _ _ _
 
-/-- The vector $B c \in B \mathbb{Z}^n$, where $c$ is the coordinate vector of a point of
-`weightedLattice B w` in the basis `weightedBasis B w`. -/
+/-- The vector `B *ᵥ c`, where `c` is the coordinate vector of a point of `weightedLattice B w` in
+the basis `weightedBasis B w`. -/
 private noncomputable def weightedVec (B : Matrix (Fin n) (Fin n) ℤ) (w : Fin n → ℕ) :
     weightedLattice B w →ₗ[ℤ] (Fin n → ℤ) :=
   B.mulVecLin ∘ₗ (weightedBasis B w).equivFun.toLinearMap
@@ -96,7 +97,7 @@ private lemma integralNorm_weightedLattice (y : weightedLattice B w) :
   refine .trans ?_ (dotProduct_weightedGram_mulVec ((weightedBasis B w).equivFun y))
   simp [dotProduct, mulVec, Finset.mul_sum, mul_assoc]
 
-/-- $\Gamma(n/2 + 1)^2 \le n!$, by the log-convexity of $\Gamma$ between $1$ and $n + 1$. -/
+/-- `Gamma (n / 2 + 1) ^ 2 ≤ n !`, by the log-convexity of `Gamma` between `1` and `n + 1`. -/
 private lemma gamma_sq_le_factorial (n : ℕ) : Real.Gamma (n / 2 + 1) ^ 2 ≤ n ! := by
   have h := Real.Gamma_mul_add_mul_le_rpow_Gamma_mul_rpow_Gamma (s := 1) (t := n + 1)
     (a := 1 / 2) (b := 1 / 2) one_pos (by positivity) (by norm_num) (by norm_num) (by norm_num)
@@ -105,8 +106,8 @@ private lemma gamma_sq_le_factorial (n : ℕ) : Real.Gamma (n / 2 + 1) ^ 2 ≤ n
   exact (pow_le_pow_left₀ (Real.Gamma_pos_of_pos (by positivity)).le h 2).trans_eq
     (Real.sq_sqrt (Nat.cast_nonneg _))
 
-/-- The constant $4^n \Gamma(n/2 + 1)^2 / \pi^n$ of Minkowski's second theorem is at most
-$2^n \, n!$. -/
+/-- The constant `4 ^ n * Gamma (n / 2 + 1) ^ 2 / π ^ n` of Minkowski's second theorem is at most
+`2 ^ n * n !`. -/
 private lemma le_of_mul_pi_pow_le {P Δ : ℝ} (hP : 0 ≤ P) (hΔ : 0 ≤ Δ)
     (h : P * Real.pi ^ n ≤ 4 ^ n * Real.Gamma (n / 2 + 1) ^ 2 * Δ) : P ≤ 2 ^ n * n ! * Δ := by
   refine le_of_mul_le_mul_left ?_ (pow_pos zero_lt_two n)
@@ -115,9 +116,9 @@ private lemma le_of_mul_pi_pow_le {P Δ : ℝ} (hP : 0 ≤ P) (hΔ : 0 ≤ Δ)
     _ ≤ 4 ^ n * n ! * Δ := by gcongr; exact gamma_sq_le_factorial n
     _ = 2 ^ n * (2 ^ n * n ! * Δ) := by rw [(by norm_num : (4 : ℝ) = 2 * 2), mul_pow]; ring
 
-/-- **Minkowski's second theorem** for the lattice $B \mathbb{Z}^n$ and the norm
-$x \mapsto \sum_j w_j x_j^2$. There are $n$ linearly independent lattice vectors whose norms have
-product at most $2^n \, n! \det(B)^2 \prod_j w_j$. -/
+/-- **Minkowski's second theorem** for the lattice of the vectors `B *ᵥ c` with `c : Fin n → ℤ`
+and the norm `x ↦ ∑ j, w j * x j ^ 2`. There are `n` linearly independent lattice vectors whose
+norms have product at most `2 ^ n * n ! * (B.det ^ 2 * ∏ j, w j)`. -/
 lemma exists_linearIndependent_prod_weightedNorm_le (hB : B.det ≠ 0) (hw : ∀ j, 0 < w j) :
     ∃ v : Fin n → Fin n → ℤ, LinearIndependent ℤ v ∧ (∀ i, ∃ c, B *ᵥ c = v i) ∧
       ∏ i, ∑ j, (w j : ℝ) * v i j ^ 2 ≤ 2 ^ n * n ! * ((B.det : ℝ) ^ 2 * ∏ j, (w j : ℝ)) := by

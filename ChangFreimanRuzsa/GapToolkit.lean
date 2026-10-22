@@ -17,31 +17,30 @@ import Mathlib.Algebra.BigOperators.Fin
 This file develops the basic theory of (not necessarily proper) generalized arithmetic progressions
 (GAPs) and their interaction with Freiman isomorphisms.
 
-A GAP $P$ with origin $x_0$ and bound $b$ has the steps $v$ with $b_v \ne 0$. Numbering them as
-$v_0, \dots, v_{d - 1}$, with lengths $\ell_i = b_{v_i} + 1 \ge 2$, gives the usual description
-$P = \{x_0 + \sum_i w_i v_i : 0 \le w_i < \ell_i\}$.
+A GAP `P` has the steps `v` with `P.bound v ≠ 0`. Numbering them as `P.step i` for `i : Fin P.dim`,
+with lengths `P.length i = P.bound (P.step i) + 1 ≥ 2`, gives the usual description of the points
+of `P` as `P.origin + ∑ i, w i • P.step i` with `w i < P.length i`.
 
 ## Main definitions
 
 * `GAP.ofSteps`: the GAP with prescribed origin, numbered steps and lengths.
 * `GAP.step` and `GAP.length`: the numbered steps and lengths of a GAP.
-* `GAP.size`: the number $\prod_v (b_v + 1)$ of coefficient vectors.
+* `GAP.size`: the number `∏ v ∈ P.bound.support, (P.bound v + 1)` of coefficient vectors.
 * `GAP.coeff` and `GAP.coordinateMap`: coefficients of an element of a GAP.
 * `GAP.map` and `GAP.shift`: images of a GAP under additive homomorphisms and translations.
-* `stepsHom`, `stepHom` and `symBox`: the homomorphism $\mathbb{Z}^d \to G$ given by the steps,
+* `stepsHom`, `stepHom` and `symBox`: the homomorphism from `ℤ ^ d` to `G` given by the steps,
   and the symmetric box of differences of coefficient vectors.
 
 ## Main statements
 
-* `GAP.carrier_add`: the points of $P + Q$ are the sums of a point of $P$ and a point of $Q$.
-* `GAP.proper_iff_card_eq_size`: a GAP is proper if and only if it has $\prod_v (b_v + 1)$
-  elements.
-* `GAP.proper_iff_injective` and `GAP.twoProper_iff_injective`: properness and $2$-properness in
+* `GAP.carrier_add`: the points of `P + Q` are the sums of a point of `P` and a point of `Q`.
+* `GAP.proper_iff_card_eq_size`: a GAP `P` is proper if and only if it has `P.size` elements.
+* `GAP.proper_iff_injective` and `GAP.twoProper_iff_injective`: properness and `2`-properness in
   terms of the numbered steps and lengths.
 * `GAP.coordinateMap_bijOn_iff`: a GAP is proper if and only if its coordinate map is a bijection
   onto its box.
 * `GAP.coordinateMap_isAddFreimanIso_iff`: the coordinate map of a GAP is a Freiman
-  2-isomorphism onto its box in $\mathbb{Z}^d$ if and only if the GAP is $2$-proper.
+  `2`-isomorphism onto its box in `ℤ ^ d` if and only if the GAP is `2`-proper.
 -/
 
 @[expose] public section
@@ -58,8 +57,7 @@ section Decomposition
 
 variable {ι : Type*}
 
-/-- A function $c \le a + b$ with values in $\mathbb{N}$ is the sum of functions $c_1 \le a$ and
-$c_2 \le b$. -/
+/-- A function `c ≤ a + b` with values in `ℕ` is the sum of functions `c₁ ≤ a` and `c₂ ≤ b`. -/
 lemma exists_add_eq_of_le_add {a b c : ι →₀ ℕ} (h : c ≤ a + b) :
     ∃ c₁ ≤ a, ∃ c₂ ≤ b, c₁ + c₂ = c := by
   refine ⟨c ⊓ a, inf_le_right, c - c ⊓ a, ?_, add_tsub_cancel_of_le inf_le_left⟩
@@ -67,15 +65,15 @@ lemma exists_add_eq_of_le_add {a b c : ι →₀ ℕ} (h : c ≤ a + b) :
   intro v
   grind [Finsupp.inf_apply, Finsupp.tsub_apply, Finsupp.add_apply, h v]
 
-/-- A function below $m \delta_v$ is $n \delta_v$ for some $n$. -/
+/-- A function below `Finsupp.single v m` is `Finsupp.single v n` for some `n`. -/
 lemma eq_single_of_le_single {c : ι →₀ ℕ} {v : ι} {m : ℕ} (h : c ≤ Finsupp.single v m) :
     c = Finsupp.single v (c v) := by
   classical
   ext u
   grind [Finsupp.le_def.1 h u]
 
-/-- The functions below $\sum_i n_i \delta_{s_i}$ are the functions $\sum_i w_i \delta_{s_i}$
-with $w \le n$. -/
+/-- The functions below `∑ i, Finsupp.single (s i) (n i)` are the functions
+`∑ i, Finsupp.single (s i) (w i)` with `w ≤ n`. -/
 lemma le_sum_single_iff {d : ℕ} {s : Fin d → ι} {n : Fin d → ℕ} {c : ι →₀ ℕ} :
     c ≤ ∑ i, Finsupp.single (s i) (n i) ↔
       ∃ w : Fin d → ℕ, (∀ i, w i ≤ n i) ∧ ∑ i, Finsupp.single (s i) (w i) = c := by
@@ -103,8 +101,8 @@ lemma le_sum_single_iff {d : ℕ} {s : Fin d → ι} {n : Fin d → ℕ} {c : ι
 
 end Decomposition
 
-/-- The points $x_0 + \sum_i w_i v_i$ with $0 \le w_i < \ell_i$ are the points
-$x_0 + \sum_i c_i v_i$ with natural numbers $c_i < \ell_i$. -/
+/-- The points `gapMap origin step length w` are the points `origin + ∑ i, c i • step i` with
+natural numbers `c i < length i`. -/
 lemma mem_image_gapMap_iff {G : Type*} [DecidableEq G] [AddCommMonoid G] {d : ℕ} {origin : G}
     {step : Fin d → G} {length : Fin d → ℕ} {x : G} :
     x ∈ Finset.univ.image (gapMap origin step length) ↔
@@ -167,7 +165,7 @@ lemma origin_mem (P : GAP G) : P.origin ∈ P.carrier := by
 lemma nonempty (P : GAP G) : P.carrier.Nonempty :=
   ⟨_, P.origin_mem⟩
 
-/-- The points of $P + Q$ are the sums of a point of $P$ and a point of $Q$. -/
+/-- The points of `P + Q` are the sums of a point of `P` and a point of `Q`. -/
 lemma carrier_add (P Q : GAP G) : (P + Q).carrier = P.carrier + Q.carrier := by
   ext x
   simp only [mem_carrier, Finset.mem_add, bound_add]
@@ -186,9 +184,9 @@ lemma dim_add_le (P Q : GAP G) : (P + Q).dim ≤ P.dim + Q.dim := by
 
 /-! ## Progressions with numbered steps -/
 
-/-- The GAP with origin $x_0$, numbered steps $s_i$ and lengths $\ell_i$, whose bound is
-$\sum_i (\ell_i - 1) \delta_{s_i}$. Equal steps are merged, and steps of length $1$ do not
-contribute. -/
+/-- The GAP with the given origin, numbered steps `step i` and lengths `length i`, whose bound is
+`∑ i, Finsupp.single (step i) (length i - 1)`. Equal steps are merged, and steps of length `1` do
+not contribute. -/
 def ofSteps {d : ℕ} (origin : G) (step : Fin d → G) (length : Fin d → ℕ) : GAP G :=
   ⟨origin, ∑ i, Finsupp.single (step i) (length i - 1)⟩
 
@@ -223,7 +221,7 @@ lemma proper_ofSteps (hl : ∀ i, 0 < length i) (h : Function.Injective (gapMap 
   rfl
 
 /-- A GAP with distinct numbered steps is proper if and only if its points
-$x_0 + \sum_i w_i s_i$ with $0 \le w_i < \ell_i$ are distinct. -/
+`origin + ∑ i, w i • step i` with `w i < length i` are distinct. -/
 lemma proper_ofSteps_iff (hs : Function.Injective step) (hl : ∀ i, 0 < length i) :
     (ofSteps origin step length).Proper ↔ Function.Injective (gapMap origin step length) := by
   classical
@@ -245,7 +243,7 @@ lemma dim_ofSteps_le : (ofSteps origin step length).dim ≤ d := by
   exact Finset.mem_image.2 ⟨i, Finset.mem_univ _, (Finset.mem_singleton.1
     (Finsupp.support_single_subset hi)).symm⟩
 
-/-- A GAP with $d$ distinct numbered steps, all of length at least $2$, has dimension $d$. -/
+/-- A GAP with `d` distinct numbered steps, all of length at least `2`, has dimension `d`. -/
 lemma dim_ofSteps (hs : Function.Injective step) (hl : ∀ i, 1 < length i) :
     (ofSteps origin step length).dim = d := by
   classical
@@ -272,10 +270,10 @@ lemma card_carrier_ofSteps_le [DecidableEq G] (hl : ∀ i, 0 < length i) :
 
 end OfSteps
 
-/-- The steps of a GAP, numbered: the elements $v$ with $b_v \ne 0$. -/
+/-- The steps of a GAP, numbered: the elements `v` with `P.bound v ≠ 0`. -/
 def step (P : GAP G) (i : Fin P.dim) : G := P.bound.support.equivFin.symm i
 
-/-- The length $b_v + 1$ of the $i$-th step $v$ of a GAP. -/
+/-- The length `P.bound v + 1` of the `i`-th step `v` of a GAP. -/
 def length (P : GAP G) (i : Fin P.dim) : ℕ := P.bound (P.step i) + 1
 
 lemma step_injective (P : GAP G) : Function.Injective P.step :=
@@ -306,15 +304,15 @@ lemma carrier_eq [DecidableEq G] (P : GAP G) :
   conv_lhs => rw [← P.ofSteps_step_length]
   exact carrier_ofSteps P.length_pos
 
-/-- A GAP is proper if and only if its points $x_0 + \sum_i w_i v_i$ with $0 \le w_i < \ell_i$ are
-distinct. -/
+/-- A GAP is proper if and only if its points `P.origin + ∑ i, w i • P.step i` with
+`w i < P.length i` are distinct. -/
 lemma proper_iff_injective (P : GAP G) :
     P.Proper ↔ Function.Injective (gapMap P.origin P.step P.length) := by
   conv_lhs => rw [← P.ofSteps_step_length]
   exact proper_ofSteps_iff P.step_injective P.length_pos
 
-/-- An element $x$ lies in a GAP with origin $x_0$, steps $v_i$ and lengths $\ell_i$ if and only if
-$x = x_0 + \sum_i c_i v_i$ for some natural numbers $c_i < \ell_i$. -/
+/-- An element `x` lies in a GAP `P` if and only if `x = P.origin + ∑ i, c i • P.step i` for some
+natural numbers `c i < P.length i`. -/
 lemma mem_carrier_iff [DecidableEq G] (P : GAP G) {x : G} :
     x ∈ P.carrier ↔ ∃ c : Fin P.dim → ℕ, (∀ i, c i < P.length i) ∧
       P.origin + ∑ i, c i • P.step i = x := by
@@ -323,7 +321,8 @@ lemma mem_carrier_iff [DecidableEq G] (P : GAP G) {x : G} :
 
 /-! ## The size of a progression -/
 
-/-- The number $\prod_v (b_v + 1)$ of coefficient vectors $c \le b$ of a GAP. -/
+/-- The number `∏ v ∈ P.bound.support, (P.bound v + 1)` of coefficient vectors `c ≤ P.bound` of a
+GAP. -/
 def size (P : GAP G) : ℕ := ∏ v ∈ P.bound.support, (P.bound v + 1)
 
 lemma size_eq_card_Iic [DecidableEq G] (P : GAP G) : P.size = (Finset.Iic P.bound).card := by
@@ -341,7 +340,7 @@ variable [DecidableEq G]
 lemma card_le_size (P : GAP G) : P.carrier.card ≤ P.size :=
   Finset.card_image_le.trans_eq P.size_eq_card_Iic.symm
 
-/-- A GAP is proper if and only if it has $\prod_v (b_v + 1)$ elements. This is the definition of
+/-- A GAP `P` is proper if and only if it has `P.size` elements. This is the definition of
 properness of Chang and of Green. -/
 lemma proper_iff_card_eq_size (P : GAP G) : P.Proper ↔ P.carrier.card = P.size := by
   rw [size_eq_card_Iic, carrier, Finset.card_image_iff, Finset.coe_Iic]
@@ -350,7 +349,7 @@ lemma proper_iff_card_eq_size (P : GAP G) : P.Proper ↔ P.carrier.card = P.size
 lemma card_eq_size {P : GAP G} (h : P.Proper) : P.carrier.card = P.size :=
   P.proper_iff_card_eq_size.1 h
 
-/-- A GAP is proper if and only if it has $\prod_i \ell_i$ elements. -/
+/-- A GAP `P` is proper if and only if it has `∏ i, P.length i` elements. -/
 lemma proper_iff_card_eq_prod_length (P : GAP G) : P.Proper ↔ P.carrier.card = ∏ i, P.length i := by
   rw [proper_iff_card_eq_size, size_eq_prod_length]
 
@@ -370,8 +369,8 @@ lemma size_add_le (P Q : GAP G) : (P + Q).size ≤ P.size * Q.size := by
   obtain ⟨c₁, hc₁, c₂, hc₂, rfl⟩ := exists_add_eq_of_le_add (Finset.mem_Iic.1 hc)
   exact Finset.add_mem_add (Finset.mem_Iic.2 hc₁) (Finset.mem_Iic.2 hc₂)
 
-/-- The sum of a GAP $P$ and a GAP with the same bound has at most $2^{\dim P}$ times as many
-coefficient vectors as $P$. -/
+/-- The sum of a GAP `P` and a GAP with the same bound has at most `2 ^ P.dim` times as many
+coefficient vectors as `P`. -/
 lemma size_add_le_of_bound_eq {P Q : GAP G} (h : Q.bound = P.bound) :
     (P + Q).size ≤ 2 ^ P.dim * P.size := by
   classical
@@ -384,8 +383,8 @@ lemma size_add_le_of_bound_eq {P Q : GAP G} (h : Q.bound = P.bound) :
 
 /-! ## Two-proper progressions -/
 
-/-- The sum of a GAP $P$ and a GAP with the same bound is the GAP with the steps of $P$ and the
-lengths $2 \ell_i - 1$. -/
+/-- The sum of a GAP `P` and a GAP with the same bound is the GAP with the steps of `P` and the
+lengths `2 * P.length i - 1`. -/
 lemma add_eq_ofSteps {P Q : GAP G} (h : Q.bound = P.bound) :
     P + Q = ofSteps (P.origin + Q.origin) P.step fun i ↦ 2 * P.length i - 1 := by
   refine ext rfl ?_
@@ -394,8 +393,8 @@ lemma add_eq_ofSteps {P Q : GAP G} (h : Q.bound = P.bound) :
   congr with i
   grind [P.length_pos i]
 
-/-- A GAP is $2$-proper if and only if the points $2 x_0 + \sum_i w_i v_i$ with
-$0 \le w_i < 2 \ell_i - 1$ are distinct. -/
+/-- A GAP is `2`-proper if and only if the points `2 • P.origin + ∑ i, w i • P.step i` with
+`w i < 2 * P.length i - 1` are distinct. -/
 lemma twoProper_iff_injective (P : GAP G) : P.TwoProper ↔
     Function.Injective (gapMap (P.origin + P.origin) P.step fun i ↦ 2 * P.length i - 1) := by
   rw [TwoProper, add_eq_ofSteps rfl]
@@ -423,7 +422,7 @@ lemma card_box : P.box.card = ∏ i, P.length i := by
     ext i
     simpa using congr_fun hw i
 
-/-- Add two coefficient vectors of a GAP. The sums have coordinates $w_i < 2 \ell_i - 1$. -/
+/-- Add two coefficient vectors of a GAP. The sums have coordinates `w i < 2 * P.length i - 1`. -/
 def sumCoefficients (w₁ w₂ : (i : Fin P.dim) → Fin (P.length i)) :
     (i : Fin P.dim) → Fin (2 * P.length i - 1) :=
   fun i ↦ ⟨(w₁ i : ℕ) + w₂ i, by grind⟩
@@ -437,8 +436,8 @@ lemma gapMap_add_eq (w₁ w₂ : (i : Fin P.dim) → Fin (P.length i)) :
   rw [Finset.sum_add_distrib]
   ac_rfl
 
-/-- Every coefficient vector with $w_i < 2 \ell_i - 1$ is the sum of two coefficient vectors of
-the GAP. -/
+/-- Every coefficient vector with `w i < 2 * P.length i - 1` is the sum of two coefficient vectors
+of the GAP. -/
 lemma exists_sumCoefficients_eq (u : (i : Fin P.dim) → Fin (2 * P.length i - 1)) :
     ∃ w₁ w₂, P.sumCoefficients w₁ w₂ = u := by
   refine ⟨fun i ↦ ⟨min (u i : ℕ) (P.length i - 1), by grind [P.length_pos i]⟩,
@@ -458,8 +457,8 @@ section Coefficients
 
 variable [DecidableEq G] (P : GAP G)
 
-/-- Coefficients $0 \le w_i < \ell_i$ of an element $x$ of a GAP, so that
-$x = x_0 + \sum_i w_i v_i$. They are all $0$ when $x$ does not lie in the GAP. -/
+/-- Coefficients `w i < P.length i` of an element `x` of a GAP, so that
+`x = P.origin + ∑ i, w i • P.step i`. They are all `0` when `x` does not lie in the GAP. -/
 def coeff (x : G) : (i : Fin P.dim) → Fin (P.length i) :=
   if hx : x ∈ P.carrier then (Finset.mem_image.1 (P.carrier_eq ▸ hx)).choose
   else fun i ↦ ⟨0, P.length_pos i⟩
@@ -469,7 +468,7 @@ lemma gapMap_coeff {x : G} (hx : x ∈ P.carrier) :
   obtain ⟨-, h⟩ := (Finset.mem_image.1 (P.carrier_eq ▸ hx)).choose_spec
   rwa [coeff, dite_eq_left hx]
 
-/-- The coefficients `P.coeff x` of $x$, as an integer vector. -/
+/-- The coefficients `P.coeff x` of `x`, as an integer vector. -/
 def coordinateMap (x : G) : Fin P.dim → ℤ :=
   fun i ↦ P.coeff x i
 
@@ -520,8 +519,8 @@ lemma coordinateMap_add_eq_iff {P : GAP G} (h : P.TwoProper) {a b c d : G}
     (P.twoProper_iff_injective.1 h).eq_iff, sumCoefficients_eq_iff]
   rfl
 
-/-- The coordinate map of a GAP $P$ is a Freiman $2$-isomorphism onto its box if and only if $P$ is
-$2$-proper. The first condition says that $P$ is an $F_2$-progression in the sense of Bilu. -/
+/-- The coordinate map of a GAP `P` is a Freiman `2`-isomorphism onto its box if and only if `P` is
+`2`-proper. The first condition says that `P` is an `F₂`-progression in the sense of Bilu. -/
 lemma coordinateMap_isAddFreimanIso_iff :
     IsAddFreimanIso 2 P.carrier P.box P.coordinateMap ↔ P.TwoProper := by
   constructor
@@ -548,8 +547,8 @@ end Coefficients
 
 /-! ## Images and translates -/
 
-/-- The image of a GAP under an additive homomorphism $f$: the GAP with origin $f(x_0)$, steps
-$f(v_i)$ and the same lengths. -/
+/-- The image of a GAP under an additive homomorphism `f`: the GAP with origin `f P.origin`, steps
+`f (P.step i)` and the same lengths. -/
 def map {H : Type*} [AddCommMonoid H] (f : G →+ H) (P : GAP G) : GAP H :=
   ofSteps (f P.origin) (fun i ↦ f (P.step i)) P.length
 
@@ -584,7 +583,7 @@ end GAP
 
 /-! ## The step homomorphism and the symmetric coefficient box
 
-Both are defined for a GAP in an abelian group, where coefficients may be taken in $\mathbb{Z}$.
+Both are defined for a GAP in an abelian group, where coefficients may be taken in `ℤ`.
 -/
 
 section Steps

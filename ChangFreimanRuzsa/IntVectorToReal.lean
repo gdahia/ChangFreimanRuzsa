@@ -9,9 +9,8 @@ public import Mathlib.Basic.Real.Basic
 
 /-! # Integer vectors as real vectors
 
-This file defines the coordinatewise inclusion `intVectorToReal` of $\mathbb{Z}^d$ into
-$\mathbb{R}^d$, the additive map `Int.castAddHom` applied in each coordinate, and proves that it
-is injective.
+This file defines the coordinatewise inclusion `intVectorToReal` of `ℤ ^ d` into `ℝ ^ d`, the
+additive map `Int.castAddHom` applied in each coordinate, and proves that it is injective.
 -/
 
 @[expose] public section

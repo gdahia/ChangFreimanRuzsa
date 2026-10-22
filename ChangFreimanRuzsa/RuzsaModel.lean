@@ -17,29 +17,28 @@ import Mathlib.Data.Rat.Cast.Order
 
 /-! # Ruzsa's model lemma
 
-A subset $X$ of $\mathbb{Z}/q\mathbb{Z}$ with small doubling has a subset $X_1$ of density $1/s$
-in $X$ that is Freiman $s$-isomorphic to a subset of $\mathbb{Z}/m\mathbb{Z}$, for any
-$m \ge |sX - sX|$. When $|X + X| \le \kappa |X|$, the Plünnecke–Ruzsa inequality allows
-$m \le \kappa^{2s} |X|$, so the density of the image of $X_1$ in $\mathbb{Z}/m\mathbb{Z}$ is
-bounded below in terms of $\kappa$ and $s$ alone.
+A subset `X` of `ZMod q` with small doubling has a subset `X₁` of density `1 / s` in `X` that is
+Freiman `s`-isomorphic to a subset of `ZMod m`, for any `m` with `#(s • X - s • X) ≤ m`. When
+`#(X + X) ≤ κ * #X`, the Plünnecke–Ruzsa inequality allows `m ≤ κ ^ (2 * s) * #X`, so the density
+of the image of `X₁` in `ZMod m` is bounded below in terms of `κ` and `s` alone.
 
-The construction is Ruzsa's. Fix an invertible dilation $l$ of $\mathbb{Z}/q\mathbb{Z}$, which
-uses that $q$ is prime, and consider the integer representative $(l x).\mathrm{val} \in [0, q)$.
-Splitting $[0, q)$ into $s$ intervals $[jL, (j + 1)L)$ of length $L = \lceil q / s \rceil$ and
-keeping the interval $j$ that contains the most dilated points produces $X_1$ and the integer
-coordinate
-$$\mathtt{modelInt}\ L\ j\ l\ x = (l x).\mathrm{val} - j L \in [0, L),$$
-whose $s$-fold sums do not wrap around modulo $q$. Reducing that coordinate modulo $m$ is a Freiman
-$s$-isomorphism when the dilation is good (`IsGoodDilation`): no nonzero element of $sX - sX$ is
-dilated onto a residue divisible by $m$. A good dilation exists by counting, because there are only
-$|sX - sX| \le m$ elements to avoid and each of them rules out at most $(q - 1) / m$ dilations.
+The construction is Ruzsa's. Fix an invertible dilation `l` of `ZMod q`, which uses that `q` is
+prime, and consider the integer representative `(l * x).val < q`. Splitting `Set.Ico 0 q` into `s`
+intervals `Set.Ico (j * L) ((j + 1) * L)` of length `L = (q + s - 1) / s` and keeping the
+interval `j` that contains the most dilated points produces `X₁` and the integer coordinate
+`modelInt L j l x = (l * x).val - j * L`, which lies in `Set.Ico 0 L` and whose `s`-fold sums do
+not wrap around modulo `q`. Reducing that coordinate modulo `m` is a Freiman `s`-isomorphism when
+the dilation is good (`IsGoodDilation`): no nonzero element of `s • X - s • X` is dilated onto a
+residue divisible by `m`. A good dilation exists by counting, because there are only
+`#(s • X - s • X) ≤ m` elements to avoid and each of them rules out at most `(q - 1) / m`
+dilations.
 
 ## Main results
 
 * `exists_subset_card_le_mul_card_isAddFreimanIso`: Ruzsa's model lemma over an arbitrary modulus
-  $m \ge |sX - sX|$.
+  `m` with `#(s • X - s • X) ≤ m`.
 * `exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le`: the same statement with the
-  Plünnecke–Ruzsa bound $m \le \kappa^{2s} |X|$ for the modulus.
+  Plünnecke–Ruzsa bound `m ≤ κ ^ (2 * s) * #X` for the modulus.
 -/
 
 @[expose] public section
@@ -57,8 +56,8 @@ variable {q m s L j : ℕ}
 
 /-! ### Good dilations -/
 
-/-- A dilation $l$ of $\mathbb{Z}/q\mathbb{Z}$ is $m$-good for $D$ when no nonzero element of $D$
-is dilated onto a residue whose representative is divisible by $m$. -/
+/-- A dilation `l` of `ZMod q` is `m`-good for `D` when no nonzero element of `D` is dilated onto a
+residue whose representative is divisible by `m`. -/
 def IsGoodDilation (m : ℕ) (D : Finset (ZMod q)) (l : ZMod q) : Prop :=
   ∀ d ∈ D, d ≠ 0 → ¬ m ∣ (l * d).val
 
@@ -73,7 +72,7 @@ def dvdResidues (q m : ℕ) [NeZero q] : Finset (ZMod q) :=
 lemma mem_dvdResidues [NeZero q] {y : ZMod q} : y ∈ dvdResidues q m ↔ y ≠ 0 ∧ m ∣ y.val := by
   simp [dvdResidues]
 
-/-- There are at most $(q - 1) / m$ nonzero residues with representative divisible by $m$. -/
+/-- There are at most `(q - 1) / m` nonzero residues with representative divisible by `m`. -/
 lemma card_dvdResidues_le (q m : ℕ) [NeZero q] : #(dvdResidues q m) ≤ (q - 1) / m := by
   suffices h : #(dvdResidues q m) ≤ #(Icc 1 ((q - 1) / m)) by simpa using h
   apply card_le_card_of_injOn (fun y ↦ y.val / m)
@@ -90,7 +89,7 @@ lemma card_dvdResidues_le (q m : ℕ) [NeZero q] : #(dvdResidues q m) ≤ (q - 1
     rw [← Nat.div_mul_cancel hy, ← Nat.div_mul_cancel hz]
     exact congrArg (· * m) hyz
 
-/-- The dilations $l$ that send some nonzero $d \in D$ into `dvdResidues q m`. -/
+/-- The dilations `l` that send some nonzero `d ∈ D` into `dvdResidues q m`. -/
 def forbiddenDilations [NeZero q] (m : ℕ) (D : Finset (ZMod q)) : Finset (ZMod q) :=
   (D.erase 0).biUnion fun d ↦ (dvdResidues q m).image (· * d⁻¹)
 
@@ -99,7 +98,7 @@ lemma card_forbiddenDilations_le [NeZero q] (m : ℕ) (D : Finset (ZMod q)) :
   apply card_biUnion_le.trans
   simpa using sum_le_card_nsmul _ _ _ fun d _ ↦ card_image_le
 
-/-- If $0 \in D$ and $|D| \le m$, fewer than $q - 1$ dilations are forbidden. -/
+/-- If `0 ∈ D` and `#D ≤ m`, fewer than `q - 1` dilations are forbidden. -/
 lemma card_forbiddenDilations_lt [NeZero q] (hq : 2 ≤ q) {D : Finset (ZMod q)} (h0 : 0 ∈ D)
     (hD : #D ≤ m) : #(forbiddenDilations m D) < q - 1 := by
   have h := card_forbiddenDilations_le m D
@@ -120,12 +119,12 @@ lemma isGoodDilation_of_notMem_forbiddenDilations [Fact q.Prime] {D : Finset (ZM
   refine ⟨d, mem_erase.2 ⟨hd0, hd⟩, mem_image.2 ⟨l * d, ?_, mul_inv_cancel_right₀ hd0 l⟩⟩
   exact mem_dvdResidues.2 ⟨mul_ne_zero hl hd0, hdvd⟩
 
-/-- A set $D$ of at most $m$ residues, containing $0$, admits a nonzero dilation that maps no
-nonzero element of $D$ onto a multiple of $m$.
+/-- A set `D` of at most `m` residues, containing `0`, admits a nonzero dilation that maps no
+nonzero element of `D` onto a multiple of `m`.
 
-A nonzero $d \in D$ forbids only the dilations $l$ with $l d \in$ `dvdResidues q m`, of which
-there are at most $(q - 1) / m$, so at most $(|D| - 1) \lfloor (q - 1) / m \rfloor < q - 1$
-dilations are forbidden altogether. -/
+A nonzero `d ∈ D` forbids only the dilations `l` with `l * d ∈ dvdResidues q m`, of which there
+are at most `(q - 1) / m`, so at most `(#D - 1) * ((q - 1) / m) < q - 1` dilations are forbidden
+altogether. -/
 lemma exists_isGoodDilation (hq : q.Prime) {D : Finset (ZMod q)} (h0 : 0 ∈ D) (hD : #D ≤ m) :
     ∃ l : ZMod q, l ≠ 0 ∧ IsGoodDilation m D l := by
   have := Fact.mk hq
@@ -138,30 +137,30 @@ lemma exists_isGoodDilation (hq : q.Prime) {D : Finset (ZMod q)} (h0 : 0 ∈ D) 
 /-! ### The model map -/
 
 /-- The integer coordinate of the Ruzsa model: the representative of the dilated point, translated
-so that the selected interval $[jL, (j + 1)L)$ starts at $0$. -/
+so that the selected interval `Set.Ico (j * L) ((j + 1) * L)` starts at `0`. -/
 def modelInt (L j : ℕ) (l x : ZMod q) : ℤ := ((l * x).val : ℤ) - j * L
 
 /-- The Ruzsa model map: the integer coordinate `modelInt`, read in `ZMod m`. -/
 def modelMap (m L j : ℕ) (l x : ZMod q) : ZMod m := (modelInt L j l x : ZMod m)
 
-/-- The model coordinate of a point of the interval $j$ is nonnegative. -/
+/-- The model coordinate of a point of the interval `j` is nonnegative. -/
 lemma modelInt_nonneg {l x : ZMod q} (hx : (l * x).val / L = j) : 0 ≤ modelInt L j l x := by
   subst hx
   grind [modelInt, Nat.div_mul_le_self (l * x).val L]
 
-/-- The model coordinate of a point of the interval $j$ is smaller than the length $L$. -/
+/-- The model coordinate of a point of the interval `j` is smaller than the length `L`. -/
 lemma modelInt_le (hL : 0 < L) {l x : ZMod q} (hx : (l * x).val / L = j) :
     modelInt L j l x ≤ L - 1 := by
   subst hx
   grind [modelInt, Nat.lt_div_mul_add (a := (l * x).val) hL]
 
-/-- Read back in `ZMod q`, the model coordinate is the dilated point translated by $-jL$. -/
+/-- Read back in `ZMod q`, the model coordinate is the dilated point translated by `-(j * L)`. -/
 lemma intCast_modelInt [NeZero q] (L j : ℕ) (l x : ZMod q) :
     (modelInt L j l x : ZMod q) = l * x - j * L := by
   simp [modelInt]
 
-/-- The sum of the model coordinates of a multiset $\sigma$, read back in `ZMod q`, is
-$l \sum \sigma - |\sigma| j L$. -/
+/-- The sum of the model coordinates of a multiset `σ`, read back in `ZMod q`, is
+`l * σ.sum - card σ * (j * L)`. -/
 lemma intCast_modelInt_sum [NeZero q] (L j : ℕ) (l : ZMod q) (σ : Multiset (ZMod q)) :
     ((σ.map (modelInt L j l)).sum : ZMod q) = l * σ.sum - Multiset.card σ * (j * L) := by
   induction σ using Multiset.induction_on with
@@ -173,7 +172,7 @@ lemma intCast_modelInt_sum [NeZero q] (L j : ℕ) (l : ZMod q) (σ : Multiset (Z
     ring
 
 /-- For two multisets of the same size, the difference of the sums of their model coordinates is
-congruent to the dilated difference of their sums modulo $q$. -/
+congruent to the dilated difference of their sums modulo `q`. -/
 lemma intCast_modelInt_sum_sub [NeZero q] (L j : ℕ) (l : ZMod q) {σ τ : Multiset (ZMod q)}
     (h : Multiset.card σ = Multiset.card τ) :
     (((σ.map (modelInt L j l)).sum - (τ.map (modelInt L j l)).sum : ℤ) : ZMod q) =
@@ -218,8 +217,8 @@ lemma modelInt_sum_nonneg {A : Finset (ZMod q)} {l : ZMod q}
   obtain ⟨x, hx, rfl⟩ := Multiset.mem_map.1 hz
   exact modelInt_nonneg (hA x (hρ x hx))
 
-/-- The sum of the model coordinates of a multiset $\rho$ of elements of a single interval is at
-most $|\rho| (L - 1)$. -/
+/-- The sum of the model coordinates of a multiset `ρ` of elements of a single interval is at most
+`card ρ * (L - 1)`. -/
 lemma modelInt_sum_le {A : Finset (ZMod q)} {l : ZMod q} (hL : 0 < L)
     (hA : ∀ x ∈ A, (l * x).val / L = j) {ρ : Multiset (ZMod q)} (hρ : ∀ x ∈ ρ, x ∈ A) :
     (ρ.map (modelInt L j l)).sum ≤ Multiset.card ρ * (L - 1 : ℤ) := by
@@ -228,8 +227,8 @@ lemma modelInt_sum_le {A : Finset (ZMod q)} {l : ZMod q} (hL : 0 < L)
   obtain ⟨x, hx, rfl⟩ := Multiset.mem_map.1 hz
   exact modelInt_le hL (hA x (hρ x hx))
 
-/-- For multisets of $s$ elements of a single interval, with $s L < q + s$, the difference of the
-sums of model coordinates lies in $(-q, q)$. -/
+/-- For multisets of `s` elements of a single interval, with `s * L < q + s`, the difference of the
+sums of model coordinates has absolute value less than `q`. -/
 lemma abs_modelInt_sum_sub_lt {A : Finset (ZMod q)} {l : ZMod q} (hL : 0 < L)
     (hLwrap : s * L < q + s) (hA : ∀ x ∈ A, (l * x).val / L = j)
     {σ τ : Multiset (ZMod q)} (hσ : ∀ x ∈ σ, x ∈ A) (hτ : ∀ x ∈ τ, x ∈ A)
@@ -239,8 +238,8 @@ lemma abs_modelInt_sum_sub_lt {A : Finset (ZMod q)} {l : ZMod q} (hL : 0 < L)
   constructor <;> grind [modelInt_sum_le hL hA hσ, modelInt_sum_le hL hA hτ,
     modelInt_sum_nonneg hA hσ, modelInt_sum_nonneg hA hτ]
 
-/-- For multisets $\sigma, \tau$ of $s$ elements of a single interval with distinct sums, a positive
-difference of the sums of model coordinates is not divisible by $m$ when the dilation is good. -/
+/-- For multisets `σ`, `τ` of `s` elements of a single interval with distinct sums, a positive
+difference of the sums of model coordinates is not divisible by `m` when the dilation is good. -/
 lemma not_dvd_modelInt_sum_sub_of_pos [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hL : 0 < L)
     (hLwrap : s * L < q + s) (hA : ∀ x ∈ A, (l * x).val / L = j)
     (hgood : IsGoodDilation m (s • A - s • A) l) {σ τ : Multiset (ZMod q)}
@@ -253,14 +252,13 @@ lemma not_dvd_modelInt_sum_sub_of_pos [NeZero q] {A : Finset (ZMod q)} {l : ZMod
     (intCast_modelInt_sum_sub L j l (hcσ.trans hcτ.symm))
   exact (le_abs_self _).trans_lt (abs_modelInt_sum_sub_lt hL hLwrap hA hσ hτ hcσ hcτ)
 
-/-- For multisets $\sigma, \tau$ of $s$ elements of $A$, the difference of the two sums of model
-coordinates is divisible by $m$ if and only if the two multiset sums agree in
-$\mathbb{Z}/q\mathbb{Z}$.
+/-- For multisets `σ`, `τ` of `s` elements of `A`, the difference of the two sums of model
+coordinates is divisible by `m` if and only if the two multiset sums agree in `ZMod q`.
 
-Both implications use that the difference of the two integer sums lies in $(-q, q)$. It is
-congruent to $l (\sum \sigma - \sum \tau)$ modulo $q$, hence vanishes when the sums agree.
-Conversely, a nonzero difference divisible by $m$ would exhibit a nonzero element of $sA - sA$
-dilated onto a multiple of $m$, which a good dilation forbids. -/
+Both implications use that the difference of the two integer sums has absolute value less than
+`q`. It is congruent to `l * (σ.sum - τ.sum)` modulo `q`, hence vanishes when the sums agree.
+Conversely, a nonzero difference divisible by `m` would exhibit a nonzero element of
+`s • A - s • A` dilated onto a multiple of `m`, which a good dilation forbids. -/
 lemma dvd_modelInt_sum_sub_iff [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : IsUnit l)
     (hL : 0 < L) (hLwrap : s * L < q + s) (hA : ∀ x ∈ A, (l * x).val / L = j)
     (hgood : IsGoodDilation m (s • A - s • A) l) {σ τ : Multiset (ZMod q)}
@@ -284,8 +282,8 @@ lemma dvd_modelInt_sum_sub_iff [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl
         heq, sub_self, mul_zero]
     simp [Int.eq_zero_of_abs_lt_dvd hq (abs_modelInt_sum_sub_lt hL hLwrap hA hσ hτ hcσ hcτ)]
 
-/-- For multisets $\sigma, \tau$ of $s$ elements of $A$, the sums of their images under the model
-map agree if and only if their sums agree. -/
+/-- For multisets `σ`, `τ` of `s` elements of `A`, the sums of their images under the model map
+agree if and only if their sums agree. -/
 lemma modelMap_sum_eq_iff [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : IsUnit l)
     (hL : 0 < L) (hLwrap : s * L < q + s) (hA : ∀ x ∈ A, (l * x).val / L = j)
     (hgood : IsGoodDilation m (s • A - s • A) l) {σ τ : Multiset (ZMod q)}
@@ -296,7 +294,7 @@ lemma modelMap_sum_eq_iff [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : Is
     ← sub_eq_zero, ← Int.cast_sub, ZMod.intCast_zmod_eq_zero_iff_dvd]
   exact dvd_modelInt_sum_sub_iff hl hL hLwrap hA hgood hσ hτ hcσ hcτ
 
-/-- For $s \ge 1$, the model map is injective on $A$. -/
+/-- For `0 < s`, the model map is injective on `A`. -/
 lemma injOn_modelMap [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : IsUnit l) (hs : 0 < s)
     (hL : 0 < L) (hLwrap : s * L < q + s) (hA : ∀ x ∈ A, (l * x).val / L = j)
     (hgood : IsGoodDilation m (s • A - s • A) l) : Set.InjOn (modelMap m L j l) A := by
@@ -307,8 +305,8 @@ lemma injOn_modelMap [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : IsUnit 
     (by simp [Multiset.mem_replicate, hx, hy]) (by simp [Multiset.mem_replicate, hy])
     (by simp) (by simp)).1 (by simp [hxy])
 
-/-- On a set $A$ all of whose dilates land in the same interval of length $L$, and for a good
-dilation, reduction of the model coordinate modulo $m$ is a Freiman $s$-isomorphism onto its
+/-- On a set `A` all of whose dilates land in the same interval of length `L`, and for a good
+dilation, reduction of the model coordinate modulo `m` is a Freiman `s`-isomorphism onto its
 image. -/
 lemma isAddFreimanIso_modelMap [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl : IsUnit l)
     (hs : 0 < s) (hL : 0 < L) (hLwrap : s * L < q + s) (hA : ∀ x ∈ A, (l * x).val / L = j)
@@ -319,14 +317,14 @@ lemma isAddFreimanIso_modelMap [NeZero q] {A : Finset (ZMod q)} {l : ZMod q} (hl
   rw [coe_image]
   exact (injOn_modelMap hl hs hL hLwrap hA hgood).bijOn_image
 
-/-- For $s \ge 1$ and $q \ge 2$, there is an interval length $L \ge 1$ with $q \le s L < q + s$. -/
+/-- For `0 < s` and `2 ≤ q`, there is an interval length `0 < L` with `q ≤ s * L < q + s`. -/
 lemma exists_pos_le_mul_lt_add (hs : 0 < s) (hq : 2 ≤ q) : ∃ L, 0 < L ∧ q ≤ s * L ∧ s * L < q + s :=
   ⟨(q + s - 1) / s, (Nat.one_le_div_iff hs).2 (by grind), by
     grind [Nat.div_add_mod (q + s - 1) s, Nat.mod_lt (q + s - 1) hs], by
     grind [Nat.div_add_mod (q + s - 1) s]⟩
 
-/-- If $s$ intervals of length $L$ cover $[0, q)$, one of them contains at least a proportion $1/s$
-of the dilates of $X$. -/
+/-- If `s` intervals of length `L` cover `Set.Ico 0 q`, one of them contains at least a proportion
+`1 / s` of the dilates of `X`. -/
 lemma exists_card_le_mul_card_filter [NeZero q] (hs : 0 < s) (hL : 0 < L) (hcover : q ≤ s * L)
     (X : Finset (ZMod q)) (l : ZMod q) : ∃ j, #X ≤ s * #{x ∈ X | (l * x).val / L = j} := by
   obtain ⟨j, -, hj⟩ := exists_le_card_fiber_of_nsmul_le_card_of_maps_to
@@ -341,11 +339,11 @@ end RuzsaModel
 
 open RuzsaModel
 
-/-- **Ruzsa's model lemma.** A nonempty $X \subseteq \mathbb{Z}/q\mathbb{Z}$, $q$ prime, has a
-subset $X_1$ of density at least $1 / s$ which is Freiman $s$-isomorphic to a subset of
-$\mathbb{Z}/m\mathbb{Z}$, for any modulus $m \ge |sX - sX|$.
+/-- **Ruzsa's model lemma.** A nonempty `X : Finset (ZMod q)`, `q` prime, has a subset `X₁` of
+density at least `1 / s` which is Freiman `s`-isomorphic to a subset of `ZMod m`, for any modulus
+`m` with `#(s • X - s • X) ≤ m`.
 
-Only the invertibility of the dilation uses that $q$ is prime. -/
+Only the invertibility of the dilation uses that `q` is prime. -/
 lemma exists_subset_card_le_mul_card_isAddFreimanIso {q s m : ℕ} (hq : q.Prime) (hs : 0 < s)
     {X : Finset (ZMod q)} (hX : X.Nonempty) (hm : #(s • X - s • X) ≤ m) :
     ∃ X₁ ⊆ X, #X ≤ s * #X₁ ∧ ∃ φ : ZMod q → ZMod m,
@@ -359,10 +357,9 @@ lemma exists_subset_card_le_mul_card_isAddFreimanIso {q s m : ℕ} (hq : q.Prime
   gcongr
   all_goals exact filter_subset _ _
 
-/-- Ruzsa's model lemma with the Plünnecke–Ruzsa bound on the modulus. If
-$|X + X| \le \kappa |X|$, the model group can be taken of size at most $\kappa^{2s} |X|$. The
-image of $X_1$ then has density at least $(s \kappa^{2s})^{-1}$ in $\mathbb{Z}/m\mathbb{Z}$, a
-bound independent of $q$. -/
+/-- Ruzsa's model lemma with the Plünnecke–Ruzsa bound on the modulus. If `#(X + X) ≤ κ * #X`,
+the model group can be taken of size at most `κ ^ (2 * s) * #X`. The image of `X₁` then has
+density at least `(s * κ ^ (2 * s))⁻¹` in `ZMod m`, a bound independent of `q`. -/
 lemma exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le {q s : ℕ} {κ : ℝ}
     (hq : q.Prime) (hs : 0 < s) {X : Finset (ZMod q)} (hX : X.Nonempty)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) :

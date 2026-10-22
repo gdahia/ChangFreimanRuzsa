@@ -14,40 +14,39 @@ import ChangFreimanRuzsa.Properization.ExponentialBounds
 /-!
 # Reducing the dimension of a progression to the Freiman dimension
 
-Let $q$ be a prime, let $P$ be a $2$-proper generalized arithmetic progression in
-$\mathbb{Z}/q\mathbb{Z}$ and let $X \subseteq P$ be nonempty. Write $d$ for the dimension of $P$ and
-$E(d) = 4 (d + 2)^3 \log (d + 2)$ for `coordinateReductionExponent d`. If $e^{E(d)} |P| \le q$,
-then $X$ lies in a $2$-proper progression of dimension at most `freimanDim X` and of size at most
-$e^{E(d)} |P|$.
+Let `q` be a prime, let `P` be a `2`-proper generalized arithmetic progression in `ZMod q` and let
+`X ⊆ P.carrier` be nonempty. Write `d` for the dimension of `P` and
+`E d = 4 * (d + 2) ^ 3 * log (d + 2)` for `coordinateReductionExponent d`. If
+`exp (E d) * #P.carrier ≤ q`, then `X` lies in a `2`-proper progression of dimension at most
+`freimanDim X` and of size at most `exp (E d) * #P.carrier`.
 
 The construction is the one of Appendix A of Marcelo Campos, Gabriel Dahia and João Pedro
 Marciano, *On the independence number of sparser random Cayley graphs*, J. London Math. Soc. 110
-(2024). Fix $x_0 \in X$ and translate the coefficient vectors in $P$ of the elements of $X$ so that
-the vector of $x_0$ is the origin. Let $H$ be the real span of the translated vectors and let
-$r = \dim H$. The difference of two coefficient vectors lies in the symmetric coefficient box of
-$P$. Restrict this box to $H$ and take coordinates in a basis of the lattice of integer points of
-$H$. The result is a symmetric convex body in $\mathbb{R}^r$ whose integer points span
-$\mathbb{R}^r$, so they are covered by a proper progression of dimension $r$ in $\mathbb{Z}^r$ with
-at most `latticeBoxFactor r` $\le (d + 2)^{2 (d + 1)^2}$ times as many points. The image of that
-progression under the homomorphism $\mathbb{Z}^r \to \mathbb{Z}/q\mathbb{Z}$ that sends
-coordinates to the corresponding combination of the steps of $P$, translated by $x_0$, contains
-$X$. Its dimension $r$ is the dimension of the Freiman model of `ChangFreimanRuzsa.FreimanModel`,
-so $r$ is at most `freimanDim X`. Finally
-`exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul` makes the progression
-$2$-proper without increasing its dimension.
+(2024). Fix `x₀ ∈ X` and translate the coefficient vectors in `P` of the elements of `X` so that
+the vector of `x₀` is the origin. Let `H` be the real span of the translated vectors and let
+`r = finrank ℝ H`. The difference of two coefficient vectors lies in the symmetric coefficient box
+of `P`. Restrict this box to `H` and take coordinates in a basis of the lattice of integer points
+of `H`. The result is a symmetric convex body in `ℝ ^ r` whose integer points span `ℝ ^ r`, so they
+are covered by a proper progression of dimension `r` in `ℤ ^ r` with at most
+`latticeBoxFactor r ≤ (d + 2) ^ (2 * (d + 1) ^ 2)` times as many points. The image of that
+progression under the homomorphism `ℤ ^ r →+ ZMod q` that sends coordinates to the corresponding
+combination of the steps of `P`, translated by `x₀`, contains `X`. Its dimension `r` is the
+dimension of the Freiman model of `ChangFreimanRuzsa.FreimanModel`, so `r` is at most
+`freimanDim X`. Finally `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul` makes
+the progression `2`-proper without increasing its dimension.
 
-The same construction works in a torsion-free group, for instance in $\mathbb{Z}$, with no
-condition on the size of $P$. Both cases follow from one statement for an abelian group in which
-the multiples $n a$ with $n < N$ of every nonzero $a$ are distinct.
+The same construction works in a torsion-free group, for instance in `ℤ`, with no condition on the
+size of `P`. Both cases follow from one statement for an abelian group in which the multiples
+`n • a` with `n < N` of every nonzero `a` are distinct.
 
 ## Main definitions
 
-* `coordinateReductionExponent`: the exponent $4 (d + 2)^3 \log (d + 2)$ of the size bound.
+* `coordinateReductionExponent`: the exponent `4 * (d + 2) ^ 3 * log (d + 2)` of the size bound.
 
 ## Main statements
 
 * `exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul`: the reduction in an abelian group in
-  which the multiples $n a$ with $n < N$ of every nonzero $a$ are distinct.
+  which the multiples `n • a` with `n < N` of every nonzero `a` are distinct.
 * `exists_twoProperGAP_dim_le_freimanDim`: the reduction to dimension at most `freimanDim X` in
   `ZMod q`.
 * `exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree`: the reduction in a torsion-free
@@ -97,12 +96,12 @@ private lemma mem_symBox_iff_intVectorToReal_mem_realBox {P : GAP G} {v : Fin P.
 
 variable (P : GAP G) (S : Finset (Fin P.dim → ℤ))
 
-/-- The points of the real span of $S$ in the real coefficient box of $P$, in the coordinates of
+/-- The points of the real span of `S` in the real coefficient box of `P`, in the coordinates of
 `realOfLatticeCoordinates S`. -/
 private def sliceBody : Set (Fin (integerGeneratedRank S) → ℝ) :=
   realOfLatticeCoordinates S ⁻¹' BoxLattice.realBox P.halfWidth
 
-/-- The coordinates of the integer points of the real span of $S$ in the symmetric box of $P$. -/
+/-- The coordinates of the integer points of the real span of `S` in the symmetric box of `P`. -/
 private def sliceCoords : Finset (Fin (integerGeneratedRank S) → ℤ) :=
   (symBox P).preimage (ofLatticeCoordinates S) (ofLatticeCoordinates_injective S).injOn
 
@@ -167,10 +166,10 @@ private lemma span_sliceBody_inter_eq_top (hS : S ⊆ symBox P) :
 
 variable [DecidableEq G]
 
-/-- Let $P$ be a proper progression of dimension $d$ and let $S$ lie in the symmetric box of $P$.
-The integer points of the slice of the box by the span of $S$, in lattice coordinates, lie in a
+/-- Let `P` be a proper progression of dimension `d` and let `S` lie in the symmetric box of `P`.
+The integer points of the slice of the box by the span of `S`, in lattice coordinates, lie in a
 progression of dimension at most `integerGeneratedRank S` and of size at most
-$e^{2 (d + 2)^2 \log (d + 2)} |P|$. -/
+`exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.carrier`. -/
 private lemma exists_gap_sliceCoords_subset (hP : P.Proper) (hS : S ⊆ symBox P) :
     ∃ R : GAP (Fin (integerGeneratedRank S) → ℤ), sliceCoords P S ⊆ R.carrier ∧
       R.dim ≤ integerGeneratedRank S ∧ (#R.carrier : ℝ) ≤
@@ -187,9 +186,9 @@ private lemma exists_gap_sliceCoords_subset (hP : P.Proper) (hS : S ⊆ symBox P
 
 variable {X : Finset G} {x₀ : G}
 
-/-- If a progression $R$ covers the lattice coordinates of the integer points of the slice by the
-span of `translatedCoords P X x₀`, then $X$ lies in the image of $R$ under the map that sends
-coordinates to the corresponding combination of the steps of $P$, translated by $x_0$. -/
+/-- If a progression `R` covers the lattice coordinates of the integer points of the slice by the
+span of `translatedCoords P X x₀`, then `X` lies in the image of `R` under the map that sends
+coordinates to the corresponding combination of the steps of `P`, translated by `x₀`. -/
 private lemma subset_carrier_shift_map_of_sliceCoords_subset (hXP : X ⊆ P.carrier) (hx₀ : x₀ ∈ X)
     {R : GAP (Fin (modelDim P X x₀) → ℤ)}
     (hR : sliceCoords P (translatedCoords P X x₀) ⊆ R.carrier) :
@@ -203,8 +202,9 @@ private lemma subset_carrier_shift_map_of_sliceCoords_subset (hXP : X ⊆ P.carr
   rw [AddMonoidHom.comp_apply, ofLatticeCoordinates_latticeCoordinates hmem, map_sub,
     stepHom_coordinateMap P (hXP hx), stepHom_coordinateMap P (hXP hx₀), sub_sub_sub_cancel_right]
 
-/-- A finite subset $X$ of a proper progression $P$ of dimension $d$ lies in a progression of
-dimension at most `modelDim P X x₀` and of size at most $e^{2 (d + 2)^2 \log (d + 2)} |P|$. -/
+/-- A finite subset `X` of a proper progression `P` of dimension `d` lies in a progression of
+dimension at most `modelDim P X x₀` and of size at most
+`exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.carrier`. -/
 private lemma exists_gap_dim_le_modelDim (hP : P.Proper) (hXP : X ⊆ P.carrier) (hx₀ : x₀ ∈ X) :
     ∃ Q : GAP G, X ⊆ Q.carrier ∧ Q.dim ≤ modelDim P X x₀ ∧ (#Q.carrier : ℝ) ≤
       Real.exp (2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * #P.carrier := by
@@ -217,7 +217,7 @@ private lemma exists_gap_dim_le_modelDim (hP : P.Proper) (hXP : X ⊆ P.carrier)
 
 /-! ## The reduction -/
 
-/-- The exponent $4 (d + 2)^3 \log (d + 2)$ in the size bound of
+/-- The exponent `4 * (d + 2) ^ 3 * log (d + 2)` in the size bound of
 `exists_twoProperGAP_dim_le_freimanDim`. -/
 def coordinateReductionExponent (d : ℝ) : ℝ := 4 * (d + 2) ^ 3 * Real.log (d + 2)
 
@@ -230,7 +230,7 @@ lemma coordinateReductionExponent_mono {d d' : ℝ} (hd : 0 ≤ d) (hdd' : d ≤
   rw [coordinateReductionExponent, coordinateReductionExponent, mul_assoc, mul_assoc]
   exact mul_le_mul_of_nonneg_left (add_two_pow_three_mul_log_le hd hdd') zero_le_four
 
-/-- For $d \ge 0$, `properizationExponent d` $+ 2 (d + 2)^2 \log (d + 2)$ is at most
+/-- For `0 ≤ d`, `properizationExponent d + 2 * (d + 2) ^ 2 * log (d + 2)` is at most
 `coordinateReductionExponent d`. -/
 lemma properizationExponent_add_le_coordinateReductionExponent {d : ℝ} (hd : 0 ≤ d) :
     properizationExponent d + 2 * (d + 2) ^ 2 * Real.log (d + 2) ≤
@@ -239,11 +239,11 @@ lemma properizationExponent_add_le_coordinateReductionExponent {d : ℝ} (hd : 0
   linarith [two_mul_add_two_sq_mul_log_le hd,
     mul_nonneg (pow_nonneg (by linarith : 0 ≤ d + 2) 3) (log_add_two_pos hd).le]
 
-/-- Let $P$ be a $2$-proper progression of dimension $d$ in an abelian group in which the
-multiples $n a$ with $n < N$ of every nonzero $a$ are distinct. Write $E$ for
-`coordinateReductionExponent` and suppose that $e^{E(d)} |P| \le N$. A nonempty set
-$X \subseteq P$ is contained in a $2$-proper progression of dimension at most `freimanDim X` and of
-size at most $e^{E(d)} |P|$. -/
+/-- Let `P` be a `2`-proper progression of dimension `d` in an abelian group in which the
+multiples `n • a` with `n < N` of every nonzero `a` are distinct. Write `E` for
+`coordinateReductionExponent` and suppose that `exp (E d) * #P.carrier ≤ N`. A nonempty set
+`X ⊆ P.carrier` is contained in a `2`-proper progression of dimension at most `freimanDim X` and of
+size at most `exp (E d) * #P.carrier`. -/
 lemma exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul {N : ℕ} {X : Finset G} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hX : X.Nonempty)
     (hP : P.TwoProper) (hXP : X ⊆ P.carrier)
@@ -265,10 +265,10 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul {N : ℕ} {X : Finset
   exact ⟨Q, hQ, hXQ₀.trans hQ₀Q, hQdim.trans (hdim.trans (modelDim_le_freimanDim hP hXP hx₀)),
     hQcard.trans hQ₀P⟩
 
-/-- Let $q$ be a prime and let $P$ be a $2$-proper progression of dimension $d$ in `ZMod q`. Write
-$E$ for `coordinateReductionExponent` and suppose that $e^{E(d)} |P| \le q$. A nonempty set
-$X \subseteq P$ is contained in a $2$-proper progression of dimension at most `freimanDim X` and of
-size at most $e^{E(d)} |P|$. -/
+/-- Let `q` be a prime and let `P` be a `2`-proper progression of dimension `d` in `ZMod q`. Write
+`E` for `coordinateReductionExponent` and suppose that `exp (E d) * #P.carrier ≤ q`. A nonempty set
+`X ⊆ P.carrier` is contained in a `2`-proper progression of dimension at most `freimanDim X` and of
+size at most `exp (E d) * #P.carrier`. -/
 lemma exists_twoProperGAP_dim_le_freimanDim {q : ℕ} {X : Finset (ZMod q)} {P : GAP (ZMod q)}
     (hq : q.Prime) (hX : X.Nonempty) (hP : P.TwoProper) (hXP : X ⊆ P.carrier)
     (hPq : Real.exp (coordinateReductionExponent P.dim) * #P.carrier ≤ q) :
@@ -277,10 +277,10 @@ lemma exists_twoProperGAP_dim_le_freimanDim {q : ℕ} {X : Finset (ZMod q)} {P :
   exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) hX hP hXP hPq
 
-/-- Let $P$ be a $2$-proper progression of dimension $d$ in a torsion-free abelian group, for
-instance in $\mathbb{Z}$, and write $E$ for `coordinateReductionExponent`. A nonempty set
-$X \subseteq P$ is contained in a $2$-proper progression of dimension at most `freimanDim X` and of
-size at most $e^{E(d)} |P|$. -/
+/-- Let `P` be a `2`-proper progression of dimension `d` in a torsion-free abelian group, for
+instance in `ℤ`, and write `E` for `coordinateReductionExponent`. A nonempty set `X ⊆ P.carrier`
+is contained in a `2`-proper progression of dimension at most `freimanDim X` and of size at most
+`exp (E d) * #P.carrier`. -/
 lemma exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree [IsAddTorsionFree G]
     {X : Finset G} {P : GAP G} (hX : X.Nonempty) (hP : P.TwoProper) (hXP : X ⊆ P.carrier) :
     ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧

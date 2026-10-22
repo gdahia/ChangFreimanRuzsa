@@ -11,27 +11,26 @@ public import Mathlib.Order.Interval.Finset.Nat
 /-!
 # Generalized arithmetic progressions
 
-A generalized arithmetic progression in an additive monoid $G$ is given by an origin $x_0 \in G$
-and a finitely supported bound $b : G \to \mathbb{N}$. Its points are $x_0 + \sum_v c_v v$ with
-$c \le b$. The steps are the elements $v$ with $b_v \ne 0$, and the length of the step $v$ is
-$b_v + 1$. The sum of two progressions adds the origins and the bounds, so that the points of
-$P + Q$ are the sums of a point of $P$ and a point of $Q$.
+A generalized arithmetic progression in an additive monoid `G` is given by an `origin : G` and a
+finitely supported `bound : G →₀ ℕ`. Its points are `origin + ∑ v, c v • v` with `c ≤ bound`. The
+steps are the elements `v` with `bound v ≠ 0`, and the length of the step `v` is `bound v + 1`.
+The sum of two progressions adds the origins and the bounds, so that the points of `P + Q` are the
+sums of a point of `P` and a point of `Q`.
 
-A progression $P$ is $2$-proper when $P + P$ is proper, as in Bilu's condition $F_2$ and in Tao and
-Vu. Green and Tao call a progression with numbered steps $s_i$ and lengths $\ell_i$ $2$-proper when
-the points $2 x_0 + \sum_i w_i s_i$ with $0 \le w_i < 2 \ell_i$ are distinct. The points of $P + P$
-are those with $0 \le w_i \le 2 \ell_i - 2$, so the condition of Green and Tao is stronger. The
-progression $\{0, 1\}$ in $\mathbb{Z}/3\mathbb{Z}$ is $2$-proper but not $2$-proper in the sense of
-Green and Tao.
+A progression `P` is `2`-proper when `P + P` is proper, as in Bilu's condition `F₂` and in Tao and
+Vu. Green and Tao call a progression with numbered steps `s i` and lengths `ℓ i` `2`-proper when
+the points `2 • origin + ∑ i, w i • s i` with `w i < 2 * ℓ i` are distinct. The points of `P + P`
+are those with `w i ≤ 2 * ℓ i - 2`, so the condition of Green and Tao is stronger. The progression
+`{0, 1}` in `ZMod 3` is `2`-proper but not `2`-proper in the sense of Green and Tao.
 
 ## Main definitions
 
 * `GAP G`: a generalized arithmetic progression in `G`, not necessarily proper.
 * `GAP.carrier`, `GAP.dim`: its set of points and its number of steps.
-* `GAP.Proper`: the points $x_0 + \sum_v c_v v$ with $c \le b$ are distinct.
-* `GAP.TwoProper`: the progression $P + P$ is proper.
-* `gapMap`: the point $x_0 + \sum_i w_i s_i$ of the progression with numbered steps $s_i$ and
-  lengths $\ell_i$, for coordinates $0 \le w_i < \ell_i$.
+* `GAP.Proper`: the points `origin + ∑ v, c v • v` with `c ≤ bound` are distinct.
+* `GAP.TwoProper`: the progression `P + P` is proper.
+* `gapMap`: the point `origin + ∑ i, w i • step i` of the progression with numbered steps `step i`
+  and lengths `length i`, for coordinates `w i < length i`.
 -/
 
 @[expose] public section
@@ -40,8 +39,8 @@ namespace ChangFreimanRuzsa
 
 noncomputable section
 
-/-- The point $a + \sum_i w_i s_i$ of the generalized arithmetic progression with origin $a$,
-steps $s_i$ and lengths $L_i$, for coordinates $0 \le w_i < L_i$. -/
+/-- The point `origin + ∑ i, w i • step i` of the generalized arithmetic progression with numbered
+steps `step i` and lengths `length i`, for coordinates `w i < length i`. -/
 def gapMap {G : Type*} [AddCommMonoid G] {d : ℕ} (origin : G) (step : Fin d → G)
     (length : Fin d → ℕ) (w : (i : Fin d) → Fin (length i)) : G := origin + ∑ i, (w i : ℕ) • step i
 

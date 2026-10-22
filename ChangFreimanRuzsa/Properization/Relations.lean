@@ -9,15 +9,15 @@ public import ChangFreimanRuzsa.GapToolkit
 
 /-! # The lattice of relations of a progression
 
-The relations of a GAP with steps $s_1, \dots, s_d$ are the integer vectors $v$ with
-$\sum_i v_i s_i = 0$. They form the kernel of the step homomorphism $\mathbb{Z}^d \to G$.
+The relations of a GAP with steps `step : Fin d → G` are the integer vectors `v` with
+`∑ i, v i • step i = 0`. They form the kernel of the step homomorphism from `ℤ ^ d` to `G`.
 
 ## Main statements
 
 * `injective_gapMap_iff`: a progression is proper if and only if no nonzero relation has
-  $|v_i| < L_i$ for all $i$.
-* `GAP.twoProper_iff`: a progression is $2$-proper if and only if no nonzero relation has
-  $|v_i| < 2 L_i - 1$ for all $i$.
+  `|v i| < length i` for all `i`.
+* `GAP.twoProper_iff`: a progression is `2`-proper if and only if no nonzero relation has
+  `|v i| < 2 * P.length i - 1` for all `i`.
 * `GAP.mem_carrier_iff_exists_intCoeffs`: membership in a progression through integer
   coefficients.
 -/
@@ -85,8 +85,8 @@ noncomputable def relations (P : GAP G) : AddSubgroup (Fin P.dim → ℤ) := (st
 lemma mem_relations {P : GAP G} {v : Fin P.dim → ℤ} :
     v ∈ P.relations ↔ ∑ i, v i • P.step i = 0 := Iff.rfl
 
-/-- A progression is $2$-proper if and only if no nonzero relation $v$ has $|v_i| < 2 L_i - 1$
-for all $i$. -/
+/-- A progression is `2`-proper if and only if no nonzero relation `v` has
+`|v i| < 2 * P.length i - 1` for all `i`. -/
 lemma twoProper_iff (P : GAP G) :
     P.TwoProper ↔ ∀ v ∈ P.relations, (∀ i, |v i| < 2 * P.length i - 1) → v = 0 := by
   have h (i : Fin P.dim) : ((2 * P.length i - 1 : ℕ) : ℤ) = 2 * P.length i - 1 := by

@@ -12,21 +12,20 @@ import ChangFreimanRuzsa.Bound
 /-!
 # Chang's theorem with dimension at most the Freiman dimension
 
-Let $q$ be a prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$.
-Write $F_\kappa$ for `freimanDimExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. If
-$256 d_\kappa \le |X|$ and $e^{F_\kappa} |X| \le q$, then $X$ lies in a $2$-proper generalized
-arithmetic progression of dimension at most `freimanDim X` and of size at most $e^{F_\kappa} |X|$.
-A finite nonempty set $X \subseteq \mathbb{Z}$ with $|X + X| \le \kappa |X|$ lies in a $2$-proper
-progression of dimension at most `freimanDim X` and of size at most $e^{E_\kappa} |X|$, where
-$E_\kappa$ is `intFreimanDimExponent κ`.
+Let `q` be a prime and let `X : Finset (ZMod q)` satisfy `#(X + X) ≤ κ * #X`. Write `F` for
+`freimanDimExponent κ` and `d` for `bohrGAPDim κ`. If `256 * d ≤ #X` and `exp F * #X ≤ q`, then
+`X` lies in a `2`-proper generalized arithmetic progression of dimension at most `freimanDim X` and
+of size at most `exp F * #X`. A finite nonempty set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` lies
+in a `2`-proper progression of dimension at most `freimanDim X` and of size at most `exp E * #X`,
+where `E` is `intFreimanDimExponent κ`.
 
-Write $c_\kappa$ for `containerExponent κ`. In `ZMod q` the proof has three stages.
-`exists_gap_zmod_subset_dim_le_card_le` puts $X$ in a
-progression of dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$,
-`exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul` replaces that progression by a
-$2$-proper one, and `exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul` replaces the $2$-proper
-progression by one of dimension at most `freimanDim X`. For sets of integers,
-`exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree` is applied to the $2$-proper
+Write `c` for `containerExponent κ`. In `ZMod q` the proof has three stages.
+`exists_gap_zmod_subset_dim_le_card_le` puts `X` in a progression of dimension at most `c` and of
+size at most `exp c * #X`, `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul`
+replaces that progression by a `2`-proper one, and
+`exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul` replaces the `2`-proper progression by one
+of dimension at most `freimanDim X`. For sets of integers,
+`exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree` is applied to the `2`-proper
 progression of `exists_twoProperGAP_of_small_sumset`.
 
 ## Main definitions
@@ -42,7 +41,7 @@ progression of `exists_twoProperGAP_of_small_sumset`.
 * `exists_twoProperGAP_int_dim_le_freimanDim`: Chang's theorem for sets of integers with dimension
   at most `freimanDim X`.
 * `freimanDimExponent_le` and `intFreimanDimExponent_le`: the exponents are at most
-  $10^{30} \kappa^7$ and $10^{32} \kappa^7$ for $\kappa \ge 2$.
+  `10 ^ 30 * κ ^ 7` and `10 ^ 32 * κ ^ 7` for `2 ≤ κ`.
 -/
 
 public section
@@ -52,25 +51,24 @@ open scoped Pointwise
 
 namespace ChangFreimanRuzsa
 
-/-- The exponent $E(c_\kappa) + E'(c_\kappa) + c_\kappa$ in the size bound of Chang's theorem in
-`ZMod q` with the dimension bounded by the Freiman dimension, where $c_\kappa$ is
-`containerExponent κ`, $E$ is `properizationExponent` and $E'$ is `coordinateReductionExponent`. -/
+/-- The exponent `properizationExponent c + coordinateReductionExponent c + c` in the size bound of
+Chang's theorem in `ZMod q` with the dimension bounded by the Freiman dimension, where `c` is
+`containerExponent κ`. -/
 @[expose] noncomputable def freimanDimExponent (κ : ℝ) : ℝ :=
   properizationExponent (containerExponent κ) + coordinateReductionExponent (containerExponent κ) +
     containerExponent κ
 
-/-- The exponent $C + E'(c_{2 \kappa})$ in the size bound of Chang's theorem for sets of integers
-with the dimension bounded by the Freiman dimension, where $C$ is `intExponent κ`, $c_{2 \kappa}$
-is `containerExponent (2 * κ)` and $E'$ is `coordinateReductionExponent`. -/
+/-- The exponent `intExponent κ + coordinateReductionExponent (containerExponent (2 * κ))` in the
+size bound of Chang's theorem for sets of integers with the dimension bounded by the Freiman
+dimension. -/
 @[expose] noncomputable def intFreimanDimExponent (κ : ℝ) : ℝ :=
   intExponent κ + coordinateReductionExponent (containerExponent (2 * κ))
 
 /-- The second and third stages of Chang's theorem, in an abelian group in which the multiples
-$n a$ with $n < N$ of every nonzero $a$ are distinct. Write $c_\kappa$ for
-`containerExponent κ` and $F_\kappa$ for `freimanDimExponent κ`. Let a nonempty set $X$
-lie in a progression $P$ of dimension at most $c_\kappa$ and of size at most $e^{c_\kappa} |X|$. If
-$e^{F_\kappa} |X| \le N$, then $X$ lies in a $2$-proper progression of dimension at most
-`freimanDim X` and of size at most $e^{F_\kappa} |X|$. -/
+`n • a` with `n < N` of every nonzero `a` are distinct. Write `c` for `containerExponent κ` and
+`F` for `freimanDimExponent κ`. Let a nonempty set `X` lie in a progression `P` of dimension at
+most `c` and of size at most `exp c * #X`. If `exp F * #X ≤ N`, then `X` lies in a `2`-proper
+progression of dimension at most `freimanDim X` and of size at most `exp F * #X`. -/
 lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [DecidableEq G]
     [AddCommGroup G] {N : ℕ} {κ : ℝ} {X : Finset G} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hX : X.Nonempty)
@@ -103,11 +101,10 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [Decidable
       (hP₂X.trans hXN)
   exact ⟨Q, hQ, hXQ, hQdim, hQcard.trans hP₂X⟩
 
-/-- **Chang's theorem** in `ZMod q` for a prime $q$, with the dimension bounded by the Freiman
-dimension. Write $F_\kappa$ for `freimanDimExponent κ` and $d_\kappa$ for `bohrGAPDim κ`. A set
-$X$ with $|X + X| \le \kappa |X|$, $256 d_\kappa \le |X|$ and $e^{F_\kappa} |X| \le q$ is contained
-in a $2$-proper generalized arithmetic progression of dimension at most `freimanDim X` and of size
-at most $e^{F_\kappa} |X|$. -/
+/-- **Chang's theorem** in `ZMod q` for a prime `q`, with the dimension bounded by the Freiman
+dimension. Write `F` for `freimanDimExponent κ` and `d` for `bohrGAPDim κ`. A set `X` with
+`#(X + X) ≤ κ * #X`, `256 * d ≤ #X` and `exp F * #X ≤ q` is contained in a `2`-proper generalized
+arithmetic progression of dimension at most `freimanDim X` and of size at most `exp F * #X`. -/
 theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
@@ -120,9 +117,9 @@ theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Fin
     hPcard hXupper
 
 /-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension.
-Write $E_\kappa$ for `intFreimanDimExponent κ`. A finite nonempty set $X \subseteq \mathbb{Z}$
-with $|X + X| \le \kappa |X|$ is contained in a $2$-proper generalized arithmetic progression of
-dimension at most `freimanDim X` and of size at most $e^{E_\kappa} |X|$. -/
+Write `E` for `intFreimanDimExponent κ`. A finite nonempty set `X : Finset ℤ` with
+`#(X + X) ≤ κ * #X` is contained in a `2`-proper generalized arithmetic progression of dimension
+at most `freimanDim X` and of size at most `exp E * #X`. -/
 theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ Q : GAP ℤ, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
@@ -135,7 +132,7 @@ theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (h
   gcongr
   exact coordinateReductionExponent_mono (Nat.cast_nonneg _) hPdim
 
-/-- `freimanDimExponent κ` is at most $10^{30} \kappa^7$ for $\kappa \ge 2$. -/
+/-- `freimanDimExponent κ` is at most `10 ^ 30 * κ ^ 7` for `2 ≤ κ`. -/
 lemma freimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) : freimanDimExponent κ ≤ 10 ^ 30 * κ ^ 7 := by
   have h := containerExponent_add_two_pow_mul_log_le hκ
   unfold freimanDimExponent properizationExponent coordinateReductionExponent
@@ -143,7 +140,7 @@ lemma freimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) : freimanDimExponent κ 
   linarith [containerExponent_le hκ, one_le_pow₀ (n := 7) (by linarith : (1 : ℝ) ≤ κ),
     pow_le_pow_right₀ (by linarith : (1 : ℝ) ≤ κ) (by norm_num : 3 ≤ 7)]
 
-/-- `intFreimanDimExponent κ` is at most $10^{32} \kappa^7$ for $\kappa \ge 2$. -/
+/-- `intFreimanDimExponent κ` is at most `10 ^ 32 * κ ^ 7` for `2 ≤ κ`. -/
 lemma intFreimanDimExponent_le {κ : ℝ} (hκ : 2 ≤ κ) :
     intFreimanDimExponent κ ≤ 10 ^ 32 * κ ^ 7 := by
   have h := containerExponent_add_two_pow_mul_log_le (κ := 2 * κ) (by linarith)

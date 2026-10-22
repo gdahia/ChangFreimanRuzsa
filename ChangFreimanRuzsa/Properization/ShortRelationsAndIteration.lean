@@ -14,14 +14,15 @@ import Mathlib.Algebra.Field.ZMod
 /-!
 # Short relations and iterated properization
 
-Let $P$ be a GAP of dimension $d$ in an abelian group in which the multiples $n a$, $n < N$, of
-every nonzero $a$ are distinct, with $N$ large compared with $|P|$. The short relations of $P$ are
-a maximal family of independent relations among its steps in the $2$-dilate of its coefficient box.
-Their saturated span consists of relations. Dividing the coefficient lattice by it and covering the
-image of the coefficient box by a proper progression gives a GAP of smaller dimension containing
-$P$, unless $P$ has no short relation, in which case $P$ is 2-proper. One step costs a factor
-$e^{2 (d + 2)^2 \log (d + 2)}$. Iterating proves that $P$ lies in a 2-proper GAP of dimension at
-most $d$ and of size at most $e^{2 (d + 2)^3 \log (d + 2)} |P|$.
+Let `P` be a GAP of dimension `d` in an abelian group in which the multiples `n • a` with `n < N`
+of every nonzero `a` are distinct, with `N` large compared with `#P.carrier`. The short relations
+of `P` are a maximal family of independent relations among its steps in the `2`-dilate of its
+coefficient box. Their saturated span consists of relations. Dividing the coefficient lattice by it
+and covering the image of the coefficient box by a proper progression gives a GAP of smaller
+dimension containing `P`, unless `P` has no short relation, in which case `P` is `2`-proper. One
+step costs a factor `exp (2 * (d + 2) ^ 2 * log (d + 2))`. Iterating proves that `P` lies in a
+`2`-proper GAP of dimension at most `d` and of size at most
+`exp (2 * (d + 2) ^ 3 * log (d + 2)) * #P.carrier`.
 
 ## Main definitions
 
@@ -29,7 +30,7 @@ most $d$ and of size at most $e^{2 (d + 2)^3 \log (d + 2)} |P|$.
   coefficient box.
 * `GAP.shortRelations` and `GAP.shortRelationSpan`: a maximal family of such relations and its
   saturated span.
-* `properizationExponent`: the exponent $2 (d + 2)^3 \log (d + 2)$ in the size bound of
+* `properizationExponent`: the exponent `2 * (d + 2) ^ 3 * log (d + 2)` in the size bound of
   properization.
 
 ## Main statements
@@ -40,7 +41,7 @@ most $d$ and of size at most $e^{2 (d + 2)^3 \log (d + 2)} |P|$.
 * `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul`: the iterated statement.
 * `exists_twoProperGAP_zmod_carrier_subset_dim_le_card_le` and
   `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_isAddTorsionFree`: the statements in
-  $\mathbb{Z}/q\mathbb{Z}$ for prime $q$ and in torsion-free groups.
+  `ZMod q` for prime `q` and in torsion-free groups.
 -/
 
 @[expose] public section
@@ -49,8 +50,8 @@ namespace ChangFreimanRuzsa
 
 noncomputable section
 
-/-- An integer vector whose real coordinates satisfy $|v_i| \le m_i$ lies in the integer box of
-half-widths $m$. -/
+/-- An integer vector whose real coordinates satisfy `|v i| ≤ m i` lies in the integer box of
+half-widths `m`. -/
 lemma mem_intBox_of_abs_le {d : ℕ} {m : Fin d → ℕ} {v : Fin d → ℤ}
     (h : ∀ i, |(v i : ℝ)| ≤ m i) : v ∈ intBox m :=
   mem_intBox.mpr fun i ↦ by exact_mod_cast h i
@@ -70,7 +71,7 @@ lemma cast_halfWidth (P : GAP G) (i : Fin P.dim) :
     ((P.halfWidth i : ℕ) : ℝ) = (P.length i : ℝ) - 1 := by
   rw [halfWidth, Nat.cast_sub (P.length_pos i), Nat.cast_one]
 
-/-- The image under the step map of an integer vector in the $m$-dilate of the coefficient box lies
+/-- The image under the step map of an integer vector in the `m`-dilate of the coefficient box lies
 in `P.boundedStepImage m`. -/
 lemma stepHom_mem_boundedStepImage [DecidableEq G] {P : GAP G} {m : ℕ} {v : Fin P.dim → ℤ}
     (hv : v ∈ intBox fun i ↦ m * P.halfWidth i) : stepHom P v ∈ P.boundedStepImage m :=
@@ -78,10 +79,10 @@ lemma stepHom_mem_boundedStepImage [DecidableEq G] {P : GAP G} {m : ℕ} {v : Fi
 
 /-! ### The rank of the short relations
 
-The relation lattice of a progression in $\mathbb{Z}/q\mathbb{Z}$ has full rank, since it contains
-$q \mathbb{Z}^d$, but that of a progression in $\mathbb{Z}$ does not. The rank reduction therefore
-does not use the successive minima of the relation lattice. It uses the largest number of linearly
-independent relations in a fixed dilate of the coefficient box, which is defined in every group. -/
+The relation lattice of a progression in `ZMod q` has full rank, since it contains `q • ℤ ^ d`,
+but that of a progression in `ℤ` does not. The rank reduction therefore does not use the
+successive minima of the relation lattice. It uses the largest number of linearly independent
+relations in a fixed dilate of the coefficient box, which is defined in every group. -/
 
 open Classical in
 /-- The largest `k ≤ dim` such that the `t`-dilate of the coefficient box of `P` contains `k`
@@ -108,8 +109,8 @@ lemma hasIndependentShort_shortRelationRank (P : GAP G) (t : ℝ) :
   Nat.findGreatest_spec (P := fun k ↦ HasIndependentShort P.relations P.halfWidth k t)
     (Nat.zero_le _) ⟨Fin.elim0, linearIndependent_empty_type, fun j ↦ j.elim0⟩
 
-/-- A progression with no nonzero relation in the $2$-dilate of its coefficient box is 2-proper.
-Indeed a relation $v$ in the coefficient box of $P + P$ has $|v_i| \le 2 (\ell_i - 1)$. -/
+/-- A progression with no nonzero relation in the `2`-dilate of its coefficient box is `2`-proper.
+Indeed a relation `v` in the coefficient box of `P + P` has `|v i| ≤ 2 * (P.length i - 1)`. -/
 lemma twoProper_of_shortRelationRank_eq_zero {P : GAP G} (hrank : P.shortRelationRank 2 = 0) :
     P.TwoProper := by
   rw [twoProper_iff]
@@ -191,7 +192,7 @@ lemma mem_shortRelationSpan {P : GAP G} {t : ℝ} {w : Fin P.dim → ℤ} (hw : 
       ⟨P.shortRelations_mem_relations t j, P.isShort_shortRelations t j⟩⟩]
 
 /-- The image under the step map of a vector in the saturated span of the short relations lies in
-the image of the $2d$-dilate of the coefficient box. Indeed rounding the coefficients of its
+the image of the `2 * d`-dilate of the coefficient box. Indeed rounding the coefficients of its
 expansion in the short relations leaves a vector of that dilate with the same image. -/
 lemma stepHom_mem_boundedStepImage_of_mem_shortRelationSpan [DecidableEq G] {P : GAP G}
     {x : Fin P.dim → ℤ} (hx : x ∈ P.shortRelationSpan 2) :
@@ -221,11 +222,12 @@ lemma injOn_nsmul_of_isAddTorsionFree [IsAddTorsionFree G] (N : ℕ) {a : G} (ha
     Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N) :=
   ((IsAddLeftRegular.all a).nsmul_injective ha).injOn
 
-/-- Suppose that the multiples $n a$, $n < N$, of every nonzero $a$ are distinct, as in a cyclic
-group of prime order $N$ or in a torsion-free group, and that $(4d + 1)^d |P| < N$. Then the
-saturated span of the short relations of $P$ consists of relations. Otherwise the first $N$
-multiples of the image of a vector in the span that is not a relation would be $N$ distinct
-elements of the image of the $2d$-dilate of the coefficient box. -/
+/-- Suppose that the multiples `n • a` with `n < N` of every nonzero `a` are distinct, as in a
+cyclic group of prime order `N` or in a torsion-free group, and that
+`(2 * (2 * d) + 1) ^ d * #P.carrier < N`. Then the saturated span of the short relations of `P`
+consists of relations. Otherwise the first `N` multiples of the image of a vector in the span that
+is not a relation would be `N` distinct elements of the image of the `2 * d`-dilate of the
+coefficient box. -/
 lemma shortRelationSpan_le_relations [DecidableEq G] {N : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.carrier.card < N) :
@@ -288,7 +290,7 @@ lemma mem_smithQuotientCoords {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → �
   rfl
 
 /-- The integer points of the projected coefficient box lie in a proper GAP of dimension at most
-$d - n$ whose size exceeds their number by a factor depending only on $d - n$. -/
+`d - n` whose size exceeds their number by a factor depending only on `d - n`. -/
 lemma exists_proper_gap_smithQuotientCoords {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → ℤ)}
     (snf : Module.Basis.SmithNormalForm (saturatedSpan S) (Fin P.dim) n) :
     ∃ Q : GAP (Fin (P.dim - n) → ℤ), Q.Proper ∧
@@ -328,9 +330,9 @@ lemma carrier_subset_shift_map [DecidableEq G] {P : GAP G} {n : ℕ} {S : Finset
   rw [P.stepHom_smithQuotientMap snf hrel]
   exact add_comm _ _
 
-/-- If a saturated span of rank $n$ consists of relations, then $P$ lies in a GAP of dimension at
-most $d - n$ whose size exceeds the number of integer points of the projected coefficient box by
-a factor depending only on $d - n$. -/
+/-- If a saturated span of rank `n` consists of relations, then `P` lies in a GAP of dimension at
+most `d - n` whose size exceeds the number of integer points of the projected coefficient box by
+a factor depending only on `d - n`. -/
 lemma exists_carrier_subset_dim_le_card_le_of_saturatedSpan_le_relations [DecidableEq G]
     {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → ℤ)}
     (snf : Module.Basis.SmithNormalForm (saturatedSpan S) (Fin P.dim) n)
@@ -345,13 +347,13 @@ lemma exists_carrier_subset_dim_le_card_le_of_saturatedSpan_le_relations [Decida
 
 /-! ### Counting the projected integer points
 
-From here on the saturated span is that of the short relations, and $r$ denotes the short rank
+From here on the saturated span is that of the short relations, and `r` denotes the short rank
 `P.shortRelationRank 2`. -/
 
-/-- Let $y$ be an integer point of the quotient that is the image of a real vector $b$. Then $y$ is
-the image of an integer vector $z$ with $|z_i| \le |b_i| + 2 r L_i$, where the $L_i$ are the
-half-widths. Indeed the lift of $y$ with zero coordinates along the span differs from $b$ by a real
-combination of the short relations, whose coefficients can be rounded. -/
+/-- Let `y` be an integer point of the quotient that is the image of a real vector `b`. Then `y` is
+the image of an integer vector `z` with `|z i| ≤ |b i| + r * (2 * P.halfWidth i)`. Indeed the lift
+of `y` with zero coordinates along the span differs from `b` by a real combination of the short
+relations, whose coefficients can be rounded. -/
 lemma exists_smithQuotientMap_eq_of_smithRealQuotientMap_eq {P : GAP G} {n : ℕ}
     (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
     {y : Fin (P.dim - n) → ℤ} {b : Fin P.dim → ℝ}
@@ -369,7 +371,7 @@ lemma exists_smithQuotientMap_eq_of_smithRealQuotientMap_eq {P : GAP G} {n : ℕ
   exact span_range_le_saturatedSpan _ hz
 
 /-- Every integer point of the projected coefficient box is the image of an integer vector in the
-$(2r + 1)$-dilate of the coefficient box. -/
+`(2 * r + 1)`-dilate of the coefficient box. -/
 lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {n : ℕ}
     {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
     {y : Fin (P.dim - n) → ℤ} (hy : y ∈ P.smithQuotientCoords snf) :
@@ -383,8 +385,8 @@ lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {n : ℕ}
   linarith [hz i, BoxLattice.mem_realBox.mp hb i]
 
 /-- If the saturated span of the short relations consists of relations, then the image in the group
-of the integer points of the projected coefficient box lies in the image of the $(2r + 1)$-dilate of
-the coefficient box, so it has at most $(2 (2r + 1) + 1)^d |P|$ elements. -/
+of the integer points of the projected coefficient box lies in the image of the `(2 * r + 1)`-dilate
+of the coefficient box, so it has at most `(2 * (2 * r + 1) + 1) ^ d * #P.carrier` elements. -/
 lemma card_image_smithQuotientCoords_le [DecidableEq G] {P : GAP G} {n : ℕ}
     (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
     (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations) :
@@ -398,7 +400,7 @@ lemma card_image_smithQuotientCoords_le [DecidableEq G] {P : GAP G} {n : ℕ}
   exact stepHom_mem_boundedStepImage hz
 
 /-- Two integer points of the projected coefficient box with the same image in the group differ by
-the image of a relation in the $(2r + 2)$-dilate of the coefficient box. -/
+the image of a relation in the `(2 * r + 2)`-dilate of the coefficient box. -/
 lemma exists_bounded_relation_of_stepsHom_eq {P : GAP G} {n : ℕ}
     {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
     (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations)
@@ -419,8 +421,8 @@ lemma exists_bounded_relation_of_stepsHom_eq {P : GAP G} {n : ℕ}
     linarith [hz i, abs_sub (b i) (b₀ i), BoxLattice.mem_realBox.mp hb i,
       BoxLattice.mem_realBox.mp hb₀ i]
 
-/-- Two relations of `P` with distinct images in the quotient are separated by the $2$-dilate of
-the coefficient box. Otherwise their difference would be a relation in the $2$-dilate outside the
+/-- Two relations of `P` with distinct images in the quotient are separated by the `2`-dilate of
+the coefficient box. Otherwise their difference would be a relation in the `2`-dilate outside the
 saturated span of the short relations. -/
 lemma exists_lt_abs_sub_of_smithQuotientMap_ne {P : GAP G} {n : ℕ}
     {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
@@ -433,8 +435,8 @@ lemma exists_lt_abs_sub_of_smithQuotientMap_ne {P : GAP G} {n : ℕ}
   intro i
   exact_mod_cast h i
 
-/-- Relations of `P` in the $(2r + 2)$-dilate of the coefficient box with distinct images in the
-quotient number at most $(2r + 4)^d$, by the packing bound. -/
+/-- Relations of `P` in the `(2 * r + 2)`-dilate of the coefficient box with distinct images in the
+quotient number at most `(2 * r + 4) ^ d`, by the packing bound. -/
 lemma card_le_of_injOn_smithQuotientMap {P : GAP G} {n : ℕ}
     {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
     {Z : Finset (Fin P.dim → ℤ)} (hrel : ∀ z ∈ Z, z ∈ P.relations)
@@ -451,8 +453,8 @@ lemma card_le_of_injOn_smithQuotientMap {P : GAP G} {n : ℕ}
 variable [DecidableEq G]
 
 /-- If the saturated span of the short relations consists of relations, then each fibre of the
-map to the group on the integer points of the projected coefficient box has at most $(2r + 4)^d$
-elements. -/
+map to the group on the integer points of the projected coefficient box has at most
+`(2 * r + 4) ^ d` elements. -/
 lemma card_filter_stepsHom_eq_le {P : GAP G} {n : ℕ}
     {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
     (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations)
@@ -479,8 +481,8 @@ lemma card_filter_stepsHom_eq_le {P : GAP G} {n : ℕ}
     exact hinj.image_of_comp
 
 /-- If the saturated span of the short relations consists of relations, then the projected
-coefficient box has at most $((2r + 4)(2 (2r + 1) + 1))^d |P|$ integer points, by the bound on
-their image in the group and the bound on each fibre. -/
+coefficient box has at most `((2 * r + 4) * (2 * (2 * r + 1) + 1)) ^ d * #P.carrier` integer
+points, by the bound on their image in the group and the bound on each fibre. -/
 lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
     (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
     (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations) :
@@ -497,10 +499,10 @@ lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
 
 /-! ### One step of properization -/
 
-/-- One step of properization. Suppose that the multiples $n a$, $n < N$, of every nonzero $a$ are
-distinct and that $(4d + 1)^d |P| < N$. Then either $P$ is 2-proper, or dividing by the saturated
-span of the short relations gives a GAP of smaller dimension containing $P$, of size at most
-$e^{2 (d + 2)^2 \log (d + 2)} |P|$. -/
+/-- One step of properization. Suppose that the multiples `n • a` with `n < N` of every nonzero `a`
+are distinct and that `(2 * (2 * d) + 1) ^ d * #P.carrier < N`. Then either `P` is `2`-proper, or
+dividing by the saturated span of the short relations gives a GAP of smaller dimension containing
+`P`, of size at most `exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.carrier`. -/
 lemma twoProper_or_exists_gap_dim_lt {N : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.carrier.card < N) :
@@ -527,7 +529,7 @@ end GAP
 
 /-! ## Iterated properization -/
 
-/-- The exponent $2 (d + 2)^3 \log (d + 2)$ in the size bound of properization. -/
+/-- The exponent `2 * (d + 2) ^ 3 * log (d + 2)` in the size bound of properization. -/
 def properizationExponent (d : ℝ) : ℝ := 2 * (d + 2) ^ 3 * Real.log (d + 2)
 
 lemma properizationExponent_nonneg {d : ℝ} (hd : 0 ≤ d) : 0 ≤ properizationExponent d :=
@@ -538,7 +540,7 @@ lemma properizationExponent_mono {d d' : ℝ} (hd : 0 ≤ d) (hdd' : d ≤ d') :
   rw [properizationExponent, properizationExponent, mul_assoc, mul_assoc]
   exact mul_le_mul_of_nonneg_left (add_two_pow_three_mul_log_le hd hdd') zero_le_two
 
-/-- For $x \ge 0$, $2 (x + 2)^2 \log (x + 2)$, the exponent of one step of properization, is at
+/-- For `0 ≤ x`, `2 * (x + 2) ^ 2 * log (x + 2)`, the exponent of one step of properization, is at
 most `properizationExponent x`. -/
 lemma mul_sq_mul_log_le_properizationExponent {x : ℝ} (hx : 0 ≤ x) :
     2 * (x + 2) ^ 2 * Real.log (x + 2) ≤ properizationExponent x := by
@@ -546,8 +548,8 @@ lemma mul_sq_mul_log_le_properizationExponent {x : ℝ} (hx : 0 ≤ x) :
   nlinarith [two_mul_add_two_sq_mul_log_le hx,
     mul_nonneg (pow_nonneg (by linarith : 0 ≤ x + 2) 3) (log_add_two_pos hx).le]
 
-/-- If $e^{E(d)} |P| \le N$, where $E$ is `properizationExponent`, then $P$ satisfies the
-hypothesis $(4d + 1)^d |P| < N$ of `GAP.twoProper_or_exists_gap_dim_lt`. -/
+/-- If `exp (properizationExponent d) * #P.carrier ≤ N`, then `P` satisfies the hypothesis
+`(2 * (2 * d) + 1) ^ d * #P.carrier < N` of `GAP.twoProper_or_exists_gap_dim_lt`. -/
 lemma GAP.mul_card_lt_of_exp_mul_card_le [DecidableEq G] {N : ℕ} {P : GAP G}
     (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ N) :
     (2 * (2 * P.dim) + 1) ^ P.dim * P.carrier.card < N := by
@@ -561,8 +563,8 @@ lemma GAP.mul_card_lt_of_exp_mul_card_le [DecidableEq G] {N : ℕ} {P : GAP G}
     (Nat.cast_nonneg _)).trans_lt (mul_lt_mul_of_pos_right hexp
       (mod_cast P.nonempty.card_pos))).trans_le hcard
 
-/-- For $e < d$ and $x \ge 0$, writing $E$ for `properizationExponent`,
-$e^{E(e)} e^{2 (d + 2)^2 \log (d + 2)} x \le e^{E(d)} x$. -/
+/-- For `e < d` and `0 ≤ x`, writing `E` for `properizationExponent`,
+`exp (E e) * (exp (2 * (d + 2) ^ 2 * log (d + 2)) * x) ≤ exp (E d) * x`. -/
 lemma exp_mul_exp_mul_le_of_lt {e d : ℕ} (hed : e < d) {x : ℝ} (hx : 0 ≤ x) :
     Real.exp (properizationExponent e) *
         (Real.exp (2 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) * x) ≤
@@ -573,12 +575,13 @@ lemma exp_mul_exp_mul_le_of_lt {e d : ℕ} (hed : e < d) {x : ℝ} (hx : 0 ≤ x
 
 variable [DecidableEq G]
 
-/-- Let $P$ be a GAP of dimension $d$ in an abelian group in which the multiples $n a$, $n < N$, of
-every nonzero $a$ are distinct. Write $E(d) = 2 (d + 2)^3 \log (d + 2)$ for
-`properizationExponent d` and suppose $e^{E(d)} |P| \le N$. Then $P$ lies in a 2-proper GAP of
-dimension at most $d$ and of size at most $e^{E(d)} |P|$. The proof iterates
-`GAP.twoProper_or_exists_gap_dim_lt`: each step costs a factor $e^{2 (d + 2)^2 \log (d + 2)}$ and
-either finds that the progression is 2-proper or lowers the dimension. -/
+/-- Let `P` be a GAP of dimension `d` in an abelian group in which the multiples `n • a` with
+`n < N` of every nonzero `a` are distinct. Write `E d = 2 * (d + 2) ^ 3 * log (d + 2)` for
+`properizationExponent d` and suppose `exp (E d) * #P.carrier ≤ N`. Then `P` lies in a `2`-proper
+GAP of dimension at most `d` and of size at most `exp (E d) * #P.carrier`. The proof iterates
+`GAP.twoProper_or_exists_gap_dim_lt`: each step costs a factor
+`exp (2 * (d + 2) ^ 2 * log (d + 2))` and either finds that the progression is `2`-proper or
+lowers the dimension. -/
 lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul {N : ℕ} (P : GAP G)
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ N) :
@@ -598,8 +601,8 @@ lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul {N : ℕ}
       exact ⟨R, hR, hPQ.trans hQR, hRdim.trans hdim.le,
         hRcard.trans (hQbound.trans (exp_mul_exp_mul_le_of_lt hdim (by positivity)))⟩
 
-/-- Properization in $\mathbb{Z}/q\mathbb{Z}$ for a prime $q \ge e^{E(d)} |P|$, where $E$ is
-`properizationExponent`. -/
+/-- Properization in `ZMod q` for a prime `q` with
+`exp (properizationExponent d) * #P.carrier ≤ q`. -/
 lemma exists_twoProperGAP_zmod_carrier_subset_dim_le_card_le {q : ℕ} (P : GAP (ZMod q))
     (hq : Nat.Prime q) (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ q) :
     ∃ Q : GAP (ZMod q), Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧
@@ -607,7 +610,7 @@ lemma exists_twoProperGAP_zmod_carrier_subset_dim_le_card_le {q : ℕ} (P : GAP 
   exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P
     (fun _ ha ↦ GAP.injOn_nsmul_of_prime hq ha) hcard
 
-/-- Properization in a torsion-free group, such as $\mathbb{Z}$, with no condition on $|P|$. -/
+/-- Properization in a torsion-free group, such as `ℤ`, with no condition on `#P.carrier`. -/
 lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_isAddTorsionFree [IsAddTorsionFree G]
     (P : GAP G) :
     ∃ Q : GAP G, Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧

@@ -11,28 +11,27 @@ import Mathlib.Tactic.Abel
 
 /-! # Transport of a progression across a Freiman isomorphism
 
-In the proof of Chang's theorem for $X \subseteq \mathbb{Z}/q\mathbb{Z}$,
-`ChangFreimanRuzsa.RuzsaModel` gives a Freiman $8$-isomorphism from a subset $X_1 \subseteq X$
-onto a set $Y \subseteq \mathbb{Z}/m\mathbb{Z}$, and `ChangFreimanRuzsa.Fourier` and
-`ChangFreimanRuzsa.BohrProgression` give a proper progression inside $2Y - 2Y$. This file
-transports that progression back to $2X_1 - 2X_1$. The statements hold in arbitrary abelian
-groups.
+In the proof of Chang's theorem for `X : Finset (ZMod q)`, `ChangFreimanRuzsa.RuzsaModel` gives a
+Freiman `8`-isomorphism from a subset `X₁ ⊆ X` onto a set `Y : Finset (ZMod m)`, and
+`ChangFreimanRuzsa.Fourier` and `ChangFreimanRuzsa.BohrProgression` give a proper progression
+inside `Y + Y - (Y + Y)`. This file transports that progression back to `X₁ + X₁ - (X₁ + X₁)`.
+The statements hold in arbitrary abelian groups.
 
 ## Main results
 
-* `GAP.apply_origin_add_linearCombination`: on the carrier of a GAP with origin $x_0$ and steps
-  $d_i$, a Freiman $2$-homomorphism $f$ is affine. It sends $x_0 + \sum_i w_i d_i$ to
-  $f(x_0) + \sum_i w_i (f(x_0 + d_i) - f(x_0))$.
-* `GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso`: a Freiman $2$-isomorphism defined on
+* `GAP.apply_origin_add_linearCombination`: on the carrier of a GAP `Q`, a Freiman
+  `2`-homomorphism `f` is affine. It sends `Q.origin + ∑ i, w i • Q.step i` to
+  `f Q.origin + ∑ i, w i • (f (Q.origin + Q.step i) - f Q.origin)`.
+* `GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso`: a Freiman `2`-isomorphism defined on
   the carrier of a proper GAP maps it onto a proper GAP of at most the same dimension.
-* `card_add_le_of_isAddFreimanIso`: a Freiman $2$-isomorphism from $B$ onto $A$ satisfies
-  $|B + B| \le |A + A|$.
-* `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`: a Freiman $8$-isomorphism from $A$
-  onto $B$ transports a proper GAP contained in $(B + B) - (B + B)$ to a proper GAP of at most the
-  same dimension and of the same cardinality contained in $(A + A) - (A + A)$.
+* `card_add_le_of_isAddFreimanIso`: a Freiman `2`-isomorphism from `B` onto `A` satisfies
+  `#(B + B) ≤ #(A + A)`.
+* `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`: a Freiman `8`-isomorphism from `A`
+  onto `B` transports a proper GAP contained in `B + B - (B + B)` to a proper GAP of at most the
+  same dimension and of the same cardinality contained in `A + A - (A + A)`.
 
-The order $8$ is needed because a relation $z_1 + z_2 = z_3 + z_4$ between elements of
-$(B + B) - (B + B)$ unfolds into a relation between eight elements of $B$ on each side.
+The order `8` is needed because a relation `z₁ + z₂ = z₃ + z₄` between elements of
+`B + B - (B + B)` unfolds into a relation between eight elements of `B` on each side.
 -/
 
 public section
@@ -44,7 +43,7 @@ open scoped Pointwise
 
 noncomputable section
 
-/-- A function $w$ with $w_i \ne 0$ is the sum of a function and the indicator of $i$. -/
+/-- A function `w` with `w i ≠ 0` is the sum of a function and the indicator of `i`. -/
 private lemma exists_eq_add_single {ι : Type*} [DecidableEq ι] {w : ι → ℕ} {i : ι}
     (hi : w i ≠ 0) : ∃ u, w = u + Pi.single (M := fun _ ↦ ℕ) i 1 := by
   refine ⟨update w i (w i - 1), ?_⟩
@@ -64,8 +63,8 @@ lemma origin_add_linearCombination_mem (Q : GAP H) {w : Fin Q.dim → ℕ}
   exact ⟨fun i ↦ ⟨w i, hw i⟩, mem_univ _, rfl⟩
 
 omit [DecidableEq G] in
-/-- Adding the $i$-th step inside the carrier of a GAP changes the image under a Freiman
-$2$-homomorphism $f$ by $f(x_0 + d_i) - f(x_0)$. -/
+/-- Adding the `i`-th step inside the carrier of a GAP `Q` changes the image under a Freiman
+`2`-homomorphism `f` by `f (Q.origin + Q.step i) - f Q.origin`. -/
 lemma apply_add_step (Q : GAP H) {B : Set G} {f : H → G}
     (hf : IsAddFreimanHom 2 (Q.carrier : Set H) B f) {i : Fin Q.dim} {x : H}
     (hx : x ∈ Q.carrier) (hxi : x + Q.step i ∈ Q.carrier) (hi : Q.origin + Q.step i ∈ Q.carrier) :
@@ -74,8 +73,9 @@ lemma apply_add_step (Q : GAP H) {B : Set G} {f : H → G}
   exact hf.add_eq_add hxi Q.origin_mem hx hi (by abel)
 
 omit [DecidableEq G] in
-/-- On the carrier of a GAP with origin $x_0$ and steps $d_i$, a Freiman $2$-homomorphism $f$ is
-affine: it sends $x_0 + \sum_i w_i d_i$ to $f(x_0) + \sum_i w_i (f(x_0 + d_i) - f(x_0))$. -/
+/-- On the carrier of a GAP `Q`, a Freiman `2`-homomorphism `f` is affine: it sends
+`Q.origin + ∑ i, w i • Q.step i` to
+`f Q.origin + ∑ i, w i • (f (Q.origin + Q.step i) - f Q.origin)`. -/
 lemma apply_origin_add_linearCombination (Q : GAP H) {B : Set G} {f : H → G}
     (hf : IsAddFreimanHom 2 (Q.carrier : Set H) B f) {w : Fin Q.dim → ℕ}
     (hw : ∀ i, w i < Q.length i) :
@@ -94,8 +94,8 @@ lemma apply_origin_add_linearCombination (Q : GAP H) {B : Set G} {f : H → G}
     simpa using Q.origin_add_linearCombination_mem fun j ↦ (Nat.le_add_left _ _).trans_lt (hw j)),
     ih u (Pi.lt_def.2 ⟨fun j ↦ Nat.le_add_right _ _, i, by simp⟩) hu]
 
-/-- The image of a GAP under a Freiman $2$-homomorphism $f$ is the progression with origin
-$f(x_0)$, steps $f(x_0 + d_i) - f(x_0)$ and the same lengths. -/
+/-- The image of a GAP `Q` under a Freiman `2`-homomorphism `f` is the progression with origin
+`f Q.origin`, steps `f (Q.origin + Q.step i) - f Q.origin` and the same lengths. -/
 lemma image_gapMap_eq_image (Q : GAP H) {B : Set G} {f : H → G}
     (hf : IsAddFreimanHom 2 (Q.carrier : Set H) B f) :
     univ.image (gapMap (f Q.origin) (fun i ↦ f (Q.origin + Q.step i) - f Q.origin) Q.length) =
@@ -104,10 +104,10 @@ lemma image_gapMap_eq_image (Q : GAP H) {B : Set G} {f : H → G}
   congr with w
   exact (Q.apply_origin_add_linearCombination hf fun i ↦ (w i).isLt).symm
 
-/-- A Freiman $2$-isomorphism defined on the carrier of a proper GAP maps it onto a proper GAP of
+/-- A Freiman `2`-isomorphism defined on the carrier of a proper GAP maps it onto a proper GAP of
 at most the same dimension, with the same lengths.
 
-The image is proper because it has $\prod_i \ell_i$ elements, so its coefficient map is
+The image is proper because it has `∏ i, Q.length i` elements, so its coefficient map is
 injective. -/
 lemma exists_proper_carrier_eq_image_of_isAddFreimanIso {Q : GAP H} (hQ : Q.Proper) {B : Set G}
     {f : H → G} (hf : IsAddFreimanIso 2 (Q.carrier : Set H) B f) :
@@ -127,8 +127,8 @@ end GAP
 
 variable {G H : Type*} [DecidableEq G] [AddCommGroup G] [DecidableEq H] [AddCommGroup H]
 
-/-- A Freiman $2$-isomorphism $\psi$ from $B$ onto $A$ satisfies $|B + B| \le |A + A|$: the map
-$a + b \mapsto \psi(a) + \psi(b)$ is well defined and injective on $B + B$. -/
+/-- A Freiman `2`-isomorphism `ψ` from `B` onto `A` satisfies `#(B + B) ≤ #(A + A)`: the map
+`a + b ↦ ψ a + ψ b` is well defined and injective on `B + B`. -/
 lemma card_add_le_of_isAddFreimanIso {A : Finset G} {B : Finset H} {ψ : H → G}
     (hψ : IsAddFreimanIso 2 (B : Set H) (A : Set G) ψ) : #(B + B) ≤ #(A + A) := by
   have hB {z : H} (hz : z ∈ B + B) :
@@ -146,8 +146,8 @@ lemma card_add_le_of_isAddFreimanIso {A : Finset G} {B : Finset H} {ψ : H → G
     rw [← invFunOn_eq (hB hz), ← invFunOn_eq (hB hz')]
     exact (hψ.add_eq_add ha hb ha' hb').1 hzz
 
-/-- The map induced on $(B + B) - (B + B)$ by a map $\psi$ defined on $B$. It sends
-$a + b - c - d$ to $\psi(a) + \psi(b) - \psi(c) - \psi(d)$ for a chosen representation. -/
+/-- The map induced on `B + B - (B + B)` by a map `ψ` defined on `B`. It sends `a + b - c - d` to
+`ψ a + ψ b - ψ c - ψ d` for a chosen representation. -/
 private def signedTransport (B : Finset H) (ψ : H → G) : H → G :=
   (fun (a, b, c, d) ↦ ψ a + ψ b - ψ c - ψ d) ∘
     invFunOn (fun (a, b, c, d) ↦ a + b - c - d)
@@ -175,9 +175,9 @@ private lemma signedTransport_mem {A : Finset G} {B : Finset H} {ψ : H → G}
   exact sub_mem_sub (add_mem_add (hψ ha) (hψ hb)) (add_mem_add (hψ hc) (hψ hd))
 
 omit [DecidableEq G] in
-/-- If $\psi$ is a Freiman $8$-isomorphism on $B$, then the induced map on a subset $S$ of
-$(B + B) - (B + B)$ is a Freiman $2$-isomorphism: a relation $z_1 + z_2 = z_3 + z_4$ has eight
-terms of $B$ on each side. -/
+/-- If `ψ` is a Freiman `8`-isomorphism on `B`, then the induced map on a subset `S` of
+`B + B - (B + B)` is a Freiman `2`-isomorphism: a relation `z₁ + z₂ = z₃ + z₄` has eight terms of
+`B` on each side. -/
 private lemma isAddFreimanIso_signedTransport {A : Finset G} {B : Finset H} {ψ : H → G}
     (hψ : IsAddFreimanIso 8 (B : Set H) (A : Set G) ψ) {S : Set H}
     (hS : S ⊆ (((B + B) - (B + B) : Finset H) : Set H)) :
@@ -202,9 +202,9 @@ private lemma isAddFreimanIso_signedTransport {A : Finset G} {B : Finset H} {ψ 
   intro x hx y hy hxy
   exact add_right_cancel ((h x hx y hy y hy y hy).1 (by rw [hxy]))
 
-/-- A Freiman $8$-isomorphism from $A$ onto $B$ transports a proper progression contained in
-$(B + B) - (B + B)$ to a proper progression of at most the same dimension and of the same
-cardinality contained in $(A + A) - (A + A)$. -/
+/-- A Freiman `8`-isomorphism from `A` onto `B` transports a proper progression contained in
+`B + B - (B + B)` to a proper progression of at most the same dimension and of the same
+cardinality contained in `A + A - (A + A)`. -/
 lemma exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso {A : Finset G} {B : Finset H}
     {φ : G → H} (hφ : IsAddFreimanIso 8 (A : Set G) (B : Set H) φ) {Q : GAP H} (hQ : Q.Proper)
     (hQB : Q.carrier ⊆ (B + B) - (B + B)) :

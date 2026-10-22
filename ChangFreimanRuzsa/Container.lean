@@ -17,50 +17,46 @@ import Mathlib.Combinatorics.Additive.RuzsaCovering
 
 /-! # A progression containing a set of small doubling
 
-Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$. If
-$|X|$ is large in terms of $\kappa$, then $X$ is contained in a (not necessarily proper) GAP whose
-dimension, and whose size relative to $|X|$, are bounded in terms of $\kappa$ alone. The proof
-follows Chang's argument.
+Let `q` be prime and let `X : Finset (ZMod q)` satisfy `#(X + X) ≤ κ * #X`. If `#X` is large in
+terms of `κ`, then `X` is contained in a (not necessarily proper) GAP whose dimension, and whose
+size relative to `#X`, are bounded in terms of `κ` alone. The proof follows Chang's argument.
 
-1. (`exists_subset_isAddFreimanIso_eight_card_le`) Ruzsa's model lemma gives a subset
-   $X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a Freiman $8$-isomorphic copy
-   $Y \subseteq \mathbb{Z}/m\mathbb{Z}$ of $X_1$ with $m \le 8 \kappa^{16} |Y|$ and
-   $|Y + Y| \le 8 \kappa |Y|$.
-2. (`exists_card_le_deltaBound_chordSet_subset`) Chang's lemma in $\mathbb{Z}/m\mathbb{Z}$
-   gives a set $\Delta$ of characters whose size is bounded in terms of $\kappa$ and whose Bohr
-   set lies in $2Y - 2Y$.
-3. (`exists_proper_gap_chordSet_card_le`) The Bohr set of $\Delta$ contains a proper
-   progression $Q$ of dimension $d = |\Delta| + 1$ with $m \le (8 d)^{3 d} |Q|$ (`bohrLoss`).
+1. (`exists_subset_isAddFreimanIso_eight_card_le`) Ruzsa's model lemma gives a subset `X₁ ⊆ X`
+   with `#X ≤ 8 * #X₁` and a Freiman `8`-isomorphic copy `Y : Finset (ZMod m)` of `X₁` with
+   `m ≤ 8 * κ ^ 16 * #Y` and `#(Y + Y) ≤ 8 * κ * #Y`.
+2. (`exists_card_le_deltaBound_chordSet_subset`) Chang's lemma in `ZMod m` gives a set `Δ` of
+   characters whose size is bounded in terms of `κ` and whose Bohr set lies in
+   `Y + Y - (Y + Y)`.
+3. (`exists_proper_gap_chordSet_card_le`) The Bohr set of `Δ` contains a proper progression `Q`
+   of dimension `d = #Δ + 1` with `m ≤ (8 * d) ^ (3 * d) * #Q.carrier` (`bohrLoss`).
 4. (`exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`) The Freiman isomorphism carries
-   $Q$ to a proper progression $Q_1 \subseteq 2X_1 - 2X_1$ of $\mathbb{Z}/q\mathbb{Z}$ with the
-   same dimension and cardinality.
-5. (`exists_length_le_iterationBound_subset_add_sub`) The packing argument adds to $Q_1$ sets
-   $S_1, \dots, S_k \subseteq X_1$ of $\lceil 3 \kappa \rceil$ elements until
-   $X_1 \subseteq F + (Q' - Q')$ with $|F| \le \lceil 3 \kappa \rceil$, where
-   $Q' = Q_1 + S_1 + \dots + S_k$.
-6. (`exists_card_le_subset_sub_sub_add`) Let $T = Q' + \Sigma(F)$, where $\Sigma(F)$ is the set
-   of subset sums of $F$. It contains $0$ and $F$, so $X_1 \subseteq T - T$
-   (`add_sub_subset_add_sub_add`), and Ruzsa's covering lemma gives
-   $X \subseteq (T - T) - (T - T) + W$ for a set $W$ of at most $8 \kappa$ elements.
-7. (`GAP.packingContainer`) Adding to $Q_1$ one step of length $2$ for each element of the sets
-   $S_j$ and of $F$, doubling twice and adding one step of length $2$ for each element of $W$
-   gives a progression containing $X$.
+   `Q` to a proper progression `Q₁` of `ZMod q` in `X₁ + X₁ - (X₁ + X₁)` with the same dimension
+   and cardinality.
+5. (`exists_length_le_iterationBound_subset_add_sub`) The packing argument adds to `Q₁` sets
+   `S ⊆ X₁` of `⌈3 * κ⌉₊` elements, collected in a list `l`, until `X₁ ⊆ F + (Q' - Q')` with
+   `#F ≤ ⌈3 * κ⌉₊`, where `Q' = Q₁.carrier + l.sum`.
+6. (`exists_card_le_subset_sub_sub_add`) Let `T = Q' + U`, where `U = listSubsetSum F.toList` is
+   the set of subset sums of `F`. It contains `0` and `F`, so `X₁ ⊆ T - T`
+   (`add_sub_subset_add_sub_add`), and Ruzsa's covering lemma gives `X ⊆ T - T - (T - T) + W`
+   for a set `W` of at most `8 * κ` elements.
+7. (`GAP.packingContainer`) Adding to `Q₁` one step of length `2` for each element of the sets
+   in `l` and of `F`, doubling twice and adding one step of length `2` for each element of `W`
+   gives a progression containing `X`.
 
 Steps 5 to 7, `exists_gap_subset_dim_le_card_le_of_subset_add_sub_add`, hold in every abelian
 group, and `Integers.lean` applies them to sets of integers.
 
-All bounds are explicit functions of $\kappa$. They are collected in `containerExponent`, which
-bounds the dimension of the progression containing $X$ and the logarithm of its size relative to
-$|X|$. The set $X$ only has to have $256 d$ elements, where $d$ is `bohrGAPDim κ`, for
-$\mathbb{Z}/m\mathbb{Z}$ to contain a Bohr progression.
+All bounds are explicit functions of `κ`. They are collected in `containerExponent`, which
+bounds the dimension of the progression containing `X` and the logarithm of its size relative to
+`#X`. The set `X` only has to have `256 * d` elements, where `d` is `bohrGAPDim κ`, for `ZMod m`
+to contain a Bohr progression.
 
 ## Main statements
 
 * `exists_proper_gap_zmod_subset_add_sub_add_card_le`: steps 1 to 4.
 * `exists_gap_subset_dim_le_card_le_of_subset_add_sub_add`: steps 5 to 7, in an arbitrary abelian
   group.
-* `exists_gap_zmod_subset_dim_le_card_le`: the progression containing $X$ in
-  $\mathbb{Z}/q\mathbb{Z}$.
+* `exists_gap_zmod_subset_dim_le_card_le`: the progression containing `X` in `ZMod q`.
 -/
 
 @[expose] public section
@@ -74,36 +70,37 @@ noncomputable section
 
 /-! ## The bounds
 
-Each definition is an explicit function of $\kappa$ bounding one quantity of the argument. None of
+Each definition is an explicit function of `κ` bounding one quantity of the argument. None of
 them is optimal.
 -/
 
-/-- The bound on the size of the dissociated set $\Delta$ given by Chang's lemma in
-$\mathbb{Z}/m\mathbb{Z}$. It is the bound of `exists_card_le_largeSpec_subset_addSpan` at the
-threshold $\eta^2 = (64 \kappa)^{-1}$ and the density $|Y| / m \ge (8 \kappa^{16})^{-1}$. -/
+/-- The bound on the size of the dissociated set `Δ` given by Chang's lemma in `ZMod m`. It is the
+bound of `exists_card_le_largeSpec_subset_addSpan` at the threshold `η ^ 2 = (64 * κ)⁻¹` and the
+density `(8 * κ ^ 16)⁻¹ ≤ #Y / m`. -/
 def deltaBound (κ : ℝ) : ℕ :=
   ⌈changConst * Real.exp 1 * (⌈1 + Real.log (8 * κ ^ 16)⌉₊ : ℝ) * (8 * (8 * κ))⌉₊
 
-/-- The bound on the dimension $|\Delta| + 1$ of the Bohr progression $Q$ and of its image $Q_1$
-in $\mathbb{Z}/q\mathbb{Z}$. -/
+/-- The bound on the dimension `#Δ + 1` of the Bohr progression `Q` and of its image `Q₁` in
+`ZMod q`. -/
 def bohrGAPDim (κ : ℝ) : ℕ := deltaBound κ + 1
 
-/-- The factor $(8 d)^{3 d}$ lost when passing from $\mathbb{Z}/m\mathbb{Z}$ to a Bohr progression
-of dimension at most $d$: the progression $Q$ satisfies $m \le (8 d)^{3 d} |Q|$. -/
+/-- The factor `(8 * d) ^ (3 * d)` lost when passing from `ZMod m` to a Bohr progression of
+dimension at most `d`: the progression `Q` satisfies `m ≤ (8 * d) ^ (3 * d) * #Q.carrier`. -/
 def bohrLoss (d : ℕ) : ℝ := (8 * d) ^ (3 * d)
 
-/-- The number $m = \lceil 3 \kappa \rceil$ of disjoint translates added at each step of the
-packing argument. Since $m \ge 3 \kappa$, after $k$ steps the size $|Q_1| m^k$ of the current set
-stays below the Plünnecke–Ruzsa bound $\kappa^{k + 4} |X|$ only if $3^k |Q_1| \le \kappa^4 |X|$. -/
+/-- The number `m = ⌈3 * κ⌉₊` of disjoint translates added at each step of the packing argument.
+Since `3 * κ ≤ m`, after `k` steps the size `#Q₁.carrier * m ^ k` of the current set stays below
+the Plünnecke–Ruzsa bound `κ ^ (k + 4) * #X` only if `3 ^ k * #Q₁.carrier ≤ κ ^ 4 * #X`. -/
 def translateCount (κ : ℝ) : ℕ := ⌈3 * κ⌉₊
 
-/-- The bound $3 + 4 \kappa + 3 d \log (8 d)$ on the number of steps of the packing argument, where
-$d$ is `bohrGAPDim κ`. It bounds $\log_3$ of $8 \kappa^4$ `bohrLoss d`. -/
+/-- The bound `3 + 4 * κ + 3 * d * log (8 * d)` on the number of steps of the packing argument,
+where `d` is `bohrGAPDim κ`. It bounds `logb 3 (8 * κ ^ 4 * bohrLoss d)`. -/
 def iterationBound (κ : ℝ) : ℝ := 3 + 4 * κ + 3 * bohrGAPDim κ * Real.log (8 * bohrGAPDim κ)
 
-/-- The exponent $E(\kappa)$ of the progression containing $X$. It bounds the dimension of the
-progression and the logarithm of its size relative to $|X|$, and $e^{E(\kappa)}$ is at least the
-size $256 d$ that $|X|$ has to reach for the Ruzsa model of $X$ to contain a Bohr progression. -/
+/-- The exponent of the progression containing `X`. It bounds the dimension of the progression and
+the logarithm of its size relative to `#X`, and `exp (containerExponent κ)` is at least the size
+`256 * bohrGAPDim κ` that `#X` has to reach for the Ruzsa model of `X` to contain a Bohr
+progression. -/
 def containerExponent (κ : ℝ) : ℝ :=
   256 + 3 * bohrGAPDim κ + 12 * κ + 3 * translateCount κ * (iterationBound κ + 1)
 
@@ -130,35 +127,35 @@ lemma containerExponent_pos {κ : ℝ} (hκ : 2 ≤ κ) : 0 < containerExponent 
   nlinarith [iterationBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ),
     Nat.cast_nonneg (α := ℝ) (translateCount κ)]
 
-/-- The exponent bounds the dimension of the progression containing $X$. -/
+/-- The exponent bounds the dimension of the progression containing `X`. -/
 lemma mul_add_bohrGAPDim_add_le_containerExponent {κ : ℝ} (hκ : 2 ≤ κ) :
     8 * κ + bohrGAPDim κ + translateCount κ * (iterationBound κ + 1) ≤ containerExponent κ := by
   rw [containerExponent]
   nlinarith [iterationBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ),
     Nat.cast_nonneg (α := ℝ) (translateCount κ)]
 
-/-- The exponent bounds the logarithm of the size of the progression containing $X$ relative to
-$|X|$. -/
+/-- The exponent bounds the logarithm of the size of the progression containing `X` relative to
+`#X`. -/
 lemma mul_add_two_mul_bohrGAPDim_add_le_containerExponent (κ : ℝ) :
     8 * κ + 2 * bohrGAPDim κ + 3 * translateCount κ * (iterationBound κ + 1) + 4 * κ ≤
       containerExponent κ := by
   rw [containerExponent]
   linarith [Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ)]
 
-/-- The exponent is at least $256 + d$, where $d$ is `bohrGAPDim κ`. -/
+/-- The exponent is at least `256 + bohrGAPDim κ`. -/
 lemma add_bohrGAPDim_le_containerExponent {κ : ℝ} (hκ : 2 ≤ κ) :
     256 + bohrGAPDim κ ≤ containerExponent κ := by
   rw [containerExponent]
   nlinarith [iterationBound_nonneg (by linarith : 0 ≤ κ), Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ),
     Nat.cast_nonneg (α := ℝ) (translateCount κ)]
 
-/-- A set with at least $256 d$ elements, where $d$ is `bohrGAPDim κ`, is nonempty. -/
+/-- A set with at least `256 * bohrGAPDim κ` elements is nonempty. -/
 lemma nonempty_of_mul_bohrGAPDim_le {G : Type*} {X : Finset G} {κ : ℝ}
     (hX : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) : X.Nonempty := by
   have hd : (1 : ℝ) ≤ bohrGAPDim κ := by exact_mod_cast one_le_bohrGAPDim κ
   exact card_pos.1 (by exact_mod_cast (by linarith : (0 : ℝ) < X.card))
 
-/-- If $x > e^{E(\kappa)}$, then $x \ge 256 d$, where $d$ is `bohrGAPDim κ`. -/
+/-- If `exp (containerExponent κ) < x`, then `256 * bohrGAPDim κ ≤ x`. -/
 lemma mul_bohrGAPDim_le_of_exp_lt {κ x : ℝ} (hκ : 2 ≤ κ)
     (hx : Real.exp (containerExponent κ) < x) : 256 * bohrGAPDim κ ≤ x := by
   refine le_trans ?_ ((Real.exp_le_exp.2 (add_bohrGAPDim_le_containerExponent hκ)).trans hx.le)
@@ -169,11 +166,10 @@ lemma mul_bohrGAPDim_le_of_exp_lt {κ x : ℝ} (hκ : 2 ≤ κ)
 
 /-! ## A proper progression in a set of small doubling -/
 
-/-- Ruzsa's model lemma with the bounds used in Chang's argument. If
-$X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfies $|X + X| \le \kappa |X|$, then there are a subset
-$X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a Freiman $8$-isomorphism $\varphi$ from $X_1$ onto
-$Y = \varphi(X_1) \subseteq \mathbb{Z}/m\mathbb{Z}$ with $|X| \le 8m$, $m \le 8 \kappa^{16} |Y|$ and
-$|Y + Y| \le 8 \kappa |Y|$. -/
+/-- Ruzsa's model lemma with the bounds used in Chang's argument. If `X : Finset (ZMod q)`
+satisfies `#(X + X) ≤ κ * #X`, then there are a subset `X₁ ⊆ X` with `#X ≤ 8 * #X₁` and a Freiman
+`8`-isomorphism `φ` from `X₁` onto `Y = X₁.image φ` in `ZMod m` with `#X ≤ 8 * m`,
+`m ≤ 8 * κ ^ 16 * #Y` and `#(Y + Y) ≤ 8 * κ * #Y`. -/
 lemma exists_subset_isAddFreimanIso_eight_card_le {q : ℕ} {κ : ℝ} (hq : q.Prime) (hκ : 0 ≤ κ)
     {X : Finset (ZMod q)} (hX : X.Nonempty) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
     ∃ (m : ℕ) (X₁ : Finset (ZMod q)) (φ : ZMod q → ZMod m), 0 < m ∧ X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧
@@ -199,10 +195,9 @@ lemma exists_subset_isAddFreimanIso_eight_card_le {q : ℕ} {κ : ℝ} (hq : q.P
     rw [hY]
     nlinarith
 
-/-- Chang's lemma in the model. If $Y \subseteq \mathbb{Z}/m\mathbb{Z}$ satisfies
-$m \le 8 \kappa^{16} |Y|$ and $|Y + Y| \le 8 \kappa |Y|$, then there is a set $\Delta$ of at most
-`deltaBound κ` characters such that every $x$ with $|1 - \psi(x)| \le (4(|\Delta| + 1))^{-1}$
-for all $\psi \in \Delta$ lies in $2Y - 2Y$. -/
+/-- Chang's lemma in the model. If `Y : Finset (ZMod m)` satisfies `m ≤ 8 * κ ^ 16 * #Y` and
+`#(Y + Y) ≤ 8 * κ * #Y`, then there is a set `Δ` of at most `deltaBound κ` characters such that
+every `x` with `‖1 - ψ x‖ ≤ (4 * (#Δ + 1))⁻¹` for all `ψ ∈ Δ` lies in `Y + Y - (Y + Y)`. -/
 lemma exists_card_le_deltaBound_chordSet_subset {m : ℕ} [NeZero m] {κ : ℝ} (hκ : 2 ≤ κ)
     {Y : Finset (ZMod m)} (hY : Y.Nonempty) (hYm : (m : ℝ) ≤ 8 * κ ^ 16 * #Y)
     (hYY : (#(Y + Y) : ℝ) ≤ 8 * κ * #Y) :
@@ -221,7 +216,7 @@ lemma exists_card_le_deltaBound_chordSet_subset {m : ℕ} [NeZero m] {κ : ℝ} 
     exact hYm
 
 /-- The dimensional factor of `exists_proper_gap_chordSet`, together with the reciprocal of the
-chord width, is at most $(8 (k + 1))^{3 (k + 1)}$, where $k = |\Delta|$. -/
+chord width, is at most `(8 * (k + 1)) ^ (3 * (k + 1))`, where `k = #Δ`. -/
 private lemma pow_mul_pow_le (k : ℕ) :
     (4 * ((k : ℝ) + 1)) ^ (2 * (k + 1)) * (8 * Real.pi * ((k : ℝ) + 1)) ^ k ≤
       (8 * ((k : ℝ) + 1)) ^ (3 * (k + 1)) := by
@@ -233,9 +228,9 @@ private lemma pow_mul_pow_le (k : ℕ) :
   · rw [pow_mul, pow_mul, ← mul_pow]
     ring
 
-/-- The Bohr set $\{x : |1 - \psi(x)| \le (4(|\Delta| + 1))^{-1}$ for all
-$\psi \in \Delta\}$ in $\mathbb{Z}/m\mathbb{Z}$ contains a proper progression $Q$ of dimension at
-most $d$ with $m \le$ `bohrLoss d` $\cdot |Q|$, provided $|\Delta| < d$ and $m \ge 32 d$. -/
+/-- The Bohr set `{x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ (4 * (#Δ + 1))⁻¹}` in `ZMod m` contains a proper
+progression `Q` of dimension at most `d` with `m ≤ bohrLoss d * #Q.carrier`, provided `#Δ < d` and
+`32 * d ≤ m`. -/
 lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (AddChar (ZMod m) ℂ))
     (hΔ : #Δ + 1 ≤ d) (hm : 32 * (d : ℝ) ≤ m) :
     ∃ Q : GAP (ZMod m), Q.Proper ∧ Q.dim ≤ d ∧
@@ -258,10 +253,10 @@ lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (Ad
   exact (pow_mul_pow_le #Δ).trans ((pow_le_pow_left₀ (by positivity) (by linarith) _).trans
     (pow_le_pow_right₀ (by linarith) (by grind)))
 
-/-- Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$
-and $|X| \ge 256 d$, where $d$ is `bohrGAPDim κ`. Then $X$ has a subset $X_1$ with
-$|X| \le 8 |X_1|$, and $2X - 2X$ contains a proper progression $Q_1$ of dimension at most $d$ with
-$|X| \le 8$ `bohrLoss d` $\cdot |Q_1|$. -/
+/-- Let `q` be prime and let `X : Finset (ZMod q)` satisfy `#(X + X) ≤ κ * #X` and
+`256 * d ≤ #X`, where `d` is `bohrGAPDim κ`. Then `X` has a subset `X₁` with `#X ≤ 8 * #X₁`, and
+`X + X - (X + X)` contains a proper progression `Q₁` of dimension at most `d` with
+`#X ≤ 8 * bohrLoss d * #Q₁.carrier`. -/
 lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
@@ -294,16 +289,17 @@ section Packing
 
 variable {G : Type*} [DecidableEq G] [AddCommGroup G]
 
-/-- If $Q \subseteq 2X - 2X$ and $S_1, \dots, S_k \subseteq X$, then
-$Q + S_1 + \dots + S_k \subseteq (k + 2)X - 2X$. -/
+/-- If `Q ⊆ X + X - (X + X)` and every set of the list `l` is contained in `X`, then
+`Q + l.sum ⊆ (l.length + 2) • X - 2 • X`. -/
 lemma add_sum_subset_nsmul_sub_nsmul {X Q : Finset G} {l : List (Finset G)}
     (hQ : Q ⊆ X + X - (X + X)) (hl : ∀ S ∈ l, S ⊆ X) :
     Q + l.sum ⊆ (l.length + 2) • X - 2 • X := by
   rw [add_nsmul, add_comm (l.length • X), ← sub_add_eq_add_sub, two_nsmul]
   exact add_subset_add hQ (List.sum_le_length_nsmul l X hl)
 
-/-- If $Q \subseteq 2X - 2X$ and $|Q + S_1 + \dots + S_k| = |Q| m^k$ for sets $S_j \subseteq X$
-and some $m \ge 3\kappa$, then $3^k |Q| \le \kappa^4 |X|$ by the Plünnecke–Ruzsa inequality. -/
+/-- If `Q ⊆ X + X - (X + X)` and `#(Q + l.sum) = #Q * m ^ l.length` for a list `l` of subsets of
+`X` and some `m` with `3 * κ ≤ m`, then `3 ^ l.length * #Q ≤ κ ^ 4 * #X` by the Plünnecke–Ruzsa
+inequality. -/
 lemma three_pow_mul_card_le {X Q : Finset G} {l : List (Finset G)} {κ : ℝ} {m : ℕ}
     (hX : X.Nonempty) (hκ : 0 < κ) (hm : 3 * κ ≤ m) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
     (hQ : Q ⊆ X + X - (X + X)) (hl : ∀ S ∈ l, S ⊆ X)
@@ -325,8 +321,7 @@ lemma three_pow_mul_card_le {X Q : Finset G} {l : List (Finset G)} {κ : ℝ} {m
     _ ≤ κ ^ (l.length + 4) * #X := hPR
     _ = κ ^ 4 * #X * κ ^ l.length := by ring
 
-/-- If $3^k \le 8 \kappa^4$ `bohrLoss d`, where $d$ is `bohrGAPDim κ`, then $k$ is at most
-`iterationBound κ`. -/
+/-- If `3 ^ k ≤ 8 * κ ^ 4 * bohrLoss (bohrGAPDim κ)`, then `k ≤ iterationBound κ`. -/
 lemma le_iterationBound_of_three_pow_le {κ : ℝ} (hκ : 0 < κ) {k : ℕ}
     (h : (3 : ℝ) ^ k ≤ 8 * κ ^ 4 * bohrLoss (bohrGAPDim κ)) :
     (k : ℝ) ≤ iterationBound κ := by
@@ -344,12 +339,11 @@ lemma le_iterationBound_of_three_pow_le {κ : ℝ} (hκ : 0 < κ) {k : ℕ}
   rw [iterationBound]
   linarith [mul_le_mul_of_nonneg_left hl3 (Nat.cast_nonneg (α := ℝ) k), Real.log_le_self hκ.le]
 
-/-- The packing step of Chang's argument. Let $X_1 \subseteq X$ with $|X + X| \le \kappa |X|$, and
-let $Q \subseteq 2X - 2X$ be nonempty with $|X| \le 8$ `bohrLoss d` $\cdot |Q|$, where $d$ is
-`bohrGAPDim κ`. Then $|Q| \le \kappa^4 |X|$, and there are sets
-$S_1, \dots, S_k \subseteq X_1$ of size $m$ = `translateCount κ`, with
-$k \le$ `iterationBound κ`, and a set $F$ of at most $m$ elements with
-$X_1 \subseteq F + (Q' - Q')$, where $Q' = Q + S_1 + \dots + S_k$. -/
+/-- The packing step of Chang's argument. Let `X₁ ⊆ X` with `#(X + X) ≤ κ * #X`, and let
+`Q ⊆ X + X - (X + X)` be nonempty with `#X ≤ 8 * bohrLoss d * #Q`, where `d` is `bohrGAPDim κ`.
+Then `#Q ≤ κ ^ 4 * #X`, and there are a list `l` of subsets of `X₁` of size `translateCount κ`,
+with `l.length ≤ iterationBound κ`, and a set `F` of at most `translateCount κ` elements with
+`X₁ ⊆ F + (Q' - Q')`, where `Q' = Q + l.sum`. -/
 lemma exists_length_le_iterationBound_subset_add_sub {X X₁ Q : Finset G} {κ : ℝ}
     (hX : X.Nonempty) (hκ : 0 < κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hX₁X : X₁ ⊆ X)
     (hQ : Q.Nonempty) (hQX : Q ⊆ X + X - (X + X))
@@ -377,15 +371,14 @@ lemma exists_length_le_iterationBound_subset_add_sub {X X₁ Q : Finset G} {κ :
     exact (mul_le_mul_of_nonneg_left hXQ (pow_pos hκ 4).le).trans_eq (by ring)
   · nlinarith [hgrow hl hcard, one_le_pow₀ (by norm_num : (1 : ℝ) ≤ 3) (n := l.length)]
 
-/-- If $F \subseteq U$ and $0 \in U$, then $F + (S - S) \subseteq (S + U) - (S + U)$. -/
+/-- If `F ⊆ U` and `0 ∈ U`, then `F + (S - S) ⊆ S + U - (S + U)`. -/
 lemma add_sub_subset_add_sub_add {F S U : Finset G} (hFU : F ⊆ U) (hU : 0 ∈ U) :
     F + (S - S) ⊆ S + U - (S + U) := by
   rw [← add_sub_assoc, add_comm F]
   exact sub_subset_sub (add_subset_add_left hFU) (subset_add_left S hU)
 
-/-- Ruzsa's covering step. If $X_1 \subseteq T - T$, $X_1 \subseteq X$, $|X| \le 8 |X_1|$ and
-$|X + X| \le \kappa |X|$, then $X \subseteq (T - T) - (T - T) + W$ for a set $W$ of at most
-$8 \kappa$ elements. -/
+/-- Ruzsa's covering step. If `X₁ ⊆ T - T`, `X₁ ⊆ X`, `#X ≤ 8 * #X₁` and `#(X + X) ≤ κ * #X`,
+then `X ⊆ T - T - (T - T) + W` for a set `W` of at most `8 * κ` elements. -/
 lemma exists_card_le_subset_sub_sub_add {X X₁ T : Finset G} {κ : ℝ}
     (hκ : 0 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hX₁ : X₁.Nonempty) (hX₁X : X₁ ⊆ X)
     (hXX₁ : #X ≤ 8 * #X₁) (hcover : X₁ ⊆ T - T) :
@@ -398,9 +391,9 @@ lemma exists_card_le_subset_sub_sub_add {X X₁ T : Finset G} {κ : ℝ}
 
 namespace GAP
 
-/-- The progression of the packing argument. Starting from $Q$, it adds one step of length $2$ for
-each entry of $l$, applies `GAP.difference` twice and adds one step of length $2$ for each element
-of $W$. If $S \subseteq Q + \sum_{a \in l} \{0, a\}$, then it contains $(S - S) - (S - S) + W$. -/
+/-- The progression of the packing argument. Starting from `Q`, it adds one step of length `2` for
+each entry of `l`, applies `GAP.difference` twice and adds one step of length `2` for each element
+of `W`. If `S ⊆ Q.carrier + listSubsetSum l`, then it contains `S - S - (S - S) + W`. -/
 def packingContainer (Q : GAP G) (l : List G) (W : Finset G) : GAP G :=
   (Q.consBinaryList l).difference.difference.consBinaryList W.toList
 
@@ -437,10 +430,9 @@ lemma size_packingContainer_le (Q : GAP G) (l : List G) (W : Finset G) :
 
 end GAP
 
-/-- The size bound of the progression containing $X$. Let $m$ be `translateCount κ`. If
-$a \le 8 \kappa$, $b \le$ `bohrGAPDim κ`, $n \le m ($`iterationBound κ`$ + 1)$ and
-$0 \le y \le \kappa^4 x$, then $2^{a + 2(b + n) + n} y \le e^{E(\kappa)} x$, where $E$ is
-`containerExponent`. -/
+/-- The size bound of the progression containing `X`. If `a ≤ 8 * κ`, `b ≤ bohrGAPDim κ`,
+`n ≤ translateCount κ * (iterationBound κ + 1)` and `0 ≤ y ≤ κ ^ 4 * x`, then
+`2 ^ (a + 2 * (b + n) + n) * y ≤ exp (containerExponent κ) * x`. -/
 private lemma two_pow_mul_le_exp_containerExponent_mul {κ x y : ℝ} {a b n : ℕ} (hκ : 2 ≤ κ)
     (ha : (a : ℝ) ≤ 8 * κ) (hb : (b : ℝ) ≤ bohrGAPDim κ)
     (hn : (n : ℝ) ≤ translateCount κ * (iterationBound κ + 1)) (hy₀ : 0 ≤ y)
@@ -460,11 +452,11 @@ private lemma two_pow_mul_le_exp_containerExponent_mul {κ x y : ℝ} {a b n : �
   push_cast
   linarith [mul_add_two_mul_bohrGAPDim_add_le_containerExponent κ]
 
-/-- Let $X$ be a nonempty finite subset of an abelian group with $|X + X| \le \kappa |X|$. Given a
-subset $X_1 \subseteq X$ with $|X| \le 8 |X_1|$ and a proper progression $Q_1 \subseteq 2X - 2X$
-with the bounds of `exists_proper_gap_zmod_subset_add_sub_add_card_le`, the set $X$ lies in a
-progression of dimension at most $E$ and of size at most $e^{E} |X|$, where $E$ is
-`containerExponent κ`. The group may be infinite. -/
+/-- Let `X` be a nonempty finite subset of an abelian group with `#(X + X) ≤ κ * #X`. Given a
+subset `X₁ ⊆ X` with `#X ≤ 8 * #X₁` and a proper progression `Q₁` in `X + X - (X + X)` with the
+bounds of `exists_proper_gap_zmod_subset_add_sub_add_card_le`, the set `X` lies in a progression
+of dimension at most `E` and of size at most `exp E * #X`, where `E` is `containerExponent κ`. The
+group may be infinite. -/
 lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
@@ -502,14 +494,13 @@ lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
 
 end Packing
 
-/-- Let $q$ be prime and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy $|X + X| \le \kappa |X|$
-and $|X| \ge 256 d$, where $d$ is `bohrGAPDim κ`. Then $X$ lies in a GAP of dimension at most $E$
-and of size at most $e^{E} |X|$, where $E$ is `containerExponent κ`.
+/-- Let `q` be prime and let `X : Finset (ZMod q)` satisfy `#(X + X) ≤ κ * #X` and
+`256 * d ≤ #X`, where `d` is `bohrGAPDim κ`. Then `X` lies in a GAP of dimension at most `E` and
+of size at most `exp E * #X`, where `E` is `containerExponent κ`.
 
-No upper bound on $|X|$ in terms of $q$ is needed, because the Fourier-analytic steps take place in
-$\mathbb{Z}/m\mathbb{Z}$ with $m \le \kappa^{16} |X|$. The lemma
-`exists_twoProperGAP_dim_le_freimanDim` then bounds the dimension by the Freiman dimension of
-$X$. -/
+No upper bound on `#X` in terms of `q` is needed, because the Fourier-analytic steps take place in
+`ZMod m` with `m ≤ κ ^ 16 * #X`. The lemma `exists_twoProperGAP_dim_le_freimanDim` then bounds the
+dimension by the Freiman dimension of `X`. -/
 lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : ((X + X).card : ℝ) ≤ κ * X.card)

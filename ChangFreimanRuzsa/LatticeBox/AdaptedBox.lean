@@ -11,16 +11,16 @@ import Mathlib.Tactic.Abel
 
 /-! # Centered GAPs of lattice boxes
 
-Let $b_1, \dots, b_s \in \mathbb{Z}^s$ be independent over $\mathbb{Z}$ and let
-$m_1, \dots, m_s \in \mathbb{N}$. The centered GAP `centeredBoxGAP b m` has steps $b_i$ and
-coefficients $c_i \in [-m_i, m_i]$. It is proper, it contains every point $\sum_i c_i b_i$ with
-$|c_i| \le m_i$, and it has at most $\prod_i (2 m_i + 1)$ elements.
+Let `b : Fin s → ℤ ^ s` be independent over `ℤ` and let `m : Fin s → ℕ`. The centered GAP
+`centeredBoxGAP b m` has steps `b i` and coefficients `c i` with `|c i| ≤ m i`. It is proper, it
+contains every point `∑ i, c i • b i` with `|c i| ≤ m i`, and it has at most `∏ i, (2 * m i + 1)`
+elements.
 
 ## Main statements
 
 * `centeredBoxGAP_proper`: the centered GAP is proper.
 * `mem_centeredBoxGAP_of_mem_intBox`: it contains the image of the coefficient box.
-* `card_centeredBoxGAP_le`: it has at most $\prod_i (2 m_i + 1)$ elements.
+* `card_centeredBoxGAP_le`: it has at most `∏ i, (2 * m i + 1)` elements.
 -/
 
 @[expose] public section
@@ -31,8 +31,7 @@ noncomputable section
 
 variable {s : ℕ}
 
-/-- The centered GAP with steps $b_i$ and coefficients $c_i \in [-m_i, m_i]$, where $b$ is
-`step`. -/
+/-- The centered GAP with steps `step i` and coefficients `c i` with `|c i| ≤ m i`. -/
 def centeredBoxGAP (step : Fin s → (Fin s → ℤ)) (m : Fin s → ℕ) : GAP (Fin s → ℤ) :=
   GAP.ofSteps (-∑ i, m i • step i) step fun i ↦ 2 * m i + 1
 

@@ -15,15 +15,15 @@ import ChangFreimanRuzsa.Lattice
 
 The lattice box step of properization uses the shortest lattice vectors of
 `ChangFreimanRuzsa.ConvexGeometry`, which are defined for a discrete subgroup of a real normed space
-and a symmetric convex body. This file passes from a subgroup $\Lambda$ of $\mathbb{Z}^d$ and the
-box of half-widths $L$ to these objects, along the coordinatewise inclusion
-`intVectorToReal` of $\mathbb{Z}^d$ into $\mathbb{R}^d$.
+and a symmetric convex body. This file passes from a subgroup `Λ` of `ℤ ^ d` and the box of
+half-widths `L` to these objects, along the coordinatewise inclusion `intVectorToReal` of `ℤ ^ d`
+into `ℝ ^ d`.
 
-* `realBox L` is the set of $x \in \mathbb{R}^d$ with $|x_i| \le L_i$ for all $i$. The lemmas
+* `realBox L` is the set of `x ∈ ℝ ^ d` with `|x i| ≤ L i` for all `i`. The lemmas
   `convex_realBox`, `isClosed_realBox`, `isBounded_realBox`, `neg_mem_realBox` and
   `realBox_mem_nhds` show that it is a symmetric convex body.
-* `discreteTopology_map` shows that the image of a subgroup of $\mathbb{Z}^d$ is a discrete
-  subgroup of $\mathbb{R}^d$.
+* `discreteTopology_map` shows that the image of a subgroup of `ℤ ^ d` is a discrete subgroup of
+  `ℝ ^ d`.
 -/
 
 @[expose] public section
@@ -42,8 +42,7 @@ variable {d : ℕ}
 
 /-! ## The real box is a symmetric convex body -/
 
-/-- The real box $\{x \in \mathbb{R}^d : |x_i| \le L_i \text{ for all } i\}$ of half-widths
-$L$. -/
+/-- The real box `{x : Fin d → ℝ | ∀ i, |x i| ≤ L i}` of half-widths `L`. -/
 def realBox (L : Fin d → ℕ) : Set (Fin d → ℝ) :=
   Set.univ.pi fun i ↦ Set.Icc (-(L i : ℝ)) (L i)
 
@@ -75,7 +74,7 @@ lemma realBox_mem_nhds {L : Fin d → ℕ} (hL : ∀ i, 0 < L i) :
 
 /-! ## The image of a subgroup of `ℤ ^ d` is discrete -/
 
-/-- The image in $\mathbb{R}^d$ of a subgroup of $\mathbb{Z}^d$ is discrete, because it lies in the
+/-- The image in `ℝ ^ d` of a subgroup of `ℤ ^ d` is discrete, because it lies in the
 discrete subgroup `standardIntegerLattice d`. -/
 lemma discreteTopology_map (Λ : AddSubgroup (Fin d → ℤ)) :
     DiscreteTopology (Λ.map intVectorToReal) := by

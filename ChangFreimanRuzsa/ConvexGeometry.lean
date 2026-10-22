@@ -11,22 +11,22 @@ import Mathlib.Topology.Algebra.OpenSubgroup
 
 /-! # Shortest lattice vectors with respect to a symmetric convex body
 
-Let $K$ be a closed bounded convex neighbourhood of the origin in a real normed space $E$, let
-$g_K$ be its gauge, and let $L$ be a discrete subgroup of $E$. This file proves the facts about
-$g_K$ and $L$ that the induction along shortest lattice vectors in
+Let `K` be a closed bounded convex neighbourhood of the origin in a real normed space `E` and let
+`L` be a discrete subgroup of `E`. This file proves the facts about `gauge K` and `L` that the
+induction along shortest lattice vectors in
 `ChangFreimanRuzsa.LatticeBox.GaugeInduction` uses. They involve only the body and its gauge, and no
 measure theory.
 
 ## Main statements
 
-- `mem_smul_iff_gauge_le`: for $t \ge 0$, $x \in tK$ if and only if $g_K(x) \le t$.
+- `mem_smul_iff_gauge_le`: for `0 ≤ t`, `x ∈ t • K` if and only if `gauge K x ≤ t`.
 - `exists_mem_ne_zero_forall_gauge_le`: a nonzero discrete subgroup has a nonzero vector of least
   gauge.
 - `exists_intCast_smul_eq_of_gauge_min`: a nonzero lattice vector of least gauge is primitive.
-- `exists_mem_gauge_le_of_mem_map` and `gauge_le_two_mul_of_mem_map`: let $\pi$ be a linear map
-  with kernel $\mathbb{R} v$ for a shortest lattice vector $v$. A vector of $\pi(L) \cap t \pi(K)$
-  lifts to a vector of $L$ of gauge at most $t + g_K(v) / 2$, and if it is nonzero, then
-  $g_K(v) \le 2t$.
+- `exists_mem_gauge_le_of_mem_map` and `gauge_le_two_mul_of_mem_map`: let `π` be a linear map
+  with kernel `ℝ ∙ v` for a shortest lattice vector `v`. A vector of `L.map π` in `t • π '' K`
+  lifts to a vector of `L` of gauge at most `t + gauge K v / 2`, and if it is nonzero, then
+  `gauge K v ≤ 2 * t`.
 - `neg_mem_image` and `exists_pos_forall_le_norm_apply`: the projected body is symmetric, and the
   nonzero projected lattice vectors have norm bounded below.
 -/
@@ -47,8 +47,8 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {K : Set E} {L :
 
 /-! ## Dilates of a convex body -/
 
-/-- For $t \ge 0$, a point $x$ lies in the dilate $tK$ of a closed bounded convex neighbourhood $K$
-of the origin if and only if $g_K(x) \le t$. -/
+/-- For `0 ≤ t`, a point `x` lies in the dilate `t • K` of a closed bounded convex neighbourhood
+`K` of the origin if and only if `gauge K x ≤ t`. -/
 lemma mem_smul_iff_gauge_le (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0)
     (hbdd : Bornology.IsVonNBounded ℝ K) {t : ℝ} (ht : 0 ≤ t) (x : E) :
     x ∈ t • K ↔ gauge K x ≤ t := by
@@ -63,10 +63,10 @@ lemma mem_smul_iff_gauge_le (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀
 
 /-! ## Shortest lattice vectors -/
 
-/-- A discrete subgroup $L \ne 0$ of a proper space has a nonzero vector of least gauge with respect
-to a closed bounded convex neighbourhood $K$ of the origin. For a nonzero $x \in L$, the nonzero
-vectors of $L \cap g_K(x) K$ form a finite set, and a vector of least gauge in it has least gauge in
-$L \setminus \{0\}$. -/
+/-- A discrete subgroup `L ≠ ⊥` of a proper space has a nonzero vector of least gauge with respect
+to a closed bounded convex neighbourhood `K` of the origin. For a nonzero `x ∈ L`, the nonzero
+vectors of `L` in `gauge K x • K` form a finite set, and a vector of least gauge in it has least
+gauge among the nonzero vectors of `L`. -/
 lemma exists_mem_ne_zero_forall_gauge_le [ProperSpace E] [DiscreteTopology L] (hconv : Convex ℝ K)
     (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0) (hbdd : Bornology.IsBounded K) {x : E} (hxL : x ∈ L)
     (hx : x ≠ 0) : ∃ v ∈ L, v ≠ 0 ∧ ∀ y ∈ L, y ≠ 0 → gauge K v ≤ gauge K y := by
@@ -82,9 +82,9 @@ lemma exists_mem_ne_zero_forall_gauge_le [ProperSpace E] [DiscreteTopology L] (h
   · exact hmin y ⟨⟨hyK, hyL⟩, hy⟩
   · exact (hmin x hxS).trans (not_le.mp (hyK ∘ (hmem y).mpr)).le
 
-/-- Rounding along a lattice direction: a point differing from a point of gauge at most $t$ by a
-real multiple of $v$ can be moved by an integer multiple of $v$ to a point of gauge at most
-$t + g_K(v) / 2$. -/
+/-- Rounding along a lattice direction: a point differing from a point of gauge at most `t` by a
+real multiple of `v` can be moved by an integer multiple of `v` to a point of gauge at most
+`t + gauge K v / 2`. -/
 lemma exists_int_gauge_sub_intCast_smul_le (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0)
     (hsymm : ∀ x ∈ K, -x ∈ K) {s t : ℝ} {y z v : E} (hz : gauge K z ≤ t)
     (hy : y = z + s • v) : ∃ m : ℤ, gauge K (y - (m : ℝ) • v) ≤ t + gauge K v / 2 := by
@@ -112,10 +112,10 @@ lemma exists_intCast_smul_eq_of_gauge_min (hconv : Convex ℝ K) (hsymm : ∀ x 
 
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-/-- Let $\pi$ be a linear map with kernel $\mathbb{R} v$ for some $v \in L$. A vector of $\pi(L)$
-in the dilate $t \pi(K)$ lifts to a vector of $L$ of gauge at most $t + g_K(v) / 2$. Any lift
-differs from a point of $tK$ by a multiple of $v$, and rounding that multiple adds at most
-$g_K(v) / 2$. -/
+/-- Let `π` be a linear map with kernel `ℝ ∙ v` for some `v ∈ L`. A vector of `L.map π` in the
+dilate `t • π '' K` lifts to a vector of `L` of gauge at most `t + gauge K v / 2`. Any lift differs
+from a point of `t • K` by a multiple of `v`, and rounding that multiple adds at most
+`gauge K v / 2`. -/
 lemma exists_mem_gauge_le_of_mem_map (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0)
     (hsymm : ∀ x ∈ K, -x ∈ K) {π : E →ₗ[ℝ] F} {v : E} (hv : v ∈ L) (hπv : π v = 0)
     (hker : ∀ x, π x = 0 → ∃ s : ℝ, x = s • v) {t : ℝ} (ht : 0 ≤ t) {w : F}
@@ -130,9 +130,9 @@ lemma exists_mem_gauge_le_of_mem_map (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 
   rw [Int.cast_smul_eq_zsmul]
   exact L.zsmul_mem hv _
 
-/-- Let $\pi$ be a linear map with kernel $\mathbb{R} v$ for a nonzero vector $v \in L$ of least
-gauge. If a nonzero vector of $\pi(L)$ lies in $t \pi(K)$, then $g_K(v) \le 2t$, since its lift is
-a nonzero vector of $L$ of gauge at most $t + g_K(v) / 2$. -/
+/-- Let `π` be a linear map with kernel `ℝ ∙ v` for a nonzero vector `v ∈ L` of least gauge. If a
+nonzero vector of `L.map π` lies in `t • π '' K`, then `gauge K v ≤ 2 * t`, since its lift is a
+nonzero vector of `L` of gauge at most `t + gauge K v / 2`. -/
 lemma gauge_le_two_mul_of_mem_map (hconv : Convex ℝ K) (hK₀ : K ∈ 𝓝 0)
     (hsymm : ∀ x ∈ K, -x ∈ K) {π : E →ₗ[ℝ] F} {v : E} (hv : v ∈ L) (hπv : π v = 0)
     (hker : ∀ x, π x = 0 → ∃ s : ℝ, x = s • v) (hmin : ∀ y ∈ L, y ≠ 0 → gauge K v ≤ gauge K y)
@@ -147,12 +147,11 @@ lemma neg_mem_image (hsymm : ∀ x ∈ K, -x ∈ K) {π : E →ₗ[ℝ] F} ⦃y 
   obtain ⟨x, hx, rfl⟩ := hy
   exact ⟨-x, hsymm x hx, map_neg π x⟩
 
-/-- Let $p$ be a linear map with $p(v) = 0$ for some $v \in L$ and $y - p(y) \in \mathbb{R} v$ for
-every $y$. Then the norms of the nonzero vectors of $p(L)$ are bounded below by a positive constant.
+/-- Let `p` be a linear map with `p v = 0` for some `v ∈ L` and `y - p y ∈ ℝ ∙ v` for every `y`.
+Then the norms of the nonzero vectors of `L.map p` are bounded below by a positive constant.
 
-Subtracting the nearest integer multiple of $v$ moves a vector $y \in L$ with $\|p(y)\| \le 1$ into
-the ball of radius $\|v\| + 1$ without changing $p(y)$, and that ball meets $L$ in finitely many
-points. -/
+Subtracting the nearest integer multiple of `v` moves a vector `y ∈ L` with `‖p y‖ ≤ 1` into the
+ball of radius `‖v‖ + 1` without changing `p y`, and that ball meets `L` in finitely many points. -/
 lemma exists_pos_forall_le_norm_apply [ProperSpace E] [DiscreteTopology L] {p : E →ₗ[ℝ] E}
     {v : E} (hv : v ∈ L) (hpv : p v = 0) (hsplit : ∀ y, ∃ s : ℝ, y - p y = s • v) :
     ∃ r, 0 < r ∧ ∀ y ∈ L, p y ≠ 0 → r ≤ ‖p y‖ := by

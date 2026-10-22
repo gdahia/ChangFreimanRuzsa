@@ -10,17 +10,17 @@ public import ChangFreimanRuzsa.Lattice
 
 /-! # Saturated spans of integer vectors
 
-The saturated span `saturatedSpan S` of a finite set $S \subseteq \mathbb{Z}^d$ is the set of
-integer vectors in the real span of $S$. It is a saturated submodule of $\mathbb{Z}^d$: it
-contains every integer vector with a nonzero multiple in it.
+The saturated span `saturatedSpan S` of a finite set `S` of vectors of `ℤ ^ d` is the set of
+integer vectors in the real span of `S`. It is a saturated submodule of `ℤ ^ d`: it contains every
+integer vector with a nonzero multiple in it.
 
 ## Main statements
 
 * `finrank_saturatedSpan`: the rank of the saturated span is the dimension of the real span.
 * `mem_saturatedSpan_of_zsmul_mem`: the saturated span is saturated.
-* `exists_congr_close_isShort` and `exists_congr_span_isShort`: if $v_1, \dots, v_r$ satisfy
-  $|v_{j,i}| \le t L_i$, then every integer vector in their real span is congruent modulo
-  $\langle v_1, \dots, v_r \rangle_{\mathbb{Z}}$ to a vector $y$ with $|y_i| \le r t L_i$.
+* `exists_congr_close_isShort` and `exists_congr_span_isShort`: if `v : Fin r → ℤ ^ d` satisfies
+  `|v j i| ≤ t * L i`, then every integer vector in its real span is congruent modulo
+  `Submodule.span ℤ (Set.range v)` to a vector `y` with `|y i| ≤ r * (t * L i)`.
 -/
 
 public section
@@ -67,15 +67,15 @@ lemma finrank_saturatedSpan (S : Finset (Fin d → ℤ)) :
   rw [(saturatedSpanEquivSubspaceIntegerLattice S).finrank_eq,
     finrank_subspaceIntegerLattice_integerGeneratedSubspace]
 
-/-- The saturated span is saturated: if a nonzero multiple of $v$ lies in it, so does $v$. -/
+/-- The saturated span is saturated: if a nonzero multiple of `v` lies in it, so does `v`. -/
 lemma mem_saturatedSpan_of_zsmul_mem {S : Finset (Fin d → ℤ)} {v : Fin d → ℤ} {c : ℤ}
     (hc : c ≠ 0) (hcv : c • v ∈ saturatedSpan S) :
     v ∈ saturatedSpan S := by
   have hmem := (integerGeneratedSubspace S).smul_mem (c : ℝ)⁻¹ (mem_saturatedSpan.mp hcv)
   rwa [map_zsmul, ← Int.cast_smul_eq_zsmul ℝ, inv_smul_smul₀ (by exact_mod_cast hc)] at hmem
 
-/-- If $|v_{j,i}| \le t L_i$ for all $j$ and $|a_j| \le 1$, then
-$|\sum_j a_j v_{j,i}| \le r t L_i$. -/
+/-- If `|v j i| ≤ t * L i` for all `j` and `|a j| ≤ 1`, then
+`|∑ j, a j * v j i| ≤ r * (t * L i)`. -/
 lemma abs_sum_mul_le_of_isShort {L : Fin d → ℕ} {t : ℝ} {v : Fin r → (Fin d → ℤ)}
     (hshort : ∀ j, IsShort L t (v j)) {a : Fin r → ℝ} (ha : ∀ j, |a j| ≤ 1) (i : Fin d) :
     |∑ j, a j * v j i| ≤ r * (t * L i) := by
@@ -85,10 +85,10 @@ lemma abs_sum_mul_le_of_isShort {L : Fin d → ℕ} {t : ℝ} {v : Fin r → (Fi
   rw [abs_mul]
   exact (mul_le_of_le_one_left (abs_nonneg _) (ha j)).trans (hshort j i)
 
-/-- Let $v_1, \dots, v_r$ be integer vectors with $|v_{j,i}| \le t L_i$. If $z - b$ lies in the
-real span of $v_1, \dots, v_r$ for an integer vector $z$ and a real vector $b$, then $z$ is
-congruent modulo $\langle v_1, \dots, v_r \rangle_{\mathbb{Z}}$ to an integer vector $y$ with
-$|y_i| \le |b_i| + r t L_i$ for all $i$. -/
+/-- Let `v : Fin r → ℤ ^ d` be integer vectors with `|v j i| ≤ t * L i`. If `z - b` lies in the
+real span of the `v j` for an integer vector `z` and a real vector `b`, then `z` is congruent
+modulo `Submodule.span ℤ (Set.range v)` to an integer vector `y` with
+`|y i| ≤ |b i| + r * (t * L i)` for all `i`. -/
 lemma exists_congr_close_isShort {L : Fin d → ℕ} {t : ℝ} {v : Fin r → (Fin d → ℤ)}
     (hshort : ∀ j, IsShort L t (v j)) {z : Fin d → ℤ} {b : Fin d → ℝ}
     (hspan : intVectorToReal z - b ∈ Submodule.span ℝ (Set.range fun j ↦ intVectorToReal (v j))) :
@@ -113,9 +113,9 @@ lemma exists_congr_close_isShort {L : Fin d → ℕ} {t : ℝ} {v : Fin r → (F
     exact (abs_add_le _ _).trans (add_le_add_right (abs_sum_mul_le_of_isShort hshort
       (fun j ↦ (abs_sub_round (c j)).trans (by norm_num)) i) _)
 
-/-- Let $v_1, \dots, v_r$ be integer vectors with $|v_{j,i}| \le t L_i$. Every integer vector $x$ in
-their real span is congruent modulo $\langle v_1, \dots, v_r \rangle_{\mathbb{Z}}$ to an integer
-vector $y$ with $|y_i| \le r t L_i$ for all $i$. -/
+/-- Let `v : Fin r → ℤ ^ d` be integer vectors with `|v j i| ≤ t * L i`. Every integer vector `x`
+in their real span is congruent modulo `Submodule.span ℤ (Set.range v)` to an integer vector `y`
+with `|y i| ≤ r * (t * L i)` for all `i`. -/
 lemma exists_congr_span_isShort {L : Fin d → ℕ} {t : ℝ} {v : Fin r → (Fin d → ℤ)}
     (hshort : ∀ j, IsShort L t (v j)) {x : Fin d → ℤ}
     (hx : x ∈ saturatedSpan (Finset.univ.image v)) :

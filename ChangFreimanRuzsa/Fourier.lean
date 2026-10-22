@@ -17,21 +17,20 @@ import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
 
 /-! # Fourier analysis for Chang's theorem
 
-Let $X$ be a finite subset of a finite abelian group with $|X + X| \le \kappa |X|$ and
-$\kappa \ge 2$.
+Let `X` be a finite subset of a finite abelian group with `#(X + X) ≤ κ * #X` and `2 ≤ κ`.
 
 ## Main statements
 
-* `card_pow_three_le_mul_addEnergy`: $|X|^3 \le \kappa E(X)$, where $E(X)$ is the additive energy.
-* `mem_add_sub_add_of_card_add_le_of_forall_largeSpec`: every $x$ with $|1 - \psi(x)| \le 1/4$ for
-  every $\psi$ in the large spectrum of $1_X$ at threshold $\eta = (8\kappa)^{-1/2}$ lies in
-  $2X - 2X$.
-* `exists_card_le_largeSpec_subset_addSpan`: Chang's lemma in $\mathbb{Z}/q\mathbb{Z}$, which puts
-  the large spectrum in the span of a small set $\Delta$ of characters.
+* `card_pow_three_le_mul_addEnergy`: `#X ^ 3 ≤ κ * E[X]`, where `E[X]` is the additive energy.
+* `mem_add_sub_add_of_card_add_le_of_forall_largeSpec`: every `x` with `‖1 - ψ x‖ ≤ 4⁻¹` for
+  every `ψ` in the large spectrum of `𝟭_[X]` at threshold `η = √(8 * κ)⁻¹` lies in
+  `X + X - (X + X)`.
+* `exists_card_le_largeSpec_subset_addSpan`: Chang's lemma in `ZMod q`, which puts the large
+  spectrum in the span of a small set `Δ` of characters.
 * `mem_add_sub_add_of_largeSpec_subset_addSpan`: the same inclusion with the large spectrum replaced
-  by $\Delta$ and the width $1/4$ by $(4(|\Delta| + 1))^{-1}$.
-* `exists_frequency_chord_le`: $|1 - \psi_r(x)| \le 2\pi |a| / q$ for every integer $a$ with
-  $a \equiv r x \pmod q$.
+  by `Δ` and the width `4⁻¹` by `(4 * (#Δ + 1))⁻¹`.
+* `exists_frequency_chord_le`: every character `ψ` of `ZMod q` has a frequency `r` such that
+  `‖1 - ψ x‖ ≤ 2 * π * |a| / q` for every integer `a` with `(a : ZMod q) = r * x`.
 
 The discrete Fourier transform, large spectra and Chang's lemma come from the APAP library, and the
 additive energy from Mathlib.
@@ -54,7 +53,7 @@ section Energy
 
 variable [DecidableEq G]
 
-/-- The fourth moment `boringEnergy 2 s` of APAP is the additive energy $E(s)$. -/
+/-- The fourth moment `boringEnergy 2 s` of APAP is the additive energy `E[s]`. -/
 lemma boringEnergy_two_eq_addEnergy [Finite G] (s : Finset G) : boringEnergy 2 s = E[s] := by
   cases nonempty_fintype G
   rw [boringEnergy_eq, addEnergy_eq_sum_sq]
@@ -62,7 +61,7 @@ lemma boringEnergy_two_eq_addEnergy [Finite G] (s : Finset G) : boringEnergy 2 s
   congr with x
   rw [iterConv_succ, iterConv_one, indicator_one_ddconv_indicator_one_eq_sum]
 
-/-- If $X$ is nonempty and $|X + X| \le \kappa |X|$, then $|X|^3 \le \kappa E(X)$. -/
+/-- If `X` is nonempty and `#(X + X) ≤ κ * #X`, then `#X ^ 3 ≤ κ * E[X]`. -/
 lemma card_pow_three_le_mul_addEnergy {X : Finset G} {κ : ℝ} (hX : X.Nonempty)
     (hXX : (#(X + X) : ℝ) ≤ κ * #X) : (#X : ℝ) ^ 3 ≤ κ * E[X] := by
   have hX₀ : (0 : ℝ) < #X := by exact_mod_cast hX.card_pos
@@ -99,8 +98,7 @@ private lemma norm_one_sub_prod_le_sum {ι : Type*} {s : Finset ι} {f : ι → 
 
 variable [Finite G]
 
-/-- If $\psi$ lies in the span of $\Delta$, then
-$|1 - \psi(x)| \le \sum_{\gamma \in \Delta} |1 - \gamma(x)|$. -/
+/-- If `ψ` lies in the span of `Δ`, then `‖1 - ψ x‖ ≤ ∑ γ ∈ Δ, ‖1 - γ x‖`. -/
 lemma norm_one_sub_apply_le_sum_of_mem_addSpan {Δ : Finset (AddChar G ℂ)} {ψ : AddChar G ℂ}
     (hψ : ψ ∈ Δ.addSpan) (x : G) : ‖1 - ψ x‖ ≤ ∑ γ ∈ Δ, ‖1 - γ x‖ := by
   obtain ⟨e, he, rfl⟩ := mem_addSpan.1 hψ
@@ -121,8 +119,8 @@ section LargeSpec
 
 variable [DecidableEq G] [Fintype G]
 
-/-- Fourier inversion for the function $1_X * 1_X \circ 1_X * 1_X$, whose Fourier transform is
-$|\hat{1}_X|^4$. -/
+/-- Fourier inversion for the function `(𝟭_[X] ∗ᵈ^ 2) ○ᵈ (𝟭_[X] ∗ᵈ^ 2)`, whose Fourier transform
+is `‖dft 𝟭_[X] ψ‖ ^ 4`. -/
 private lemma expect_norm_dft_pow_four_mul_apply (X : Finset G) (x : G) :
     𝔼 ψ, (‖dft 𝟭_[(X : Set G), ℂ] ψ‖ : ℂ) ^ 4 * ψ x =
       ((𝟭_[(X : Set G), ℂ] ∗ᵈ^ 2) ○ᵈ (𝟭_[(X : Set G)] ∗ᵈ^ 2)) x := by
@@ -131,7 +129,7 @@ private lemma expect_norm_dft_pow_four_mul_apply (X : Finset G) (x : G) :
   rw [dft_dddconv_apply, dft_iterConv, Pi.pow_apply, map_pow, ← mul_pow, Complex.mul_conj']
   ring
 
-/-- The function $1_X * 1_X \circ 1_X * 1_X$ vanishes outside $2X - 2X$. -/
+/-- The function `(𝟭_[X] ∗ᵈ^ 2) ○ᵈ (𝟭_[X] ∗ᵈ^ 2)` vanishes outside `X + X - (X + X)`. -/
 private lemma iterConv_two_dddconv_apply_eq_zero {X : Finset G} {x : G}
     (hx : x ∉ (X + X) - (X + X)) :
     ((𝟭_[(X : Set G), ℂ] ∗ᵈ^ 2) ○ᵈ (𝟭_[(X : Set G)] ∗ᵈ^ 2)) x = 0 := by
@@ -145,20 +143,20 @@ private lemma iterConv_two_dddconv_apply_eq_zero {X : Finset G} {x : G}
 
 variable [MeasurableSpace G] [DiscreteMeasurableSpace G]
 
-/-- The fourth moment of $\hat{1}_X$ is the additive energy of $X$. -/
+/-- The fourth moment of `dft 𝟭_[X]` is the additive energy of `X`. -/
 lemma expect_norm_dft_indicator_pow_four (X : Finset G) :
     𝔼 ψ, ‖dft 𝟭_[(X : Set G), ℂ] ψ‖ ^ 4 = E[X] := by
   rw [← boringEnergy_two_eq_addEnergy, ← cLpNorm_pow_eq_expect_norm (by norm_num)]
   simpa using cLpNorm_dft_indicator_one_pow 2 X
 
 omit [DecidableEq G] in
-/-- The second moment of $\hat{1}_X$ is $|X|$. -/
+/-- The second moment of `dft 𝟭_[X]` is `#X`. -/
 lemma expect_norm_dft_indicator_sq (X : Finset G) :
     𝔼 ψ, ‖dft 𝟭_[(X : Set G), ℂ] ψ‖ ^ 2 = #X := by
   rw [← cLpNorm_pow_eq_expect_norm (by norm_num)]
   simp
 
-/-- If $x \notin 2X - 2X$, then $E(X) \le \mathbb{E}_\psi |\hat{1}_X(\psi)|^4 |1 - \psi(x)|$. -/
+/-- If `x ∉ X + X - (X + X)`, then `E[X] ≤ 𝔼 ψ, ‖dft 𝟭_[X] ψ‖ ^ 4 * ‖1 - ψ x‖`. -/
 private lemma addEnergy_le_expect_norm_dft_pow_four_mul {X : Finset G} {x : G}
     (hx : x ∉ (X + X) - (X + X)) :
     (E[X] : ℝ) ≤ 𝔼 ψ, ‖dft 𝟭_[(X : Set G), ℂ] ψ‖ ^ 4 * ‖1 - ψ x‖ := by
@@ -171,8 +169,8 @@ private lemma addEnergy_le_expect_norm_dft_pow_four_mul {X : Finset G} {x : G}
   refine (norm_expect_le (K := ℝ)).trans_eq ?_
   simp
 
-/-- If $|1 - \psi(x)| \le \varepsilon$ on the large spectrum at threshold $\eta$, then
-$\mathbb{E}_\psi |\hat{1}_X(\psi)|^4 |1 - \psi(x)| \le \varepsilon E(X) + 2 \eta^2 |X|^3$. -/
+/-- If `‖1 - ψ x‖ ≤ ε` on the large spectrum at threshold `η`, then
+`𝔼 ψ, ‖dft 𝟭_[X] ψ‖ ^ 4 * ‖1 - ψ x‖ ≤ ε * E[X] + 2 * η ^ 2 * #X ^ 3`. -/
 private lemma expect_norm_dft_pow_four_mul_le {X : Finset G} {η ε : ℝ} (hε : 0 ≤ ε) {x : G}
     (hx : ∀ ψ ∈ largeSpec 𝟭_[(X : Set G)] η, ‖1 - ψ x‖ ≤ ε) :
     𝔼 ψ, ‖dft 𝟭_[(X : Set G), ℂ] ψ‖ ^ 4 * ‖1 - ψ x‖ ≤ ε * E[X] + 2 * (η * #X) ^ 2 * #X := by
@@ -194,8 +192,8 @@ private lemma expect_norm_dft_pow_four_mul_le {X : Finset G} {η ε : ℝ} (hε 
   · rw [expect_add_distrib, ← mul_expect, ← mul_expect, expect_norm_dft_indicator_pow_four,
       expect_norm_dft_indicator_sq]
 
-/-- Let $|1 - \psi(x)| \le \varepsilon$ for every $\psi$ in the large spectrum of $1_X$ at
-threshold $\eta$. If $\varepsilon E(X) + 2 \eta^2 |X|^3 < E(X)$, then $x \in 2X - 2X$. -/
+/-- Let `‖1 - ψ x‖ ≤ ε` for every `ψ` in the large spectrum of `𝟭_[X]` at threshold `η`. If
+`ε * E[X] + 2 * η ^ 2 * #X ^ 3 < E[X]`, then `x ∈ X + X - (X + X)`. -/
 lemma mem_add_sub_add_of_forall_largeSpec_norm_one_sub_le {X : Finset G} {η ε : ℝ} (hε : 0 ≤ ε)
     (hεη : ε * E[X] + 2 * (η * #X) ^ 2 * #X < E[X]) {x : G}
     (hx : ∀ ψ ∈ largeSpec 𝟭_[(X : Set G)] η, ‖1 - ψ x‖ ≤ ε) : x ∈ (X + X) - (X + X) := by
@@ -203,8 +201,8 @@ lemma mem_add_sub_add_of_forall_largeSpec_norm_one_sub_le {X : Finset G} {η ε 
   exact ((expect_norm_dft_pow_four_mul_le hε hx).trans_lt hεη).not_ge
     (addEnergy_le_expect_norm_dft_pow_four_mul hmem)
 
-/-- If $|X + X| \le \kappa |X|$ with $\kappa \ge 2$, every $x$ with $|1 - \psi(x)| \le 1/4$ for
-every $\psi$ in the large spectrum of $1_X$ at threshold $(8\kappa)^{-1/2}$ lies in $2X - 2X$. -/
+/-- If `#(X + X) ≤ κ * #X` with `2 ≤ κ`, every `x` with `‖1 - ψ x‖ ≤ 4⁻¹` for every `ψ` in the
+large spectrum of `𝟭_[X]` at threshold `√(8 * κ)⁻¹` lies in `X + X - (X + X)`. -/
 lemma mem_add_sub_add_of_card_add_le_of_forall_largeSpec {X : Finset G} {κ : ℝ} (hκ : 2 ≤ κ)
     (hX : X.Nonempty) (hXX : (#(X + X) : ℝ) ≤ κ * #X) {x : G}
     (hx : ∀ ψ ∈ largeSpec 𝟭_[(X : Set G)] (Real.sqrt (8 * κ)⁻¹), ‖1 - ψ x‖ ≤ 4⁻¹) :
@@ -216,9 +214,9 @@ lemma mem_add_sub_add_of_card_add_le_of_forall_largeSpec {X : Finset G} {κ : �
     mul_inv_cancel₀ (by positivity : 8 * κ ≠ 0),
     (by exact_mod_cast addEnergy_self_pos hX : (0 : ℝ) < E[X])]
 
-/-- If $|X + X| \le \kappa |X|$ with $\kappa \ge 2$ and the large spectrum of $1_X$ at threshold
-$(8\kappa)^{-1/2}$ lies in the span of $\Delta$, then every $x$ with
-$|1 - \psi(x)| \le (4(|\Delta| + 1))^{-1}$ for every $\psi \in \Delta$ lies in $2X - 2X$. -/
+/-- If `#(X + X) ≤ κ * #X` with `2 ≤ κ` and the large spectrum of `𝟭_[X]` at threshold
+`√(8 * κ)⁻¹` lies in the span of `Δ`, then every `x` with `‖1 - ψ x‖ ≤ (4 * (#Δ + 1))⁻¹` for
+every `ψ ∈ Δ` lies in `X + X - (X + X)`. -/
 lemma mem_add_sub_add_of_largeSpec_subset_addSpan {X : Finset G} {κ : ℝ} (hκ : 2 ≤ κ)
     (hX : X.Nonempty) (hXX : (#(X + X) : ℝ) ≤ κ * #X) {Δ : Finset (AddChar G ℂ)}
     (hΔ : largeSpec 𝟭_[(X : Set G)] (Real.sqrt (8 * κ)⁻¹) ⊆ Δ.addSpan) {x : G}
@@ -231,10 +229,8 @@ lemma mem_add_sub_add_of_largeSpec_subset_addSpan {X : Finset G} {κ : ℝ} (hκ
 
 end LargeSpec
 
-/-- **Chang's lemma** in $\mathbb{Z}/q\mathbb{Z}$. The large spectrum of $1_X$ at threshold
-$\eta$ lies in the span of a subset $\Delta$ of itself with
-$|\Delta| \le \lceil C e \lceil 1 + \log(q / |X|) \rceil / \eta^2 \rceil$, where $C$ is
-`changConst`. -/
+/-- **Chang's lemma** in `ZMod q`. The large spectrum of `𝟭_[X]` at threshold `η` lies in the span
+of a subset `Δ` of itself with `#Δ ≤ ⌈changConst * exp 1 * ⌈1 + log (q / #X)⌉₊ / η ^ 2⌉₊`. -/
 lemma exists_card_le_largeSpec_subset_addSpan {q : ℕ} [NeZero q] {X : Finset (ZMod q)}
     (hX : X.Nonempty) {η : ℝ} (hη : 0 < η) :
     ∃ Δ ⊆ largeSpec 𝟭_[(X : Set (ZMod q))] η,
@@ -244,12 +240,12 @@ lemma exists_card_le_largeSpec_subset_addSpan {q : ℕ} [NeZero q] {X : Finset (
 
 /-! ## Frequencies
 
-Chord widths $|1 - \psi(x)|$ are the analytic form of the Bohr condition. The construction of a
-progression inside a Bohr set works instead with integer representatives $a$ of the products $r x$
-of frequencies with group elements, together with bounds on $|a|$. -/
+Chord widths `‖1 - ψ x‖` are the analytic form of the Bohr condition. The construction of a
+progression inside a Bohr set works instead with integer representatives `a` of the products
+`r * x` of frequencies with group elements, together with bounds on `|a|`. -/
 
-/-- Every character $\psi$ of $\mathbb{Z}/q\mathbb{Z}$ is given by a frequency $r$, and
-$|1 - \psi(x)| \le 2 \pi |a| / q$ for every integer $a$ with $a \equiv r x \pmod q$. -/
+/-- Every character `ψ` of `ZMod q` is given by a frequency `r`, and
+`‖1 - ψ x‖ ≤ 2 * π * |a| / q` for every integer `a` with `(a : ZMod q) = r * x`. -/
 lemma exists_frequency_chord_le {q : ℕ} [NeZero q] (ψ : AddChar (ZMod q) ℂ) :
     ∃ r : ZMod q, ∀ (x : ZMod q) (a : ℤ), (a : ZMod q) = r * x →
       ‖1 - ψ x‖ ≤ 2 * Real.pi * |(a : ℝ)| / q := by
