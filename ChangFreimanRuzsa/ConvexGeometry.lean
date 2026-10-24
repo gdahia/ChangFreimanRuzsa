@@ -14,9 +14,8 @@ import Mathlib.Topology.Algebra.OpenSubgroup
 
 Let `K` be a closed bounded convex neighborhood of the origin in a real normed space `E` and let
 `L` be a discrete subgroup of `E`. This file proves the facts about `gauge K` and `L` that the
-induction along shortest lattice vectors in
-`ChangFreimanRuzsa.LatticeBox.GaugeInduction` uses. They involve only the body and its gauge, and no
-measure theory.
+induction along shortest lattice vectors in `ChangFreimanRuzsa.LatticeBox.GaugeInduction` uses.
+They involve only the body and its gauge, and no measure theory.
 
 ## Main statements
 
