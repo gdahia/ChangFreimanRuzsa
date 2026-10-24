@@ -5,7 +5,7 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GAP.Defs
+public import ChangFreimanRuzsa.GAP.Basic
 public import Mathlib.Analysis.Complex.Exponential
 public import SumOfSetsInSeveralDimensions.FreimanDimension
 import ChangFreimanRuzsa.ExponentBounds

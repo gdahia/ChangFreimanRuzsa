@@ -5,7 +5,7 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GAP.Defs
+public import ChangFreimanRuzsa.GAP.Basic
 public import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import ChangFreimanRuzsa.Properization.ExponentialBounds
 import ChangFreimanRuzsa.Properization.ShortRelations

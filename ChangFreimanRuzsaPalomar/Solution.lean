@@ -8,7 +8,7 @@ module
 public import Mathlib.Analysis.Complex.Exponential
 public import Mathlib.Data.Finsupp.Interval
 public import Mathlib.Data.Nat.Prime.Defs
-public import ChangFreimanRuzsa.GAP.Defs
+public import ChangFreimanRuzsa.GAP.Basic
 import ChangFreimanRuzsa.Explicit
 
 /-!

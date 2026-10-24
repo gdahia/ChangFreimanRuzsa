@@ -6,7 +6,7 @@ Authors: Gabriel Dahia
 module
 
 public import APAP.Prereqs.Chang
-public import ChangFreimanRuzsa.GAP.Defs
+public import ChangFreimanRuzsa.GAP.Basic
 public import Mathlib.Combinatorics.Additive.FreimanHom
 import ChangFreimanRuzsa.BogolyubovRuzsa.BohrSet
 import ChangFreimanRuzsa.BogolyubovRuzsa.Fourier

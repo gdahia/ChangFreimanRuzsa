@@ -81,7 +81,7 @@ The library also states the theorems with named exponents, which the explicit bo
 
 | Files in `ChangFreimanRuzsa/` | Contents |
 | --- | --- |
-| `GAP/Defs.lean`, `GAP/Basic.lean`, `GAP/Coeff.lean` | Progressions, proper and `2`-proper progressions, coefficients and the Freiman isomorphism onto the coefficient box |
+| `GAP/Basic.lean`, `GAP/Coeff.lean` | Progressions, proper and `2`-proper progressions, coefficients and the Freiman isomorphism onto the coefficient box |
 | `GAP/Relations.lean`, `GAP/ScaleLengths.lean`, `GAP/Symmetric.lean`, `GAP/Constructions.lean` | Relations among the steps, enlarged lengths, symmetric progressions, progressions containing subset sums and differences |
 | `GAP/FreimanHom.lean` | Images of progressions under Freiman isomorphisms |
 | `GeometryOfNumbers/Box.lean`, `GeometryOfNumbers/RealBox.lean` | Integer and real boxes, the packing bound, short lattice vectors |

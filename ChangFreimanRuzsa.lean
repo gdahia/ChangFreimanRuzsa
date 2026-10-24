@@ -19,7 +19,6 @@ public import ChangFreimanRuzsa.FreimanDimension.Model
 public import ChangFreimanRuzsa.GAP.Basic
 public import ChangFreimanRuzsa.GAP.Coeff
 public import ChangFreimanRuzsa.GAP.Constructions
-public import ChangFreimanRuzsa.GAP.Defs
 public import ChangFreimanRuzsa.GAP.FreimanHom
 public import ChangFreimanRuzsa.GAP.Relations
 public import ChangFreimanRuzsa.GAP.ScaleLengths
