@@ -23,8 +23,16 @@ with `#(X + X) ≤ κ * #X` lies in a `2`-proper progression of dimension at mos
 at most `exp (C * κ ^ 7) * #X` points, for an absolute constant `C`. The Freiman dimension of `X`
 is at most `2 * κ - 1`, so the progression has dimension at most `2 * κ - 1`.
 
+The file also gives the Bogolyubov–Ruzsa lemma with explicit bounds, the first step of the proof:
+if moreover `7 * 10 ^ 7 * κ ^ 2 ≤ #X`, then `X + X - (X + X)` contains a proper progression of
+dimension at most `3 * 10 ^ 5 * κ ^ 2` with at least `#X / exp (2 * 10 ^ 7 * κ ^ 2)` points.
+
 ## Main statements
 
+* `exists_proper_gap_subset_add_sub_add_dim_le_card_le`: the Bogolyubov–Ruzsa lemma for sets of
+  integers.
+* `exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le`: the Bogolyubov–Ruzsa lemma in
+  `ZMod q`.
 * `exists_twoProperGAP_subset_dim_le_freimanDim_card_le`: the explicit form for sets of integers,
   with dimension at most `freimanDim X`.
 * `exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le`: the explicit form in `ZMod q`, with
@@ -41,6 +49,33 @@ open Finset SumOfSetsInSeveralDimensions
 open scoped Pointwise
 
 namespace ChangFreimanRuzsa
+
+/-- **Bogolyubov–Ruzsa lemma** for sets of integers. If a finite set `X` of integers satisfies
+`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
+`X + X - (X + X)` contains a proper generalized arithmetic progression `Q` of dimension at most
+`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier`. -/
+theorem exists_proper_gap_subset_add_sub_add_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
+    (hXX : #(X + X) ≤ κ * #X) (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
+    ∃ Q : GAP ℤ, Q.Proper ∧ Q.carrier ⊆ X + X - (X + X) ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier := by
+  obtain ⟨-, Q, -, -, hQ, hdim, hsub, hcard⟩ := exists_proper_gap_int_subset_add_sub_add_card_le X
+    hκ hXX ((mul_bohrGAPDim_le hκ).trans hXlower)
+  refine ⟨Q, hQ, hsub, by linarith [mul_bohrGAPDim_le hκ], hcard.trans ?_⟩
+  grw [mul_bohrLoss_bohrGAPDim_le hκ]
+
+/-- **Bogolyubov–Ruzsa lemma** in `ZMod q` for a prime `q`. If a set `X` satisfies
+`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
+`X + X - (X + X)` contains a proper generalized arithmetic progression `Q` of dimension at most
+`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier`. -/
+theorem exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le {q : ℕ} {κ : ℝ}
+    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
+    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
+    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.carrier ⊆ X + X - (X + X) ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier := by
+  obtain ⟨-, Q, -, -, hQ, hdim, hsub, hcard⟩ := exists_proper_gap_zmod_subset_add_sub_add_card_le X
+    hq hκ hXX ((mul_bohrGAPDim_le hκ).trans hXlower)
+  refine ⟨Q, hQ, hsub, by linarith [mul_bohrGAPDim_le hκ], hcard.trans ?_⟩
+  grw [mul_bohrLoss_bohrGAPDim_le hκ]
 
 /-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension. A
 finite nonempty set `X` of integers with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, is contained in a

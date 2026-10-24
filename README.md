@@ -46,7 +46,19 @@ $\exp(C \kappa^2 \log^3 \kappa) |X|$ points and dimension at most the Freiman di
 Theorems 1 and 2 have the same bound on the dimension, and a bound on the size that is linear in
 $|X|$ too, with a larger exponent.
 
-[Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 and 4, under the
+The first step of the proof is the Bogolyubov–Ruzsa lemma, a large proper progression inside
+$2X - 2X$.
+
+**Theorem 5** (`ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le`). Let
+$\kappa \ge 2$ and let $X$ be a finite set of integers. If $|X + X| \le \kappa |X|$ and
+$|X| \ge 7 \cdot 10^7 \kappa^2$, then $X + X - (X + X)$ contains a proper progression $Q$ with
+
+$$\dim Q \le 3 \cdot 10^5 \kappa^2, \qquad |X| \le \exp(2 \cdot 10^7 \kappa^2) |Q|.$$
+
+**Theorem 6** (`ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le`).
+The same holds for $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $q$ prime.
+
+[Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 to 6, under the
 library names with a prime and with `sorry` placeholders, together with the definitions of `GAP`
 and of its points, dimension, properness and sum. A progression `P` is `2`-proper when
 `(P + P).Proper`. The statements are in terms of Mathlib, which has no Freiman dimension, so
@@ -62,6 +74,8 @@ The library also states the theorems with named exponents, which the explicit bo
 | `exists_twoProperGAP_int_dim_le_freimanDim`, exponent of the size | `intFreimanDimExponent κ` | at most `10 ^ 32 * κ ^ 7` |
 | `exists_twoProperGAP_zmod_dim_le_freimanDim`, exponent of the size | `freimanDimExponent κ` | at most `10 ^ 30 * κ ^ 7` |
 | `exists_twoProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
+| `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, dimension | `bohrGAPDim κ` | at most `3 * 10 ^ 5 * κ ^ 2` |
+| `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, loss in the size | `8 * bohrLoss (bohrGAPDim κ)` | at most `exp (2 * 10 ^ 7 * κ ^ 2)` |
 
 ## Files
 
@@ -81,7 +95,7 @@ The library also states the theorems with named exponents, which the explicit bo
 | `Cyclic.lean` | Chang's theorem in `ZMod q` with named exponents |
 | `Integers.lean` | Chang's theorem for sets of integers with named exponents |
 | `Bound.lean` | Polynomial bounds for the exponents of `Container.lean`, `Cyclic.lean` and `Integers.lean` |
-| `ExplicitBounds.lean` | Theorems 1 to 4 |
+| `ExplicitBounds.lean` | Theorems 1 to 6 |
 | `LatticeCoordinates.lean`, `LatticeBox/EffectiveLattice.lean` | Coordinates in a basis of the lattice of integer points of the span of a finite set of integer vectors |
 | `FreimanModel.lean` | The Freiman model of a subset of a `2`-proper progression |
 | `CoordinateReduction.lean` | A `2`-proper progression of dimension at most `freimanDim X` containing `X` |
@@ -95,9 +109,11 @@ scope, and the use of AI coding agents.
 `Challenge.lean` imports only the Mathlib modules `Mathlib.Analysis.Complex.Exponential`,
 `Mathlib.Data.Finsupp.Interval` and `Mathlib.Data.Nat.Prime.Defs`. It repeats the library
 definitions of `GAP`, `GAP.eval`, `GAP.carrier`, `GAP.dim`, `GAP.Proper` and the sum of
-progressions, and states `exists_twoProperGAP_subset_dim_le_card_le'` and
+progressions, and states `exists_proper_gap_subset_add_sub_add_dim_le_card_le'`,
+`exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le'`,
+`exists_twoProperGAP_subset_dim_le_card_le'` and
 `exists_twoProperGAP_zmod_subset_dim_le_card_le'` with `sorry`. `comparator.json` names these
-two theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
+four theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
 modules to compare, and `propext`, `Classical.choice` and `Quot.sound` as the permitted axioms.
 The two modules sit in `ChangFreimanRuzsaPalomar/` rather than at the root, so that they do not
 clash with the `Challenge` and `Solution` modules of the projects this one requires or is

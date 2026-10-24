@@ -14,7 +14,9 @@ public import Mathlib.Data.Nat.Prime.Defs
 
 Chang's polynomial form of Freiman's theorem for finite sets of integers and for subsets of
 `ZMod q` with `q` prime: a set with small doubling lies in a `2`-proper generalized arithmetic
-progression of comparable size.
+progression of comparable size. Also the Bogolyubov–Ruzsa lemma, the first step of its proof:
+for such a set `X`, the set `X + X - (X + X)` contains a large proper generalized arithmetic
+progression.
 
 A generalized arithmetic progression has an `origin` and a finitely supported `bound`, and its
 points are `origin + ∑ v, c v • v` with `c ≤ bound`. It is `2`-proper when `P + P` is proper.
@@ -63,6 +65,27 @@ instance : Add (GAP G) where
 end GAP
 
 end
+
+/-- **Bogolyubov–Ruzsa lemma** for sets of integers. If a finite set `X` of integers satisfies
+`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
+`X + X - (X + X)` contains a proper generalized arithmetic progression `Q` of dimension at most
+`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier`. -/
+theorem exists_proper_gap_subset_add_sub_add_dim_le_card_le' {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
+    (hXX : #(X + X) ≤ κ * #X) (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
+    ∃ Q : GAP ℤ, Q.Proper ∧ Q.carrier ⊆ X + X - (X + X) ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier :=
+  sorry
+
+/-- **Bogolyubov–Ruzsa lemma** in `ZMod q` for a prime `q`. If a set `X` satisfies
+`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
+`X + X - (X + X)` contains a proper generalized arithmetic progression `Q` of dimension at most
+`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier`. -/
+theorem exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le' {q : ℕ} {κ : ℝ}
+    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
+    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
+    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.carrier ⊆ X + X - (X + X) ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.carrier :=
+  sorry
 
 /-- **Chang's theorem** for sets of integers. A finite nonempty set `X` of integers with
 `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, is contained in a `2`-proper generalized arithmetic

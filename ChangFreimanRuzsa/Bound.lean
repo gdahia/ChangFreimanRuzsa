@@ -18,6 +18,7 @@ For `2 ≤ κ`, the exponents defined in `ChangFreimanRuzsa.Container`,
   `2 * 10 ^ 8 * κ ^ 3`.
 * `containerExponent (2 * κ)` is at most `16 * 10 ^ 8 * κ ^ 3`.
 * `256 * bohrGAPDim κ` is at most `7 * 10 ^ 7 * κ ^ 2`.
+* `8 * bohrLoss (bohrGAPDim κ)` is at most `exp (2 * 10 ^ 7 * κ ^ 2)`.
 * `(c + 2) ^ 3 * log (c + 2)`, where `c` is `containerExponent κ`, is at most
   `88 * 10 ^ 27 * κ ^ 7`. This bounds the cost of properization.
 * `zmodExponent κ` is at most `3 * 10 ^ 29 * κ ^ 7`.
@@ -135,6 +136,18 @@ private lemma log_eight_mul_bohrGAPDim_le (hκ : 2 ≤ κ) :
     Real.log_pow]
   push_cast
   linarith [Real.log_two_lt_d9, Real.log_le_sub_one_of_pos (by linarith : 0 < 1 + Real.log κ)]
+
+/-- `8 * bohrLoss d ≤ exp (2 * 10 ^ 7 * κ ^ 2)`, where `d` is `bohrGAPDim κ`. This bounds the loss
+in the Bogolyubov–Ruzsa lemma. -/
+lemma mul_bohrLoss_bohrGAPDim_le (hκ : 2 ≤ κ) :
+    8 * bohrLoss (bohrGAPDim κ) ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) := by
+  have hloss := bohrLoss_pos (one_le_bohrGAPDim κ)
+  rw [← Real.exp_log (by positivity : 0 < 8 * bohrLoss (bohrGAPDim κ)), Real.exp_le_exp,
+    Real.log_mul (by norm_num) hloss.ne', log_bohrLoss]
+  nlinarith [mul_le_mul (bohrGAPDim_le hκ) (log_eight_mul_bohrGAPDim_le hκ)
+    (log_eight_mul_bohrGAPDim_nonneg κ) ((Nat.cast_nonneg _).trans (bohrGAPDim_le hκ)),
+    mul_le_mul_of_nonneg_left (one_add_log_sq_le (by linarith : (1 : ℝ) ≤ κ))
+      (by linarith : (0 : ℝ) ≤ κ), Real.log_le_sub_one_of_pos (by norm_num : (0 : ℝ) < 8)]
 
 private lemma translateCount_le (hκ : 2 ≤ κ) : translateCount κ ≤ 7 / 2 * κ := by
   unfold translateCount

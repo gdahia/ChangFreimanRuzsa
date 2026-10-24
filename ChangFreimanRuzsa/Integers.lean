@@ -37,6 +37,8 @@ A set too small for this argument is first replaced by its sum with a long arith
 
 ## Main statements
 
+* `exists_proper_gap_int_subset_add_sub_add_card_le`: a set of integers with small doubling that
+  is not too small has a large proper progression in `X + X - (X + X)`.
 * `exists_gap_int_subset_dim_le_card_le`: a set of integers with small doubling that is not too
   small lies in a progression of bounded dimension and size.
 * `exists_twoProperGAP_int_of_small_sumset`: Chang's theorem for sets of integers that are not too
@@ -166,7 +168,7 @@ private lemma card_image_intCast_add_le (q : ℕ) (X : Finset ℤ) :
 The progression is the one that `exists_proper_gap_zmod_subset_add_sub_add_card_le` gives for the
 reduction of `X` modulo a large prime, carried back to `ℤ` by
 `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`. -/
-private lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : Finset ℤ)
+lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : Finset ℤ)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
     ∃ (X₁ : Finset ℤ) (Q₁ : GAP ℤ), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧ Q₁.Proper ∧
       (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧ Q₁.carrier ⊆ (X + X) - (X + X) ∧

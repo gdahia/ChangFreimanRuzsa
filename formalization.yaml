@@ -10,7 +10,10 @@ project:
     dimension at most the Freiman dimension of X, hence at most 2 kappa - 1, with at most
     exp(10^32 kappa^7) |X| points. There is also a statement for subsets of ZMod q with q
     prime, where the progression has at most exp(10^30 kappa^7) |X| points. The bound on the
-    size is weaker than that of Chang.
+    size is weaker than that of Chang. The first step of the proof, the Bogolyubov-Ruzsa lemma,
+    is stated too: if moreover |X| >= 7 * 10^7 kappa^2, then 2X - 2X contains a proper
+    progression of dimension at most 3 * 10^5 kappa^2 with at least
+    exp(-2 * 10^7 kappa^2) |X| points.
   authors:
     - "Gabriel Dahia"
   license: "Apache-2.0"
@@ -118,9 +121,10 @@ status:
     statements give a progression of dimension at most the Freiman dimension of the set.
     Mathlib has no Freiman dimension, so Challenge.lean states instead their corollaries with
     dimension at most 2 kappa - 1, which use the bound freimanDim X <= 2 kappa - 1 for sets
-    with |X + X| <= kappa |X| from SumOfSetsInSeveralDimensions. The sorry counts refer to the
-    library and Solution.lean; Challenge.lean has one placeholder for each of its two
-    statements.
+    with |X + X| <= kappa |X| from SumOfSetsInSeveralDimensions. Challenge.lean also states the
+    Bogolyubov-Ruzsa lemma for subsets of ZMod q with q prime and for finite sets of integers.
+    The sorry counts refer to the library and Solution.lean; Challenge.lean has one placeholder
+    for each of its four statements.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -157,7 +161,8 @@ automation:
         Later, one instruction to adjust the project to the style rules of the maintainer, one
         to check the documentation and one to drop the direct dependency on AddCombi. Later,
         one instruction to carry the removal of redundant casts in Challenge.lean over to the
-        library and to drop the definition of 2-properness.
+        library and to drop the definition of 2-properness. Later, one instruction to add the
+        Bogolyubov-Ruzsa statements to Challenge.lean and Solution.lean.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -188,7 +193,10 @@ automation:
     indicator notation and the two lemmas on indicator functions taken from AddCombi by a local
     notation and lemmas of Mathlib, so that AddCombi is only a dependency of APAP. Later, the
     agent removed the definition of 2-properness, which the statements now write as
-    (P + P).Proper, and the casts that Lean inserts itself. Every proof is checked by Lean.
+    (P + P).Proper, and the casts that Lean inserts itself. Later, the agent stated the
+    Bogolyubov-Ruzsa lemma with explicit bounds, bounding the dimension bohrGAPDim kappa and the
+    loss 8 bohrLoss (bohrGAPDim kappa), and added it to Challenge.lean and Solution.lean. Every
+    proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -221,6 +229,13 @@ fidelity:
     dimension at most 2 kappa - 1 in place of freimanDim X. Green and Tao get
     floor(K - 1 + epsilon) for |A| >= C K^2 / epsilon.
 
+    Bogolyubov-Ruzsa lemma. Chang's Proposition 2.1 puts in 2A - 2A a proper progression with
+    the dimension of (2.1), of order alpha log alpha, and the size of (2.2).
+    exists_proper_gap_subset_add_sub_add_dim_le_card_le and
+    exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le need 2 <= kappa and
+    |X| >= 7 * 10^7 kappa^2, and the latter q prime. They give dimension at most
+    3 * 10^5 kappa^2 and |X| <= exp(2 * 10^7 kappa^2) |Q|.
+
     A progression is a structure GAP with an origin x_0 and a finitely supported bound
     b : G -> N; its points are x_0 + sum_v c_v v with c <= b. Its steps are the v with
     b_v > 0, of length b_v + 1, and its dimension is their number. Numbering the steps gives
@@ -244,6 +259,20 @@ review:
 alignment:
   namespace: "ChangFreimanRuzsa"
   statements:
+    - source: "Chang, Proposition 2.1 (the Bogolyubov-Ruzsa lemma)"
+      lean: "ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le'"
+      module: "ChangFreimanRuzsaPalomar.Challenge"
+      status: "proved"
+      note: >-
+        For |X| >= 7 * 10^7 kappa^2, with dimension at most 3 * 10^5 kappa^2 and
+        |X| <= exp(2 * 10^7 kappa^2) |Q|.
+    - source: "Chang, Proposition 2.1 (the Bogolyubov-Ruzsa lemma), in ZMod q"
+      lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le'"
+      module: "ChangFreimanRuzsaPalomar.Challenge"
+      status: "proved"
+      note: >-
+        For q prime and |X| >= 7 * 10^7 kappa^2, with dimension at most 3 * 10^5 kappa^2 and
+        |X| <= exp(2 * 10^7 kappa^2) |Q|.
     - source: "Chang, Theorem 2, with a 2-proper progression"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
@@ -318,8 +347,8 @@ alignment:
       note: >-
         For q prime and 256 * bohrGAPDim kappa <= |X|. The dimension is at most
         bohrGAPDim kappa, of order kappa log kappa as in (2.1), and
-        |X| <= 8 (8 d)^(3 d) |Q| in place of (2.2). The version for integers is the private
-        lemma exists_proper_gap_int_subset_add_sub_add_card_le of Integers.lean.
+        |X| <= 8 (8 d)^(3 d) |Q| in place of (2.2). The version for integers is
+        exists_proper_gap_int_subset_add_sub_add_card_le of Integers.lean.
     - source: "Chang, Section 1, Step 1 (Ruzsa's model)"
       lean: "ChangFreimanRuzsa.exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le"
       module: "ChangFreimanRuzsa.RuzsaModel"
