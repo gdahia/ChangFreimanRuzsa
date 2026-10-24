@@ -19,7 +19,7 @@ rev = "cfce977a6d11d6175c450547e7593773e37ba36e"
 [[require]]
 name = "TauCeti"
 git = "https://github.com/TauCetiProject/TauCeti.git"
-rev = "6387e140389a98fd761f1ab169092ad2faf5891a"
+rev = "v4.35.0"
 
 # Source of the affine dimension of a finite set, of Ruzsa's lower bound for sumsets and of the
 # Freiman dimension.
@@ -28,11 +28,12 @@ name = "SumOfSetsInSeveralDimensions"
 git = "https://github.com/gdahia/SumOfSetsInSeveralDimensions"
 rev = "1f8da867debcce675e07cac515ea9598c1245a92"
 
-# Last, so that its pins of the shared dependencies take precedence on `lake update`.
+# Last, so that its pins of the shared dependencies take precedence on `lake update`. Pinned to
+# the commit TauCeti v4.35.0 pins, since Palomar requires TauCeti's exact manifest closure.
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "v4.35.0"
+rev = "074063781836922cb02701cd12943c9f51731afa"
 
 # The proof development; `Solution.lean` imports it.
 [[lean_lib]]
