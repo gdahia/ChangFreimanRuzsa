@@ -1,45 +1,29 @@
 # Chang's theorem
 
-Lean 4 proof of Chang's theorem, the polynomial form of Freiman's theorem from Mei-Chu Chang,
-[*A polynomial bound in Freiman's theorem*](https://doi.org/10.1215/S0012-7094-02-11331-3), Duke
-Math. J. 113 (2002): a set with small doubling lies in a generalized arithmetic progression of
-comparable size. The progression $P$ is $2$-proper in the sense that $P + P$ is proper, which is
-weaker than the $2$-properness of Proposition 1.3 of Ben Green and Terence Tao,
-[*Compressions, convex geometry and the Freiman–Bilu theorem*](https://arxiv.org/abs/math/0511069).
-The bounds proved here are weaker than Chang's. The proof uses Chang's lemma on large spectra
-from [APAP](https://github.com/YaelDillies/apap) and Minkowski's second theorem from
-[Tau Ceti](https://github.com/TauCetiProject/TauCeti).
+Lean 4 proof of Chang's version of Freiman's theorem from [*A polynomial bound
+in Freiman's theorem*](https://doi.org/10.1215/S0012-7094-02-11331-3), Duke
+Math. J. 113 (2002). Her result complements Freiman's qualitative statement that a
+set with small doubling lies in a generalized arithmetic progression of comparable
+size by ensuring that the progression $P$ is $2$-proper in the sense that $P +
+P$ is proper. The bounds proved here are weaker than Chang's. The proof uses
+Chang's lemma on large spectra from [APAP](https://github.com/YaelDillies/apap)
+and Minkowski's second theorem from [Tau
+Ceti](https://github.com/TauCetiProject/TauCeti).
 
 ## Results
 
-A generalized arithmetic progression (`ChangFreimanRuzsa.GAP`) in an abelian group $G$ has an
-origin $a$ and a finitely supported bound $b : G \to \mathbb{N}$. Its points are
-$a + \sum_v c_v v$ with $c \le b$. Its steps are the $v$ with $b_v \ne 0$, the length of the step
-$v$ is $b_v + 1$, and its dimension is the number of steps. It is proper (`GAP.Proper`) if these
-points are distinct. The sum $P + Q$ adds the origins and the bounds, so its points are the sums
-of a point of $P$ and a point of $Q$. A progression $P$ is $2$-proper (`GAP.TwoProper`) if
-$P + P$ is proper, as in Bilu's condition $F_2$ and in Tao and Vu. For steps $s_i$ and lengths
-$\ell_i$, this asks the points $2a + \sum_i w_i s_i$ with $0 \le w_i \le 2\ell_i - 2$ to be
-distinct. Definition 1.1 of Green and Tao with $t = 2$ asks the same for
-$0 \le w_i \le 2\ell_i - 1$, which is stronger: the progression $\{0, 1\}$ in
-$\mathbb{Z}/3\mathbb{Z}$ is $2$-proper here but not in their sense.
-
-The Freiman dimension $\mathrm{dim}_\mathrm{F} X$ of a finite set $X$ is the largest
-$d \le |X|$ such that $X$ is Freiman isomorphic of order $2$ to a subset of $\mathbb{Q}^d$ that
-is not contained in a proper affine subspace. It is `SumOfSetsInSeveralDimensions.freimanDim`, from
-[SumOfSetsInSeveralDimensions](https://github.com/gdahia/SumOfSetsInSeveralDimensions), a Lake
-dependency.
-
 **Theorem 1** (`ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_freimanDim_card_le`). Let
-$\kappa \ge 2$ and let $X$ be a finite nonempty set of integers with $|X + X| \le \kappa |X|$.
-Then $X$ is contained in a $2$-proper progression $P$ with
+$\kappa \ge 2$ and let $X$ be a finite nonempty set of integers. If $|X + X| \le \kappa |X|$,
+then $X$ is contained in a $2$-proper progression $P$ with
 
-$$\dim P \le \mathrm{dim}_\mathrm{F} X, \qquad |P| \le \exp(10^{32} \kappa^7) |X|.$$
+$$\dim P \le \mathrm{dim}_\mathrm{F} X, \qquad |P| \le \exp(10^{32} \kappa^7) |X|$$
+
+where $\mathrm{dim}_\mathrm{F} X$ is the Freiman dimension of $X$.
 
 **Theorem 2** (`ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le`).
-Let $q$ be a prime, let $\kappa \ge 2$, and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$ satisfy
-$|X + X| \le \kappa |X|$, $|X| \ge 7 \cdot 10^7 \kappa^2$ and
-$\exp(10^{30} \kappa^7) |X| \le q$. Then $X$ is contained in a $2$-proper progression $Q$ with
+Let $q$ be a prime, let $\kappa \ge 2$, and let $X \subseteq \mathbb{Z}/q\mathbb{Z}$.
+If $|X + X| \le \kappa |X|$, $|X| \ge 7 \cdot 10^7 \kappa^2$ and
+$\exp(10^{30} \kappa^7) |X| \le q$, then $X$ is contained in a $2$-proper progression $Q$ with
 
 $$\dim Q \le \mathrm{dim}_\mathrm{F} X, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
 
