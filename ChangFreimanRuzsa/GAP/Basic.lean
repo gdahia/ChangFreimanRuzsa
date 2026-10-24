@@ -5,6 +5,7 @@ Authors: Gabriel Dahia
 -/
 module
 
+public import Mathlib.Algebra.Order.Ring.Nat
 public import Mathlib.Data.Finsupp.Interval
 public import Mathlib.Data.Int.Interval
 public import Mathlib.Data.Pi.Interval
