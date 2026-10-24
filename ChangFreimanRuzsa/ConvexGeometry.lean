@@ -9,9 +9,10 @@ public import Mathlib.Analysis.Convex.Gauge
 import Mathlib.Analysis.LocallyConvex.WithSeminorms
 import Mathlib.Topology.Algebra.OpenSubgroup
 
-/-! # Shortest lattice vectors with respect to a symmetric convex body
+/-!
+# Shortest lattice vectors with respect to a symmetric convex body
 
-Let `K` be a closed bounded convex neighbourhood of the origin in a real normed space `E` and let
+Let `K` be a closed bounded convex neighborhood of the origin in a real normed space `E` and let
 `L` be a discrete subgroup of `E`. This file proves the facts about `gauge K` and `L` that the
 induction along shortest lattice vectors in
 `ChangFreimanRuzsa.LatticeBox.GaugeInduction` uses. They involve only the body and its gauge, and no
@@ -47,7 +48,7 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {K : Set E} {L :
 
 /-! ## Dilates of a convex body -/
 
-/-- For `0 ≤ t`, a point `x` lies in the dilate `t • K` of a closed bounded convex neighbourhood
+/-- For `0 ≤ t`, a point `x` lies in the dilate `t • K` of a closed bounded convex neighborhood
 `K` of the origin if and only if `gauge K x ≤ t`. -/
 lemma mem_smul_iff_gauge_le (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀ : K ∈ 𝓝 0)
     (hbdd : Bornology.IsVonNBounded ℝ K) {t : ℝ} (ht : 0 ≤ t) (x : E) :
@@ -64,7 +65,7 @@ lemma mem_smul_iff_gauge_le (hconv : Convex ℝ K) (hclosed : IsClosed K) (hK₀
 /-! ## Shortest lattice vectors -/
 
 /-- A discrete subgroup `L ≠ ⊥` of a proper space has a nonzero vector of least gauge with respect
-to a closed bounded convex neighbourhood `K` of the origin. For a nonzero `x ∈ L`, the nonzero
+to a closed bounded convex neighborhood `K` of the origin. For a nonzero `x ∈ L`, the nonzero
 vectors of `L` in `gauge K x • K` form a finite set, and a vector of least gauge in it has least
 gauge among the nonzero vectors of `L`. -/
 lemma exists_mem_ne_zero_forall_gauge_le [ProperSpace E] [DiscreteTopology L] (hconv : Convex ℝ K)

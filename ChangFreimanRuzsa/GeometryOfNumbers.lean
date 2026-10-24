@@ -11,7 +11,8 @@ public import Mathlib.Basic.Real.Basic
 public import Mathlib.LinearAlgebra.LinearIndependent.Defs
 import Mathlib.Data.Rat.Floor
 
-/-! # Geometry of numbers for the relation lattice of a progression
+/-!
+# Geometry of numbers for the relation lattice of a progression
 
 This file contains the geometry of numbers used to make generalized arithmetic progressions proper.
 The ambient lattice is `ℤ ^ d`, the convex body is a box, and the sublattice is the lattice of

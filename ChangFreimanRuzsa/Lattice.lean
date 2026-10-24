@@ -9,7 +9,8 @@ public import Mathlib.Algebra.Module.ZLattice.Basic
 public import ChangFreimanRuzsa.IntVectorToReal
 import Mathlib.LinearAlgebra.LinearIndependent.BaseChange
 
-/-! # Lattices in coordinate subspaces
+/-!
+# Lattices in coordinate subspaces
 
 For a real subspace `H` of `ℝ ^ d`, this file defines the lattice `H ∩ ℤ ^ d` as
 `subspaceIntegerLattice H`, a submodule of `H`. When `H` is spanned by a finite set `S` of integer

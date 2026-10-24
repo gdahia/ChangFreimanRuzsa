@@ -15,7 +15,8 @@ import ChangFreimanRuzsa.ConvexGeometry
 import ChangFreimanRuzsa.LatticeBox.GaugeInduction
 import ChangFreimanRuzsa.Properization.SaturatedSpan
 
-/-! # Quotients of the coefficient lattice by a saturated span
+/-!
+# Quotients of the coefficient lattice by a saturated span
 
 The properization of a GAP divides the coefficient lattice `ℤ ^ d` by the saturated span of its
 short relations. Every Smith coefficient of a saturated submodule is nonzero, so a Smith normal

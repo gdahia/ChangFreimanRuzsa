@@ -10,7 +10,8 @@ public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import TauCeti.LinearAlgebra.IntegralLattice.PosDef.Minkowski
 import Mathlib.Analysis.SpecialFunctions.Gamma.BohrMollerup
 
-/-! # Minkowski's second theorem for a weighted sum of squares
+/-!
+# Minkowski's second theorem for a weighted sum of squares
 
 Let `B : Matrix (Fin n) (Fin n) ℤ` have nonzero determinant and let `w : Fin n → ℕ` be positive
 weights. The lattice of the vectors `B *ᵥ c` with `c : Fin n → ℤ`, with the norm

@@ -9,7 +9,8 @@ public import ChangFreimanRuzsa.GeometryOfNumbers
 public import ChangFreimanRuzsa.GapToolkit
 import Mathlib.Tactic.Abel
 
-/-! # Centered GAPs of lattice boxes
+/-!
+# Centered GAPs of lattice boxes
 
 Let `b : Fin s → ℤ ^ s` be independent over `ℤ` and let `m : Fin s → ℕ`. The centered GAP
 `centeredBoxGAP b m` has steps `b i` and coefficients `c i` with `|c i| ≤ m i`. It is proper, it

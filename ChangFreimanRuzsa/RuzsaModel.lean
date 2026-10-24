@@ -15,7 +15,8 @@ import Mathlib.Combinatorics.Pigeonhole
 import Mathlib.Data.Rat.Cast.Lemmas
 import Mathlib.Data.Rat.Cast.Order
 
-/-! # Ruzsa's model lemma
+/-!
+# Ruzsa's model lemma
 
 A subset `X` of `ZMod q` with small doubling has a subset `X₁` of density `1 / s` in `X` that is
 Freiman `s`-isomorphic to a subset of `ZMod m`, for any `m` with `#(s • X - s • X) ≤ m`. When
@@ -33,7 +34,7 @@ residue divisible by `m`. A good dilation exists by counting, because there are 
 `#(s • X - s • X) ≤ m` elements to avoid and each of them rules out at most `(q - 1) / m`
 dilations.
 
-## Main results
+## Main statements
 
 * `exists_subset_card_le_mul_card_isAddFreimanIso`: Ruzsa's model lemma over an arbitrary modulus
   `m` with `#(s • X - s • X) ≤ m`.

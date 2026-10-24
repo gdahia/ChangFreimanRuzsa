@@ -5,7 +5,9 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import Mathlib
+public import Mathlib.Analysis.Complex.Exponential
+public import Mathlib.Data.Finsupp.Interval
+public import Mathlib.Data.Nat.Prime.Defs
 
 /-!
 # Chang's theorem

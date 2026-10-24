@@ -43,10 +43,18 @@ $\exp(10^{30} \kappa^7) |X| \le q$. Then $X$ is contained in a $2$-proper progre
 
 $$\dim Q \le \mathrm{dim}_\mathrm{F} X, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
 
-**Corollary** (`ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le` and
-`ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le`). Under the hypotheses of
-Theorems 1 and 2, the progression has dimension at most $2\kappa - 1$, since the Freiman dimension
-of a nonempty set $X$ with $|X + X| \le \kappa |X|$ is at most $2\kappa - 1$
+**Theorem 3** (`ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le`). Under the
+hypotheses of Theorem 1, $X$ is contained in a $2$-proper progression $P$ with
+
+$$\dim P \le 2\kappa - 1, \qquad |P| \le \exp(10^{32} \kappa^7) |X|.$$
+
+**Theorem 4** (`ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le`). Under the
+hypotheses of Theorem 2, $X$ is contained in a $2$-proper progression $Q$ with
+
+$$\dim Q \le 2\kappa - 1, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
+
+Theorems 3 and 4 follow from Theorems 1 and 2, since the Freiman dimension of a nonempty set $X$
+with $|X + X| \le \kappa |X|$ is at most $2\kappa - 1$
 (`SumOfSetsInSeveralDimensions.freimanDim_le_two_mul_sub_one_of_card_add_le`).
 
 Chang's theorem, as stated by Green and Tao, gives a progression with at most
@@ -54,11 +62,10 @@ $\exp(C \kappa^2 \log^3 \kappa) |X|$ points and dimension at most the Freiman di
 Theorems 1 and 2 have the same bound on the dimension, and a bound on the size that is linear in
 $|X|$ too, with a larger exponent.
 
-[Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains the two statements of the
-corollary, under the library names with a prime and with `sorry` placeholders, together with the
-definitions of `GAP`, of its points, dimension, properness and sum, and of `GAP.TwoProper`. They
-are stated in terms of Mathlib, which has
-no Freiman dimension, so Theorems 1 and 2 are not part of `Challenge.lean`.
+[Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 and 4, under the
+library names with a prime and with `sorry` placeholders, together with the definitions of `GAP`,
+of its points, dimension, properness and sum, and of `GAP.TwoProper`. They are stated in terms of
+Mathlib, which has no Freiman dimension, so Theorems 1 and 2 are not part of `Challenge.lean`.
 [Solution.lean](ChangFreimanRuzsaPalomar/Solution.lean) proves each statement by the library
 theorem. The library and the solution contain no `sorry`, and the
 theorems depend on no axioms other than `propext`, `Classical.choice` and `Quot.sound`.
@@ -89,7 +96,7 @@ The library also states the theorems with named exponents, which the explicit bo
 | `Cyclic.lean` | Chang's theorem in `ZMod q` with named exponents |
 | `Integers.lean` | Chang's theorem for sets of integers with named exponents |
 | `Bound.lean` | Polynomial bounds for the exponents of `Container.lean`, `Cyclic.lean` and `Integers.lean` |
-| `ExplicitBounds.lean` | Theorems 1 and 2 and the corollary |
+| `ExplicitBounds.lean` | Theorems 1 to 4 |
 | `LatticeCoordinates.lean`, `LatticeBox/EffectiveLattice.lean` | Coordinates in a basis of the lattice of integer points of the span of a finite set of integer vectors |
 | `FreimanModel.lean` | The Freiman model of a subset of a `2`-proper progression |
 | `CoordinateReduction.lean` | A `2`-proper progression of dimension at most `freimanDim X` containing `X` |
@@ -100,8 +107,10 @@ scope, and the use of AI coding agents.
 
 ## Verification
 
-`Challenge.lean` imports only Mathlib. It repeats the library definitions of `GAP`, `GAP.eval`,
-`GAP.carrier`, `GAP.dim`, `GAP.Proper`, the sum of progressions and `GAP.TwoProper` and states `exists_twoProperGAP_subset_dim_le_card_le'` and
+`Challenge.lean` imports only the Mathlib modules `Mathlib.Analysis.Complex.Exponential`,
+`Mathlib.Data.Finsupp.Interval` and `Mathlib.Data.Nat.Prime.Defs`. It repeats the library
+definitions of `GAP`, `GAP.eval`, `GAP.carrier`, `GAP.dim`, `GAP.Proper`, the sum of progressions
+and `GAP.TwoProper` and states `exists_twoProperGAP_subset_dim_le_card_le'` and
 `exists_twoProperGAP_zmod_subset_dim_le_card_le'` with `sorry`. `comparator.json` names these
 two theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
 modules to compare, and `propext`, `Classical.choice` and `Quot.sound` as the permitted axioms.
@@ -111,7 +120,7 @@ required by.
 
 ## Build
 
-The Lean, Mathlib, APAP, AddCombi, Tau Ceti and SumOfSetsInSeveralDimensions versions are pinned
+The Lean, Mathlib, APAP, Tau Ceti and SumOfSetsInSeveralDimensions versions are pinned
 in `lean-toolchain`, `lakefile.toml` and `lake-manifest.json`.
 
 ```sh

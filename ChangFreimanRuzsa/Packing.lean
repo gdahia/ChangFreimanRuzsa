@@ -12,7 +12,8 @@ import Mathlib.Tactic.Abel
 import Mathlib.Tactic.Positivity.Finset
 import Mathlib.Tactic.Ring.RingNF
 
-/-! # The packing argument of Chang's proof
+/-!
+# The packing argument of Chang's proof
 
 This file contains the combinatorial packing argument of Chang's proof. Starting from a finite set
 `Q`, one repeatedly adds a set `S ⊆ A` of `m` elements whose translates of the current set are

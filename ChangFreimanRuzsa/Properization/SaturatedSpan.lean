@@ -8,7 +8,8 @@ module
 public import ChangFreimanRuzsa.GeometryOfNumbers
 public import ChangFreimanRuzsa.Lattice
 
-/-! # Saturated spans of integer vectors
+/-!
+# Saturated spans of integer vectors
 
 The saturated span `saturatedSpan S` of a finite set `S` of vectors of `ℤ ^ d` is the set of
 integer vectors in the real span of `S`. It is a saturated submodule of `ℤ ^ d`: it contains every

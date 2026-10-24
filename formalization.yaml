@@ -6,12 +6,11 @@ project:
   description: >-
     Formalization of Chang's polynomial form of Freiman's theorem, with a 2-proper
     progression P, one for which P + P is proper: a finite set X of integers with
-    |X + X| <= kappa |X| is
-    contained in a 2-proper generalized arithmetic progression of dimension at most the
-    Freiman dimension of X, hence at most 2 kappa - 1, with at most exp(10^32 kappa^7) |X|
-    points. There is also a statement for subsets of ZMod q with q prime, where the
-    progression has at most exp(10^30 kappa^7) |X| points. The bound on the size is weaker
-    than that of Chang.
+    |X + X| <= kappa |X| is contained in a 2-proper generalized arithmetic progression of
+    dimension at most the Freiman dimension of X, hence at most 2 kappa - 1, with at most
+    exp(10^32 kappa^7) |X| points. There is also a statement for subsets of ZMod q with q
+    prime, where the progression has at most exp(10^30 kappa^7) |X| points. The bound on the
+    size is weaker than that of Chang.
   authors:
     - "Gabriel Dahia"
   license: "Apache-2.0"
@@ -155,6 +154,8 @@ automation:
         other sources, and to record the numbering of Chang's results; one to make 2-proper
         mean that P + P is proper, with a structure for which P + P is the sum of
         progressions; and one to use the 2-dilate of the coefficient box in properization.
+        Later, one instruction to adjust the project to the style rules of the maintainer, one
+        to check the documentation and one to drop the direct dependency on AddCombi.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -179,8 +180,11 @@ automation:
     finitely supported bound, defined the sum of two progressions and 2-properness as the
     properness of P + P, and adapted the proofs; properization now uses the 2-dilate of the
     coefficient box, no longer doubles the lengths, and has the exponent
-    2 (d + 2)^3 log (d + 2) in place of 3 (d + 2)^3 log (d + 2). Every proof is checked by
-    Lean.
+    2 (d + 2)^3 log (d + 2) in place of 3 (d + 2)^3 log (d + 2). Later, the agent replaced
+    the import of all of Mathlib in Challenge.lean by the modules its statements need, and
+    made the headers, spelling and notation of the docstrings uniform. It also replaced the
+    indicator notation and the two lemmas on indicator functions taken from AddCombi by a local
+    notation and lemmas of Mathlib, so that AddCombi is only a dependency of APAP. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -201,19 +205,13 @@ fidelity:
 
     Integers. exists_twoProperGAP_subset_dim_le_freimanDim_card_le takes kappa >= 2 with
     |X + X| <= kappa |X| and gives |P| <= exp(10^32 kappa^7) |X| and dimension at most
-    freimanDim X. The library form exists_twoProperGAP_int_dim_le_freimanDim has
-    exp(intFreimanDimExponent kappa) in place of exp(10^32 kappa^7). The statement for
-    ZMod q is not used directly, since a progression of ZMod q containing the reduction of
-    X may wrap around: only the progression inside 2X - 2X is built modulo a prime and
-    carried back to the integers, and the rest of the argument takes place in Z.
+    freimanDim X.
 
     ZMod q. exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le is for q prime and
     needs 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7) |X| <= q. It gives a
     2-proper progression of dimension at most freimanDim X with at most
-    exp(10^30 kappa^7) |X| points. The library form
-    exists_twoProperGAP_zmod_dim_le_freimanDim is written with the exponents
-    containerExponent and freimanDimExponent. Chang works in Z only, so these statements have
-    no counterpart in her paper.
+    exp(10^30 kappa^7) |X| points. Chang works in Z only, so these statements have no
+    counterpart in her paper.
 
     Dimension at most 2 kappa - 1. The statements of Challenge.lean are the same with
     dimension at most 2 kappa - 1 in place of freimanDim X. Green and Tao get

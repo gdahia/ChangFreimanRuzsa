@@ -12,7 +12,8 @@ public import ChangFreimanRuzsa.GeneralizedArithmeticProgression
 public import Mathlib.LinearAlgebra.Finsupp.LinearCombination
 import Mathlib.Algebra.BigOperators.Fin
 
-/-! # Generalized arithmetic progressions (proper and non-proper)
+/-!
+# Numbered steps, sizes and coefficients of generalized arithmetic progressions
 
 This file develops the basic theory of (not necessarily proper) generalized arithmetic progressions
 (GAPs) and their interaction with Freiman isomorphisms.
@@ -590,8 +591,8 @@ section Steps
 
 variable {G : Type*} [AddCommGroup G]
 
-/-- The homomorphism `ℤᵈ →+ G` attached to a family of steps: the integer linear combination
-`Fintype.linearCombination ℤ step`. -/
+/-- The homomorphism `(Fin d → ℤ) →+ G` attached to a family of steps: the integer linear
+combination `Fintype.linearCombination ℤ step`. -/
 def stepsHom {d : ℕ} (step : Fin d → G) : (Fin d → ℤ) →+ G :=
   (Fintype.linearCombination ℤ step).toAddMonoidHom
 
@@ -608,7 +609,7 @@ end Steps
 
 variable {G : Type*} [AddCommGroup G]
 
-/-- The homomorphism `ℤᵈ →+ G` given by the steps of a GAP. -/
+/-- The homomorphism `(Fin P.dim → ℤ) →+ G` given by the steps of a GAP. -/
 def stepHom (P : GAP G) : (Fin P.dim → ℤ) →+ G := stepsHom P.step
 
 lemma stepHom_coordinateMap [DecidableEq G] (P : GAP G) {x : G} (hx : x ∈ P.carrier) :

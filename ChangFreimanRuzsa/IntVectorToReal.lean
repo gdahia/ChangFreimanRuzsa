@@ -7,7 +7,8 @@ module
 
 public import Mathlib.Basic.Real.Basic
 
-/-! # Integer vectors as real vectors
+/-!
+# Integer vectors as real vectors
 
 This file defines the coordinatewise inclusion `intVectorToReal` of `ℤ ^ d` into `ℝ ^ d`, the
 additive map `Int.castAddHom` applied in each coordinate, and proves that it is injective.

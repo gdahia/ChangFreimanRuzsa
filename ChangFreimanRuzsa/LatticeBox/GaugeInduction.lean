@@ -11,10 +11,11 @@ import ChangFreimanRuzsa.ConvexGeometry
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.Normed.Module.FiniteDimension
 
-/-! # Shortest-vector induction for lattice boxes with gauge bounds
+/-!
+# Shortest-vector induction for lattice boxes with gauge bounds
 
 Let `E` be a real normed space of dimension `n`, let `L` be a discrete subgroup of `E`, and let
-`K ⊆ E` be a compact symmetric convex neighbourhood of `0` such that `K ∩ L` spans `E`. Then there
+`K ⊆ E` be a compact symmetric convex neighborhood of `0` such that `K ∩ L` spans `E`. Then there
 are linearly independent `b : Fin n → E` in `L` and `m : Fin n → ℕ` such that every point of
 `K ∩ L` is `∑ i, c i • b i` with `c ∈ intBox m`, and `m i * gauge K (b i) ≤ latticeBoxGaugeBound n`.
 
@@ -28,7 +29,7 @@ and `v` is added as a new vector whose half-width covers the multiples of `v` th
 * `exists_linearIndependent_mem_intBox_gauge_le`: the vectors and half-widths with gauge bound
   `latticeBoxGaugeBound n`.
 * `exists_proper_gap_of_convex_body`: the integer points of a compact symmetric convex
-  neighbourhood of `0` in `ℝ ^ s` whose integer points span `ℝ ^ s` lie in a proper GAP of
+  neighborhood of `0` in `ℝ ^ s` whose integer points span `ℝ ^ s` lie in a proper GAP of
   dimension at most `s` with at most `latticeBoxFactor s` times as many elements.
 -/
 
@@ -162,7 +163,7 @@ lemma exists_linearIndependent_mem_intBox_gauge_le_of_map (hconv : Convex ℝ K)
       nlinarith [hym i, (Nat.one_le_cast.mpr i.pos : (1 : ℝ) ≤ n)]
 
 /-- If `E` has dimension `n`, `L` is a discrete subgroup of `E`, and `K` is a compact symmetric
-convex neighbourhood of `0` such that `K ∩ L` spans `E`, then there are linearly independent
+convex neighborhood of `0` such that `K ∩ L` spans `E`, then there are linearly independent
 `b : Fin n → E` in `L` and `m : Fin n → ℕ` such that every point of `K ∩ L` is `∑ i, c i • b i`
 with `c ∈ intBox m`, and `m i * gauge K (b i) ≤ latticeBoxGaugeBound n`. -/
 lemma exists_linearIndependent_mem_intBox_gauge_le {n : ℕ} {E : Type u} [NormedAddCommGroup E]
@@ -202,7 +203,7 @@ lemma exists_linearIndependent_mem_intBox_gauge_le {n : ℕ} {E : Type u} [Norme
         (hcompact.image π.continuous_of_finiteDimensional) hK₀' (Nat.cast_nonneg _) hbL hb
         hcover hgauge
 
-/-- Let `K ⊆ ℝ ^ s` be a compact symmetric convex neighbourhood of `0` whose integer points span
+/-- Let `K ⊆ ℝ ^ s` be a compact symmetric convex neighborhood of `0` whose integer points span
 `ℝ ^ s`, and let `D` be the set of integer points of `K`. Then `D` lies in a proper GAP of
 dimension at most `s` with at most `latticeBoxFactor s` times as many elements. -/
 lemma exists_proper_gap_of_convex_body {s : ℕ} {K : Set (Fin s → ℝ)} (hconv : Convex ℝ K)

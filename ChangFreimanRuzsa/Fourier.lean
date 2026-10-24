@@ -5,17 +5,16 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import AddCombi.Mathlib.Algebra.Notation.Indicator
 public import APAP.Prereqs.Chang
 public import Mathlib.Combinatorics.Additive.Energy
 import APAP.Mathlib.Analysis.Normed.Ring.Basic
 import APAP.Prereqs.Convolution.Discrete.Basic
 import APAP.Prereqs.LpNorm.Discrete.Basic
-import AddCombi.Mathlib.Algebra.GroupWithZero.Indicator
 import Mathlib.Analysis.SpecialFunctions.Complex.CircleAddChar
 import Mathlib.Analysis.SpecialFunctions.Trigonometric.Bounds
 
-/-! # Fourier analysis for Chang's theorem
+/-!
+# Fourier analysis for Chang's theorem
 
 Let `X` be a finite subset of a finite abelian group with `#(X + X) ≤ κ * #X` and `2 ≤ κ`.
 
@@ -41,7 +40,13 @@ additive energy from Mathlib.
 namespace ChangFreimanRuzsa
 
 open Finset Fintype MeasureTheory RCLike
-open scoped BigOperators Combinatorics.Additive ComplexConjugate Indicator NNReal Pointwise
+open scoped BigOperators Combinatorics.Additive ComplexConjugate NNReal Pointwise
+
+/-- The indicator function `𝟭_[s, R]` of a set `s`, with values `0` and `1` in `R`. -/
+local notation3 "𝟭_[" s ", " R "]" => Set.indicator s fun _ ↦ (1 : R)
+
+/-- The indicator function `𝟭_[s]` of a set `s`, with values in a type given by the context. -/
+local notation3 "𝟭_[" s "]" => 𝟭_[s, _]
 
 noncomputable section
 
@@ -134,7 +139,7 @@ private lemma iterConv_two_dddconv_apply_eq_zero {X : Finset G} {x : G}
     (hx : x ∉ (X + X) - (X + X)) :
     ((𝟭_[(X : Set G), ℂ] ∗ᵈ^ 2) ○ᵈ (𝟭_[(X : Set G)] ∗ᵈ^ 2)) x = 0 := by
   have h := support_iterConv_subset 𝟭_[(X : Set G), ℂ] 2
-  rw [Set.support_indicator_one, two_nsmul] at h
+  rw [Set.support_indicator, Function.support_const one_ne_zero, Set.inter_univ, two_nsmul] at h
   apply Function.notMem_support.1
   intro hmem
   apply hx
@@ -236,7 +241,8 @@ lemma exists_card_le_largeSpec_subset_addSpan {q : ℕ} [NeZero q] {X : Finset (
     ∃ Δ ⊆ largeSpec 𝟭_[(X : Set (ZMod q))] η,
       #Δ ≤ ⌈changConst * Real.exp 1 * ⌈1 + Real.log (#X / q : ℝ)⁻¹⌉₊ / η ^ 2⌉₊ ∧
       largeSpec 𝟭_[(X : Set (ZMod q))] η ⊆ Δ.addSpan := by
-  simpa [sq, hX.ne_empty] using chang (Set.indicator_one_ne_zero.2 (coe_nonempty.2 hX)) hη
+  simpa [sq, hX.ne_empty] using chang (f := 𝟭_[(X : Set (ZMod q)), ℂ])
+    (Function.ne_iff.2 ⟨hX.choose, by simp [hX.choose_spec]⟩) hη
 
 /-! ## Frequencies
 

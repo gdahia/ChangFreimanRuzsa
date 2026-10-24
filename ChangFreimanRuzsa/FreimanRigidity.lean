@@ -9,7 +9,8 @@ public import ChangFreimanRuzsa.GapToolkit
 import Mathlib.Data.DFinsupp.WellFounded
 import Mathlib.Tactic.Abel
 
-/-! # Transport of a progression across a Freiman isomorphism
+/-!
+# Transport of a progression across a Freiman isomorphism
 
 In the proof of Chang's theorem for `X : Finset (ZMod q)`, `ChangFreimanRuzsa.RuzsaModel` gives a
 Freiman `8`-isomorphism from a subset `X₁ ⊆ X` onto a set `Y : Finset (ZMod m)`, and
@@ -17,7 +18,7 @@ Freiman `8`-isomorphism from a subset `X₁ ⊆ X` onto a set `Y : Finset (ZMod 
 inside `Y + Y - (Y + Y)`. This file transports that progression back to `X₁ + X₁ - (X₁ + X₁)`.
 The statements hold in arbitrary abelian groups.
 
-## Main results
+## Main statements
 
 * `GAP.apply_origin_add_linearCombination`: on the carrier of a GAP `Q`, a Freiman
   `2`-homomorphism `f` is affine. It sends `Q.origin + ∑ i, w i • Q.step i` to

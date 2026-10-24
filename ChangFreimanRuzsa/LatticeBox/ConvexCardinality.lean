@@ -10,7 +10,8 @@ public import Mathlib.Analysis.Convex.Basic
 public import Mathlib.Data.ZMod.Defs
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
-/-! # Cardinality control for dilates of convex lattice sets
+/-!
+# Cardinality control for dilates of convex lattice sets
 
 Let `K ⊆ ℝ ^ s` be a symmetric convex set containing `0`, and let `E` be the set of integer points
 of `K`. Then every finite set of integer points of `n • K` has at most `(2 * n + 1) ^ s * #E`

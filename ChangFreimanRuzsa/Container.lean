@@ -15,7 +15,8 @@ import Mathlib.Analysis.Complex.ExponentialBounds
 import Mathlib.Combinatorics.Additive.PluenneckeRuzsa
 import Mathlib.Combinatorics.Additive.RuzsaCovering
 
-/-! # A progression containing a set of small doubling
+/-!
+# A progression containing a set of small doubling
 
 Let `q` be prime and let `X : Finset (ZMod q)` satisfy `#(X + X) ≤ κ * #X`. If `#X` is large in
 terms of `κ`, then `X` is contained in a (not necessarily proper) GAP whose dimension, and whose

@@ -13,7 +13,8 @@ import ChangFreimanRuzsa.Fourier
 import ChangFreimanRuzsa.MinkowskiSecond
 import Mathlib.Analysis.Real.Pi.Bounds
 
-/-! # A large progression inside a Bohr set
+/-!
+# A large progression inside a Bohr set
 
 This file shows that the Bohr set `{x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε}` of a finite set `Δ` of
 characters of `ZMod q`, as in `ChangFreimanRuzsa.Fourier`, contains a proper progression of
@@ -36,7 +37,7 @@ inside the box `freqBox q D` of half-width `q` in the first coordinate and `D` i
 - The size of the progression follows from the bound on `∏ i, t i`
   (`one_le_prod_coeffBound_mul`).
 
-## Main results
+## Main statements
 
 * `exists_proper_gap_forall_exists_intCast_eq_mul`: the arithmetic formulation.
 * `exists_proper_gap_chordSet`: the chord-width formulation.
@@ -405,8 +406,8 @@ lemma apply_eq_zero_of_stepsHom_eq_zero [NeZero q] (hDq : D ≤ q) (hv : LinearI
     (hmem : ∀ i, v i ∈ freqLattice r) (ht : ∀ i, 0 < t i)
     (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) (n : Fin (k + 1) → ℤ)
     (hn : ∀ i, |n i| ≤ 2 * coeffBound t i)
-    (hzero : stepsHom (fun i ↦ ((v i 0 : ℤ) : ZMod q)) n = 0) : ∀ i, n i = 0 := by
-  apply Fintype.linearIndependent_iff.mp hv n
+    (hzero : stepsHom (fun i ↦ ((v i 0 : ℤ) : ZMod q)) n = 0) (i : Fin (k + 1)) : n i = 0 := by
+  apply Fintype.linearIndependent_iff.mp hv n _ i
   refine eq_zero_of_mem_freqLattice hDq
     (AddSubgroup.sum_mem _ fun i _ ↦ AddSubgroup.zsmul_mem _ (hmem i) _)
     (two_mul_abs_sum_zsmul_le hshort ht hn) ?_

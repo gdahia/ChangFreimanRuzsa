@@ -7,7 +7,8 @@ module
 
 public import ChangFreimanRuzsa.GapToolkit
 
-/-! # The lattice of relations of a progression
+/-!
+# The lattice of relations of a progression
 
 The relations of a GAP with steps `step : Fin d → G` are the integer vectors `v` with
 `∑ i, v i • step i = 0`. They form the kernel of the step homomorphism from `ℤ ^ d` to `G`.

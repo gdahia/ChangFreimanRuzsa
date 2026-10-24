@@ -9,7 +9,8 @@ public import ChangFreimanRuzsa.GapToolkit
 public import ChangFreimanRuzsa.GeometryOfNumbers
 import ChangFreimanRuzsa.Properization.Relations
 
-/-! # Enlarging the lengths of a progression
+/-!
+# Enlarging the lengths of a progression
 
 This file bounds the size of the progression obtained by enlarging all lengths by the same factor.
 

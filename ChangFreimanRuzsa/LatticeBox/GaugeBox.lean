@@ -17,10 +17,11 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.Normed.Module.FiniteDimension
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
-/-! # Gauge bounds for lattice coefficient boxes
+/-!
+# Gauge bounds for lattice coefficient boxes
 
 Let `L` be a subgroup of a real normed space `E` and let `K ⊆ E` be a symmetric convex
-neighbourhood of `0`. Consider linearly independent vectors `b : Fin s → E` in `L` and half-widths
+neighborhood of `0`. Consider linearly independent vectors `b : Fin s → E` in `L` and half-widths
 `m : Fin s → ℕ` such that every point of `K ∩ L` is `∑ i, c i • b i` with `c ∈ intBox m`, and
 `m i * gauge K (b i) ≤ A` for every `i`. Then every combination `∑ i, c i • b i` with
 `c ∈ intBox m` has gauge at most `s * A`. For the lattice `ℤ ^ s ⊆ ℝ ^ s` and `A = a : ℕ`, the
@@ -98,7 +99,7 @@ lemma span_inter_image_map_eq_top
   rintro _ ⟨x, ⟨hxK, hxL⟩, rfl⟩
   exact ⟨⟨x, hxK, rfl⟩, AddSubgroup.mem_map_of_mem _ hxL⟩
 
-/-- If `K` is a compact convex neighbourhood of `0` and `K ∩ L` spans the nontrivial space `E`,
+/-- If `K` is a compact convex neighborhood of `0` and `K ∩ L` spans the nontrivial space `E`,
 then `L` has a nonzero point `v` of positive minimal gauge among the nonzero points of `L`. -/
 lemma exists_mem_ne_zero_gauge_pos_forall_gauge_le [FiniteDimensional ℝ E] [Nontrivial E]
     {L : AddSubgroup E} [DiscreteTopology L] (hconv : Convex ℝ K)
@@ -146,7 +147,7 @@ lemma injective_stepsHom_of_linearIndependent {step : Fin s → (Fin s → ℤ)}
   simpa [sub_eq_zero] using Fintype.linearIndependent_iff.mp h (fun j ↦ ((c j - c' j : ℤ) : ℝ))
     (by simpa [sub_smul, sub_eq_zero] using hreal) i
 
-/-- Let `K ⊆ ℝ ^ s` be a compact symmetric convex neighbourhood of `0` with integer points `D`.
+/-- Let `K ⊆ ℝ ^ s` be a compact symmetric convex neighborhood of `0` with integer points `D`.
 Let `b : Fin s → ℝ ^ s` be linearly independent integer vectors and `m : Fin s → ℕ` such that
 every integer point of `K` is `∑ i, c i • b i` with `c ∈ intBox m`, and `m i * gauge K (b i) ≤ a`
 for every `i`. Then `D` lies in a proper GAP of dimension at most `s` with at most

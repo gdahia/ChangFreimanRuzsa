@@ -452,7 +452,7 @@ lemma card_le_of_injOn_smithQuotientMap {P : GAP G} {n : ℕ}
 
 variable [DecidableEq G]
 
-/-- If the saturated span of the short relations consists of relations, then each fibre of the
+/-- If the saturated span of the short relations consists of relations, then each fiber of the
 map to the group on the integer points of the projected coefficient box has at most
 `(2 * r + 4) ^ d` elements. -/
 lemma card_filter_stepsHom_eq_le {P : GAP G} {n : ℕ}
@@ -482,7 +482,7 @@ lemma card_filter_stepsHom_eq_le {P : GAP G} {n : ℕ}
 
 /-- If the saturated span of the short relations consists of relations, then the projected
 coefficient box has at most `((2 * r + 4) * (2 * (2 * r + 1) + 1)) ^ d * #P.carrier` integer
-points, by the bound on their image in the group and the bound on each fibre. -/
+points, by the bound on their image in the group and the bound on each fiber. -/
 lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
     (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
     (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations) :

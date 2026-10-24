@@ -8,7 +8,8 @@ module
 public import ChangFreimanRuzsa.LatticeBox.GaugeBox
 public import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
-/-! # Exponential bounds for properization
+/-!
+# Exponential bounds for properization
 
 Each step of the properization of a GAP of dimension `d` costs a factor
 `exp (C * (d + 2) ^ 2 * log (d + 2))` for a constant `C`, and the steps lower the dimension. This

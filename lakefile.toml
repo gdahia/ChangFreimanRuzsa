@@ -15,12 +15,6 @@ name = "APAP"
 git = "https://github.com/YaelDillies/apap.git"
 rev = "cfce977a6d11d6175c450547e7593773e37ba36e"
 
-# Pinned to the revision in APAP's manifest.
-[[require]]
-name = "AddCombi"
-git = "https://github.com/leanprover-community/add-combi.git"
-rev = "1b6b09fb20c7f06fe77b84c579c6b73a20ddbd34"
-
 # Source of Minkowski's second theorem.
 [[require]]
 name = "TauCeti"

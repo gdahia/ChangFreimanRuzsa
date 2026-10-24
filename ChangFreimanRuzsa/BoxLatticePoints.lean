@@ -11,7 +11,8 @@ public import Mathlib.Topology.Bornology.Constructions
 public import Mathlib.Topology.MetricSpace.Pseudo.Defs
 import ChangFreimanRuzsa.Lattice
 
-/-! # The real box of a box of integer points
+/-!
+# The real box of a box of integer points
 
 The lattice box step of properization uses the shortest lattice vectors of
 `ChangFreimanRuzsa.ConvexGeometry`, which are defined for a discrete subgroup of a real normed space
