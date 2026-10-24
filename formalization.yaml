@@ -70,7 +70,7 @@ sources:
     relationship: "background"
     note: >-
       Proposition 1.3 states Chang's theorem with a t-proper progression. The statements
-      here are the case t = 2, with a weaker notion of 2-proper and weaker bounds.
+      here are the case t = 2, with a (slightly) weaker notion of 2-proper and weaker bounds.
     license: "unknown"
     author_endorsement: "not-contacted"
   - title: "On the independence number of sparser random Cayley graphs"
@@ -252,9 +252,14 @@ fidelity:
     respect.
 
 review:
-  status: "unchecked"
-  reviewers: []
-  notes: "Unreviewed"
+  status: "self-assessed"
+  reviewers:
+    - "Gabriel Dahia"
+  notes: >-
+    Gabriel Dahia reviewed all the main statements and the definitions they use, and found
+    them correct. The maintainer also reviewed the overall structure of the proof, which the
+    maintainer directed in this project and in the previous projects it comes from. Not every
+    proof has been reviewed in detail. No independent reviewer has checked the development.
 
 alignment:
   namespace: "ChangFreimanRuzsa"
