@@ -55,11 +55,11 @@ Chang's theorem in `ZMod q`, where `c` is `containerExponent κ`. -/
 lemma exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap {G : Type*} [DecidableEq G]
     [AddCommGroup G] {N : ℕ} {κ : ℝ} {X : Finset G} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hXP : X ⊆ P.carrier)
-    (hPdim : (P.dim : ℝ) ≤ containerExponent κ)
-    (hPcard : (#P.carrier : ℝ) ≤ Real.exp (containerExponent κ) * #X)
+    (hPdim : P.dim ≤ containerExponent κ)
+    (hPcard : #P.carrier ≤ Real.exp (containerExponent κ) * #X)
     (hN : Real.exp (zmodExponent κ) * #X ≤ N) :
-    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ containerExponent κ ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (zmodExponent κ) * #X := by
+    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ containerExponent κ ∧
+      #Q.carrier ≤ Real.exp (zmodExponent κ) * #X := by
   have hP : Real.exp (properizationExponent P.dim) * #P.carrier ≤
       Real.exp (zmodExponent κ) * #X := by
     rw [zmodExponent, Real.exp_add, mul_assoc]
@@ -74,11 +74,11 @@ lemma exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap {G : Type*} [Decid
 and `exp C * #X ≤ q` is contained in a `2`-proper generalized arithmetic progression of dimension
 at most `c` and of size at most `exp C * #X`. -/
 theorem exists_twoProperGAP_zmod_of_small_sumset {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
-    (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
+    (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (zmodExponent κ) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ containerExponent κ ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (zmodExponent κ) * #X := by
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ containerExponent κ ∧
+      #Q.carrier ≤ Real.exp (zmodExponent κ) * #X := by
   obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
   exact exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) hXP hPdim hPcard hXupper

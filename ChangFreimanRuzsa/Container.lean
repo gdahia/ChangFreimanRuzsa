@@ -172,11 +172,10 @@ satisfies `#(X + X) ≤ κ * #X`, then there are a subset `X₁ ⊆ X` with `#X 
 `8`-isomorphism `φ` from `X₁` onto `Y = X₁.image φ` in `ZMod m` with `#X ≤ 8 * m`,
 `m ≤ 8 * κ ^ 16 * #Y` and `#(Y + Y) ≤ 8 * κ * #Y`. -/
 lemma exists_subset_isAddFreimanIso_eight_card_le {q : ℕ} {κ : ℝ} (hq : q.Prime) (hκ : 0 ≤ κ)
-    {X : Finset (ZMod q)} (hX : X.Nonempty) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
+    {X : Finset (ZMod q)} (hX : X.Nonempty) (hXX : #(X + X) ≤ κ * #X) :
     ∃ (m : ℕ) (X₁ : Finset (ZMod q)) (φ : ZMod q → ZMod m), 0 < m ∧ X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧
       IsAddFreimanIso 8 (X₁ : Set (ZMod q)) (X₁.image φ : Set (ZMod m)) φ ∧ (#X : ℝ) ≤ 8 * m ∧
-      (m : ℝ) ≤ 8 * κ ^ 16 * #(X₁.image φ) ∧
-      (#(X₁.image φ + X₁.image φ) : ℝ) ≤ 8 * κ * #(X₁.image φ) := by
+      m ≤ 8 * κ ^ 16 * #(X₁.image φ) ∧ #(X₁.image φ + X₁.image φ) ≤ 8 * κ * #(X₁.image φ) := by
   obtain ⟨m, X₁, φ, hm, hmX, hX₁X, hX₁, hφ⟩ :=
     exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le (s := 8) hq (by norm_num) hX hXX
   have : NeZero m := ⟨hm.ne'⟩
@@ -200,8 +199,8 @@ lemma exists_subset_isAddFreimanIso_eight_card_le {q : ℕ} {κ : ℝ} (hq : q.P
 `#(Y + Y) ≤ 8 * κ * #Y`, then there is a set `Δ` of at most `deltaBound κ` characters such that
 every `x` with `‖1 - ψ x‖ ≤ (4 * (#Δ + 1))⁻¹` for all `ψ ∈ Δ` lies in `Y + Y - (Y + Y)`. -/
 lemma exists_card_le_deltaBound_chordSet_subset {m : ℕ} [NeZero m] {κ : ℝ} (hκ : 2 ≤ κ)
-    {Y : Finset (ZMod m)} (hY : Y.Nonempty) (hYm : (m : ℝ) ≤ 8 * κ ^ 16 * #Y)
-    (hYY : (#(Y + Y) : ℝ) ≤ 8 * κ * #Y) :
+    {Y : Finset (ZMod m)} (hY : Y.Nonempty) (hYm : m ≤ 8 * κ ^ 16 * #Y)
+    (hYY : #(Y + Y) ≤ 8 * κ * #Y) :
     ∃ Δ : Finset (AddChar (ZMod m) ℂ), #Δ ≤ deltaBound κ ∧
       {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ⊆
         ((Y + Y) - (Y + Y) : Finset (ZMod m)) := by
@@ -236,7 +235,7 @@ lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (Ad
     (hΔ : #Δ + 1 ≤ d) (hm : 32 * (d : ℝ) ≤ m) :
     ∃ Q : GAP (ZMod m), Q.Proper ∧ Q.dim ≤ d ∧
       (Q.carrier : Set (ZMod m)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ∧
-      (m : ℝ) ≤ bohrLoss d * #Q.carrier := by
+      m ≤ bohrLoss d * #Q.carrier := by
   have hΔR : (#Δ : ℝ) + 1 ≤ d := by exact_mod_cast hΔ
   have hε : 2 * Real.pi ≤ ((4 : ℝ) * (#Δ + 1))⁻¹ * m := by
     rw [inv_mul_eq_div, le_div_iff₀ (by positivity)]
@@ -260,13 +259,13 @@ lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (Ad
 `#X ≤ 8 * bohrLoss d * #Q₁.carrier`. -/
 lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
-    (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
+    (hXX : (X + X).card ≤ κ * X.card)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ (X₁ : Finset (ZMod q)) (Q₁ : GAP (ZMod q)),
       X₁ ⊆ X ∧ X.card ≤ 8 * X₁.card ∧ Q₁.Proper ∧
         (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧
         Q₁.carrier ⊆ (X + X) - (X + X) ∧
-        (X.card : ℝ) ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card := by
+        X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card := by
   have hX : X.Nonempty := nonempty_of_mul_bohrGAPDim_le hXlower
   obtain ⟨m, X₁, φ, hm, hX₁X, hX₁, hφ, hXm, hmY, hYY⟩ :=
     exists_subset_isAddFreimanIso_eight_card_le hq (by linarith) hX hXX
@@ -302,7 +301,7 @@ lemma add_sum_subset_nsmul_sub_nsmul {X Q : Finset G} {l : List (Finset G)}
 `X` and some `m` with `3 * κ ≤ m`, then `3 ^ l.length * #Q ≤ κ ^ 4 * #X` by the Plünnecke–Ruzsa
 inequality. -/
 lemma three_pow_mul_card_le {X Q : Finset G} {l : List (Finset G)} {κ : ℝ} {m : ℕ}
-    (hX : X.Nonempty) (hκ : 0 < κ) (hm : 3 * κ ≤ m) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
+    (hX : X.Nonempty) (hκ : 0 < κ) (hm : 3 * κ ≤ m) (hXX : #(X + X) ≤ κ * #X)
     (hQ : Q ⊆ X + X - (X + X)) (hl : ∀ S ∈ l, S ⊆ X)
     (hcard : #(Q + l.sum) = #Q * m ^ l.length) :
     (3 : ℝ) ^ l.length * #Q ≤ κ ^ 4 * #X := by
@@ -324,8 +323,7 @@ lemma three_pow_mul_card_le {X Q : Finset G} {l : List (Finset G)} {κ : ℝ} {m
 
 /-- If `3 ^ k ≤ 8 * κ ^ 4 * bohrLoss (bohrGAPDim κ)`, then `k ≤ iterationBound κ`. -/
 lemma le_iterationBound_of_three_pow_le {κ : ℝ} (hκ : 0 < κ) {k : ℕ}
-    (h : (3 : ℝ) ^ k ≤ 8 * κ ^ 4 * bohrLoss (bohrGAPDim κ)) :
-    (k : ℝ) ≤ iterationBound κ := by
+    (h : (3 : ℝ) ^ k ≤ 8 * κ ^ 4 * bohrLoss (bohrGAPDim κ)) : k ≤ iterationBound κ := by
   have hlog := Real.log_le_log (by positivity) h
   rw [Real.log_pow, Real.log_mul (by positivity) (bohrLoss_pos (one_le_bohrGAPDim κ)).ne',
     Real.log_mul (by norm_num) (by positivity), Real.log_pow, log_bohrLoss] at hlog
@@ -346,11 +344,11 @@ Then `#Q ≤ κ ^ 4 * #X`, and there are a list `l` of subsets of `X₁` of size
 with `l.length ≤ iterationBound κ`, and a set `F` of at most `translateCount κ` elements with
 `X₁ ⊆ F + (Q' - Q')`, where `Q' = Q + l.sum`. -/
 lemma exists_length_le_iterationBound_subset_add_sub {X X₁ Q : Finset G} {κ : ℝ}
-    (hX : X.Nonempty) (hκ : 0 < κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hX₁X : X₁ ⊆ X)
+    (hX : X.Nonempty) (hκ : 0 < κ) (hXX : #(X + X) ≤ κ * #X) (hX₁X : X₁ ⊆ X)
     (hQ : Q.Nonempty) (hQX : Q ⊆ X + X - (X + X))
-    (hXQ : (#X : ℝ) ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q) :
+    (hXQ : #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q) :
     ∃ (l : List (Finset G)) (F : Finset G), (∀ S ∈ l, S ⊆ X₁ ∧ #S = translateCount κ) ∧
-      (l.length : ℝ) ≤ iterationBound κ ∧ (#Q : ℝ) ≤ κ ^ 4 * #X ∧
+      l.length ≤ iterationBound κ ∧ #Q ≤ κ ^ 4 * #X ∧
       #F ≤ translateCount κ ∧ X₁ ⊆ F + (Q + l.sum - (Q + l.sum)) := by
   have hgrow {l : List (Finset G)} (hl : ∀ S ∈ l, S ⊆ X₁ ∧ #S = translateCount κ)
       (hcard : #(Q + l.sum) = #Q * translateCount κ ^ l.length) :
@@ -381,9 +379,9 @@ lemma add_sub_subset_add_sub_add {F S U : Finset G} (hFU : F ⊆ U) (hU : 0 ∈ 
 /-- Ruzsa's covering step. If `X₁ ⊆ T - T`, `X₁ ⊆ X`, `#X ≤ 8 * #X₁` and `#(X + X) ≤ κ * #X`,
 then `X ⊆ T - T - (T - T) + W` for a set `W` of at most `8 * κ` elements. -/
 lemma exists_card_le_subset_sub_sub_add {X X₁ T : Finset G} {κ : ℝ}
-    (hκ : 0 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) (hX₁ : X₁.Nonempty) (hX₁X : X₁ ⊆ X)
+    (hκ : 0 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hX₁ : X₁.Nonempty) (hX₁X : X₁ ⊆ X)
     (hXX₁ : #X ≤ 8 * #X₁) (hcover : X₁ ⊆ T - T) :
-    ∃ W : Finset G, (#W : ℝ) ≤ 8 * κ ∧ X ⊆ T - T - (T - T) + W := by
+    ∃ W : Finset G, #W ≤ 8 * κ ∧ X ⊆ T - T - (T - T) + W := by
   obtain ⟨W, -, hW, hXW⟩ := ruzsa_covering_add (A := X) (K := 8 * κ) hX₁ (by
     linarith [(Nat.cast_le (α := ℝ)).2 (card_le_card (add_subset_add_left (s := X) hX₁X)),
       mul_le_mul_of_nonneg_left (by exact_mod_cast hXX₁ : (#X : ℝ) ≤ 8 * #X₁) hκ])
@@ -435,8 +433,8 @@ end GAP
 `n ≤ translateCount κ * (iterationBound κ + 1)` and `0 ≤ y ≤ κ ^ 4 * x`, then
 `2 ^ (a + 2 * (b + n) + n) * y ≤ exp (containerExponent κ) * x`. -/
 private lemma two_pow_mul_le_exp_containerExponent_mul {κ x y : ℝ} {a b n : ℕ} (hκ : 2 ≤ κ)
-    (ha : (a : ℝ) ≤ 8 * κ) (hb : (b : ℝ) ≤ bohrGAPDim κ)
-    (hn : (n : ℝ) ≤ translateCount κ * (iterationBound κ + 1)) (hy₀ : 0 ≤ y)
+    (ha : a ≤ 8 * κ) (hb : (b : ℝ) ≤ bohrGAPDim κ)
+    (hn : n ≤ translateCount κ * (iterationBound κ + 1)) (hy₀ : 0 ≤ y)
     (hy : y ≤ κ ^ 4 * x) :
     2 ^ (a + 2 * (b + n) + n) * y ≤ Real.exp (containerExponent κ) * x := by
   have h₂ (n : ℕ) : (2 : ℝ) ^ n ≤ Real.exp n := by
@@ -460,14 +458,13 @@ of dimension at most `E` and of size at most `exp E * #X`, where `E` is `contain
 group may be infinite. -/
 lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
-    (hXX : ((X + X).card : ℝ) ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
+    (hXX : (X + X).card ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
     (hQ₁proper : Q₁.Proper) (hQ₁dimle : (Q₁.dim : ℝ) ≤ bohrGAPDim κ)
     (hQ₁subX : Q₁.carrier ⊆ (X + X) - (X + X))
-    (hQlow : (X.card : ℝ) ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card) :
+    (hQlow : X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card) :
     ∃ P : GAP G,
-      X ⊆ P.carrier ∧
-        ((P.dim : ℝ) ≤ containerExponent κ) ∧
-        (P.carrier.card : ℝ) ≤ Real.exp (containerExponent κ) * X.card := by
+      X ⊆ P.carrier ∧ P.dim ≤ containerExponent κ ∧
+        P.carrier.card ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨l, F, hl, hlen, hQ₁X, hF, hcover⟩ := exists_length_le_iterationBound_subset_add_sub
     hXne (by linarith) hXX hX₁X Q₁.nonempty hQ₁subX hQlow
   obtain ⟨W, hW, hXW⟩ := exists_card_le_subset_sub_sub_add (by linarith) hXX
@@ -504,12 +501,11 @@ No upper bound on `#X` in terms of `q` is needed, because the Fourier-analytic s
 dimension by the Freiman dimension of `X`. -/
 lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
-    (hXX : ((X + X).card : ℝ) ≤ κ * X.card)
+    (hXX : (X + X).card ≤ κ * X.card)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ P : GAP (ZMod q),
-      X ⊆ P.carrier ∧
-        ((P.dim : ℝ) ≤ containerExponent κ) ∧
-        (P.carrier.card : ℝ) ≤ Real.exp (containerExponent κ) * X.card := by
+      X ⊆ P.carrier ∧ P.dim ≤ containerExponent κ ∧
+        P.carrier.card ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
     exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX hXlower
   exact exists_gap_subset_dim_le_card_le_of_subset_add_sub_add

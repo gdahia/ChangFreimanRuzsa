@@ -363,9 +363,9 @@ the model group can be taken of size at most `κ ^ (2 * s) * #X`. The image of `
 density at least `(s * κ ^ (2 * s))⁻¹` in `ZMod m`, a bound independent of `q`. -/
 lemma exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le {q s : ℕ} {κ : ℝ}
     (hq : q.Prime) (hs : 0 < s) {X : Finset (ZMod q)} (hX : X.Nonempty)
-    (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
+    (hXX : #(X + X) ≤ κ * #X) :
     ∃ (m : ℕ) (X₁ : Finset (ZMod q)) (φ : ZMod q → ZMod m),
-      0 < m ∧ (m : ℝ) ≤ κ ^ (2 * s) * #X ∧ X₁ ⊆ X ∧ #X ≤ s * #X₁ ∧
+      0 < m ∧ m ≤ κ ^ (2 * s) * #X ∧ X₁ ⊆ X ∧ #X ≤ s * #X₁ ∧
       IsAddFreimanIso s (X₁ : Set (ZMod q)) (X₁.image φ : Set (ZMod m)) φ := by
   obtain ⟨X₁, hX₁, hcard, φ, hφ⟩ :=
     exists_subset_card_le_mul_card_isAddFreimanIso hq hs hX le_rfl

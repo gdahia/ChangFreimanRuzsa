@@ -172,8 +172,8 @@ progression of dimension at most `integerGeneratedRank S` and of size at most
 `exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.carrier`. -/
 private lemma exists_gap_sliceCoords_subset (hP : P.Proper) (hS : S ⊆ symBox P) :
     ∃ R : GAP (Fin (integerGeneratedRank S) → ℤ), sliceCoords P S ⊆ R.carrier ∧
-      R.dim ≤ integerGeneratedRank S ∧ (#R.carrier : ℝ) ≤
-        Real.exp (2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * #P.carrier := by
+      R.dim ≤ integerGeneratedRank S ∧
+        #R.carrier ≤ Real.exp (2 * (P.dim + 2) ^ 2 * Real.log (P.dim + 2)) * #P.carrier := by
   obtain ⟨R, -, hR, hdim, hcard⟩ := exists_proper_gap_of_convex_body (convex_sliceBody P S)
     (isCompact_sliceBody P S) (sliceBody_mem_nhds P S) (fun _ ↦ neg_mem_sliceBody P S)
     (span_sliceBody_inter_eq_top hS) fun _ ↦ mem_sliceCoords_iff P S
@@ -206,8 +206,8 @@ private lemma subset_carrier_shift_map_of_sliceCoords_subset (hXP : X ⊆ P.carr
 dimension at most `modelDim P X x₀` and of size at most
 `exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.carrier`. -/
 private lemma exists_gap_dim_le_modelDim (hP : P.Proper) (hXP : X ⊆ P.carrier) (hx₀ : x₀ ∈ X) :
-    ∃ Q : GAP G, X ⊆ Q.carrier ∧ Q.dim ≤ modelDim P X x₀ ∧ (#Q.carrier : ℝ) ≤
-      Real.exp (2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * #P.carrier := by
+    ∃ Q : GAP G, X ⊆ Q.carrier ∧ Q.dim ≤ modelDim P X x₀ ∧
+      #Q.carrier ≤ Real.exp (2 * (P.dim + 2) ^ 2 * Real.log (P.dim + 2)) * #P.carrier := by
   obtain ⟨R, hR, hdim, hcard⟩ :=
     exists_gap_sliceCoords_subset hP (translatedCoords_subset_symBox P X x₀)
   refine ⟨_, subset_carrier_shift_map_of_sliceCoords_subset hXP hx₀ hR,
@@ -246,12 +246,12 @@ multiples `n • a` with `n < N` of every nonzero `a` are distinct. Write `E` fo
 size at most `exp (E d) * #P.carrier`. -/
 lemma exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul {N : ℕ} {X : Finset G} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hX : X.Nonempty)
-    (hP : P.TwoProper) (hXP : X ⊆ P.carrier)
+    (hP : (P + P).Proper) (hXP : X ⊆ P.carrier)
     (hPN : Real.exp (coordinateReductionExponent P.dim) * #P.carrier ≤ N) :
-    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier := by
+    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
+      #Q.carrier ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier := by
   obtain ⟨x₀, hx₀⟩ := hX
-  obtain ⟨Q₀, hXQ₀, hdim, hcard⟩ := exists_gap_dim_le_modelDim hP.proper hXP hx₀
+  obtain ⟨Q₀, hXQ₀, hdim, hcard⟩ := exists_gap_dim_le_modelDim hP.of_add_self hXP hx₀
   have hQ₀P : Real.exp (properizationExponent Q₀.dim) * #Q₀.carrier ≤
       Real.exp (coordinateReductionExponent P.dim) * #P.carrier := by
     refine (mul_le_mul (Real.exp_le_exp.2 (properizationExponent_mono (Nat.cast_nonneg _)
@@ -270,10 +270,10 @@ lemma exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul {N : ℕ} {X : Finset
 `X ⊆ P.carrier` is contained in a `2`-proper progression of dimension at most `freimanDim X` and of
 size at most `exp (E d) * #P.carrier`. -/
 lemma exists_twoProperGAP_dim_le_freimanDim {q : ℕ} {X : Finset (ZMod q)} {P : GAP (ZMod q)}
-    (hq : q.Prime) (hX : X.Nonempty) (hP : P.TwoProper) (hXP : X ⊆ P.carrier)
+    (hq : q.Prime) (hX : X.Nonempty) (hP : (P + P).Proper) (hXP : X ⊆ P.carrier)
     (hPq : Real.exp (coordinateReductionExponent P.dim) * #P.carrier ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier :=
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
+      #Q.carrier ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier :=
   exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) hX hP hXP hPq
 
@@ -282,9 +282,9 @@ instance in `ℤ`, and write `E` for `coordinateReductionExponent`. A nonempty s
 is contained in a `2`-proper progression of dimension at most `freimanDim X` and of size at most
 `exp (E d) * #P.carrier`. -/
 lemma exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree [IsAddTorsionFree G]
-    {X : Finset G} {P : GAP G} (hX : X.Nonempty) (hP : P.TwoProper) (hXP : X ⊆ P.carrier) :
-    ∃ Q : GAP G, Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier :=
+    {X : Finset G} {P : GAP G} (hX : X.Nonempty) (hP : (P + P).Proper) (hXP : X ⊆ P.carrier) :
+    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
+      #Q.carrier ≤ Real.exp (coordinateReductionExponent P.dim) * #P.carrier :=
   exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul
     (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _) hX hP hXP (Nat.le_ceil _)
 

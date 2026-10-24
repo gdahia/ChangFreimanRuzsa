@@ -155,7 +155,9 @@ automation:
         mean that P + P is proper, with a structure for which P + P is the sum of
         progressions; and one to use the 2-dilate of the coefficient box in properization.
         Later, one instruction to adjust the project to the style rules of the maintainer, one
-        to check the documentation and one to drop the direct dependency on AddCombi.
+        to check the documentation and one to drop the direct dependency on AddCombi. Later,
+        one instruction to carry the removal of redundant casts in Challenge.lean over to the
+        library and to drop the definition of 2-properness.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -184,7 +186,9 @@ automation:
     the import of all of Mathlib in Challenge.lean by the modules its statements need, and
     made the headers, spelling and notation of the docstrings uniform. It also replaced the
     indicator notation and the two lemmas on indicator functions taken from AddCombi by a local
-    notation and lemmas of Mathlib, so that AddCombi is only a dependency of APAP. Every proof is checked by Lean.
+    notation and lemmas of Mathlib, so that AddCombi is only a dependency of APAP. Later, the
+    agent removed the definition of 2-properness, which the statements now write as
+    (P + P).Proper, and the casts that Lean inserts itself. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-

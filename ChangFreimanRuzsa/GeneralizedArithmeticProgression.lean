@@ -28,7 +28,6 @@ are those with `w i ≤ 2 * ℓ i - 2`, so the condition of Green and Tao is str
 * `GAP G`: a generalized arithmetic progression in `G`, not necessarily proper.
 * `GAP.carrier`, `GAP.dim`: its set of points and its number of steps.
 * `GAP.Proper`: the points `origin + ∑ v, c v • v` with `c ≤ bound` are distinct.
-* `GAP.TwoProper`: the progression `P + P` is proper.
 * `gapMap`: the point `origin + ∑ i, w i • step i` of the progression with numbered steps `step i`
   and lengths `length i`, for coordinates `w i < length i`.
 -/
@@ -72,11 +71,6 @@ def Proper (P : GAP G) : Prop := Set.InjOn P.eval (Set.Iic P.bound)
 /-- The sum of two progressions adds the origins and the bounds. -/
 instance : Add (GAP G) where
   add P Q := ⟨P.origin + Q.origin, P.bound + Q.bound⟩
-
-/-- A progression is `2`-proper if the progression `P + P` is proper. Green and Tao ask instead
-that the points `2 • origin + ∑ i, w i • s i` with `w i < 2 * ℓ i` be distinct, for the steps
-`s i` and the lengths `ℓ i`, which is a stronger condition. -/
-def TwoProper (P : GAP G) : Prop := (P + P).Proper
 
 end GAP
 

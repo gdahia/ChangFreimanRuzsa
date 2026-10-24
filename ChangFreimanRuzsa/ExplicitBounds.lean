@@ -47,9 +47,9 @@ finite nonempty set `X` of integers with `#(X + X) ≤ κ * #X`, where `2 ≤ κ
 `2`-proper generalized arithmetic progression of dimension at most `freimanDim X` with at most
 `Real.exp (10 ^ 32 * κ ^ 7) * #X` points. -/
 theorem exists_twoProperGAP_subset_dim_le_freimanDim_card_le {κ : ℝ} (X : Finset ℤ)
-    (hX : X.Nonempty) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
-    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ P.dim ≤ freimanDim X ∧
-      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X := by
+    (hX : X.Nonempty) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
+    ∃ P : GAP ℤ, (P + P).Proper ∧ X ⊆ P.carrier ∧ P.dim ≤ freimanDim X ∧
+      #P.carrier ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X := by
   obtain ⟨P, hP, hXP, hdim, hcard⟩ := exists_twoProperGAP_int_dim_le_freimanDim X hX hκ hXX
   refine ⟨P, hP, hXP, hdim, hcard.trans ?_⟩
   grw [intFreimanDimExponent_le hκ]
@@ -60,11 +60,10 @@ dimension. A set `X` with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, with at leas
 `2`-proper generalized arithmetic progression of dimension at most `freimanDim X` with at most
 `Real.exp (10 ^ 30 * κ ^ 7) * #X` points. -/
 theorem exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le {q : ℕ} {κ : ℝ}
-    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
-    (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
+    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
+    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q) :
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
+      #Q.carrier ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
   have he : Real.exp (freimanDimExponent κ) * #X ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
     grw [freimanDimExponent_le hκ]
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ := exists_twoProperGAP_zmod_dim_le_freimanDim X hq hκ hXX
@@ -76,9 +75,9 @@ theorem exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le {q : ℕ} {κ 
 progression of dimension at most `2 * κ - 1` with at most `Real.exp (10 ^ 32 * κ ^ 7) * #X`
 points. The Freiman dimension of `X` is at most `2 * κ - 1`. -/
 theorem exists_twoProperGAP_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
-    (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
-    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ 2 * κ - 1 ∧
-      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X := by
+    (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
+    ∃ P : GAP ℤ, (P + P).Proper ∧ X ⊆ P.carrier ∧ P.dim ≤ 2 * κ - 1 ∧
+      #P.carrier ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X := by
   obtain ⟨P, hP, hXP, hdim, hcard⟩ :=
     exists_twoProperGAP_subset_dim_le_freimanDim_card_le X hX hκ hXX
   exact ⟨P, hP, hXP,
@@ -90,11 +89,10 @@ theorem exists_twoProperGAP_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (h
 progression of dimension at most `2 * κ - 1` with at most `Real.exp (10 ^ 30 * κ ^ 7) * #X`
 points. The Freiman dimension of `X` is at most `2 * κ - 1`. -/
 theorem exists_twoProperGAP_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
-    (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
+    (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
     (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ 2 * κ - 1 ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ 2 * κ - 1 ∧
+      #Q.carrier ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X := by
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ :=
     exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le X hq hκ hXX hXlower hXupper
   exact ⟨Q, hQ, hXQ, (Nat.cast_le.2 hdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le

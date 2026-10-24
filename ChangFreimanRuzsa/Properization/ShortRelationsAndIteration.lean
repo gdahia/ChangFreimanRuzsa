@@ -37,7 +37,7 @@ step costs a factor `exp (2 * (d + 2) ^ 2 * log (d + 2))`. Iterating proves that
 
 * `GAP.mem_shortRelationSpan`: every relation in the dilate lies in the saturated span.
 * `GAP.shortRelationSpan_le_relations`: the saturated span consists of relations.
-* `GAP.twoProper_or_exists_gap_dim_lt`: one step of the iteration.
+* `GAP.proper_add_self_or_exists_gap_dim_lt`: one step of the iteration.
 * `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul`: the iterated statement.
 * `exists_twoProperGAP_zmod_carrier_subset_dim_le_card_le` and
   `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_isAddTorsionFree`: the statements in
@@ -111,9 +111,9 @@ lemma hasIndependentShort_shortRelationRank (P : GAP G) (t : ℝ) :
 
 /-- A progression with no nonzero relation in the `2`-dilate of its coefficient box is `2`-proper.
 Indeed a relation `v` in the coefficient box of `P + P` has `|v i| ≤ 2 * (P.length i - 1)`. -/
-lemma twoProper_of_shortRelationRank_eq_zero {P : GAP G} (hrank : P.shortRelationRank 2 = 0) :
-    P.TwoProper := by
-  rw [twoProper_iff]
+lemma proper_add_self_of_shortRelationRank_eq_zero {P : GAP G}
+    (hrank : P.shortRelationRank 2 = 0) : (P + P).Proper := by
+  rw [proper_add_self_iff]
   intro v hv hlt
   by_contra hne
   obtain ⟨i₀, -⟩ := Function.ne_iff.1 hne
@@ -503,14 +503,13 @@ lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
 are distinct and that `(2 * (2 * d) + 1) ^ d * #P.carrier < N`. Then either `P` is `2`-proper, or
 dividing by the saturated span of the short relations gives a GAP of smaller dimension containing
 `P`, of size at most `exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.carrier`. -/
-lemma twoProper_or_exists_gap_dim_lt {N : ℕ} {P : GAP G}
+lemma proper_add_self_or_exists_gap_dim_lt {N : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.carrier.card < N) :
-    P.TwoProper ∨ ∃ Q : GAP G, P.carrier ⊆ Q.carrier ∧ Q.dim < P.dim ∧
-      (Q.carrier.card : ℝ) ≤
-        Real.exp (2 * ((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) * P.carrier.card := by
+    (P + P).Proper ∨ ∃ Q : GAP G, P.carrier ⊆ Q.carrier ∧ Q.dim < P.dim ∧
+      Q.carrier.card ≤ Real.exp (2 * (P.dim + 2) ^ 2 * Real.log (P.dim + 2)) * P.carrier.card := by
   by_cases hrank : P.shortRelationRank 2 = 0
-  · exact Or.inl (twoProper_of_shortRelationRank_eq_zero hrank)
+  · exact Or.inl (proper_add_self_of_shortRelationRank_eq_zero hrank)
   obtain ⟨snf⟩ := P.nonempty_smithNormalForm_shortRelationSpan 2
   have hrel := shortRelationSpan_le_relations hG hcard
   obtain ⟨Q, hPQ, hdim, hQcard⟩ :=
@@ -549,7 +548,7 @@ lemma mul_sq_mul_log_le_properizationExponent {x : ℝ} (hx : 0 ≤ x) :
     mul_nonneg (pow_nonneg (by linarith : 0 ≤ x + 2) 3) (log_add_two_pos hx).le]
 
 /-- If `exp (properizationExponent d) * #P.carrier ≤ N`, then `P` satisfies the hypothesis
-`(2 * (2 * d) + 1) ^ d * #P.carrier < N` of `GAP.twoProper_or_exists_gap_dim_lt`. -/
+`(2 * (2 * d) + 1) ^ d * #P.carrier < N` of `GAP.proper_add_self_or_exists_gap_dim_lt`. -/
 lemma GAP.mul_card_lt_of_exp_mul_card_le [DecidableEq G] {N : ℕ} {P : GAP G}
     (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ N) :
     (2 * (2 * P.dim) + 1) ^ P.dim * P.carrier.card < N := by
@@ -579,19 +578,19 @@ variable [DecidableEq G]
 `n < N` of every nonzero `a` are distinct. Write `E d = 2 * (d + 2) ^ 3 * log (d + 2)` for
 `properizationExponent d` and suppose `exp (E d) * #P.carrier ≤ N`. Then `P` lies in a `2`-proper
 GAP of dimension at most `d` and of size at most `exp (E d) * #P.carrier`. The proof iterates
-`GAP.twoProper_or_exists_gap_dim_lt`: each step costs a factor
+`GAP.proper_add_self_or_exists_gap_dim_lt`: each step costs a factor
 `exp (2 * (d + 2) ^ 2 * log (d + 2))` and either finds that the progression is `2`-proper or
 lowers the dimension. -/
 lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul {N : ℕ} (P : GAP G)
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
     (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ N) :
-    ∃ Q : GAP G, Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧
-      (Q.carrier.card : ℝ) ≤ Real.exp (properizationExponent P.dim) * P.carrier.card := by
+    ∃ Q : GAP G, (Q + Q).Proper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧
+      Q.carrier.card ≤ Real.exp (properizationExponent P.dim) * P.carrier.card := by
   induction hd : P.dim using Nat.strong_induction_on generalizing P with
   | h d ih =>
     subst hd
-    rcases GAP.twoProper_or_exists_gap_dim_lt hG (GAP.mul_card_lt_of_exp_mul_card_le hcard) with
-      hP | ⟨Q, hPQ, hdim, hQcard⟩
+    rcases GAP.proper_add_self_or_exists_gap_dim_lt hG
+      (GAP.mul_card_lt_of_exp_mul_card_le hcard) with hP | ⟨Q, hPQ, hdim, hQcard⟩
     · refine ⟨P, hP, subset_rfl, le_rfl, le_mul_of_one_le_left (Nat.cast_nonneg _) ?_⟩
       exact Real.one_le_exp (properizationExponent_nonneg (Nat.cast_nonneg _))
     · have hQbound := mul_le_mul_of_nonneg_left hQcard
@@ -605,16 +604,16 @@ lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul {N : ℕ}
 `exp (properizationExponent d) * #P.carrier ≤ q`. -/
 lemma exists_twoProperGAP_zmod_carrier_subset_dim_le_card_le {q : ℕ} (P : GAP (ZMod q))
     (hq : Nat.Prime q) (hcard : Real.exp (properizationExponent P.dim) * P.carrier.card ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧
-      (Q.carrier.card : ℝ) ≤ Real.exp (properizationExponent P.dim) * P.carrier.card :=
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧
+      Q.carrier.card ≤ Real.exp (properizationExponent P.dim) * P.carrier.card :=
   exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P
     (fun _ ha ↦ GAP.injOn_nsmul_of_prime hq ha) hcard
 
 /-- Properization in a torsion-free group, such as `ℤ`, with no condition on `#P.carrier`. -/
 lemma exists_twoProperGAP_carrier_subset_dim_le_card_le_of_isAddTorsionFree [IsAddTorsionFree G]
     (P : GAP G) :
-    ∃ Q : GAP G, Q.TwoProper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧
-      (Q.carrier.card : ℝ) ≤ Real.exp (properizationExponent P.dim) * P.carrier.card :=
+    ∃ Q : GAP G, (Q + Q).Proper ∧ P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim ∧
+      Q.carrier.card ≤ Real.exp (properizationExponent P.dim) * P.carrier.card :=
   exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P
     (fun _ ha ↦ GAP.injOn_nsmul_of_isAddTorsionFree _ ha) (Nat.le_ceil _)
 

@@ -96,8 +96,7 @@ private lemma changConst_mul_exp_one_le : changConst * Real.exp 1 ≤ 237 := by
     Real.exp 1 ^ 2 ≤ 2.72 ^ 2)]
 
 /-- `deltaBound κ` is at most `250000 * κ * (1 + log κ)`. -/
-lemma deltaBound_le (hκ : 2 ≤ κ) :
-    (deltaBound κ : ℝ) ≤ 250000 * κ * (1 + Real.log κ) := by
+lemma deltaBound_le (hκ : 2 ≤ κ) : deltaBound κ ≤ 250000 * κ * (1 + Real.log κ) := by
   have hL : Real.log (8 * κ ^ 16) ≤ 3 + 16 * Real.log κ := by
     rw [Real.log_mul (by norm_num) (by positivity), Real.log_pow,
       (by norm_num : (8 : ℝ) = 2 ^ 3), Real.log_pow]
@@ -116,8 +115,7 @@ lemma deltaBound_le (hκ : 2 ≤ κ) :
     (⌈1 + Real.log (8 * κ ^ 16)⌉₊ : ℝ) * (8 * (8 * κ))) (by positivity),
     Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
 
-private lemma bohrGAPDim_le (hκ : 2 ≤ κ) :
-    (bohrGAPDim κ : ℝ) ≤ 260000 * κ * (1 + Real.log κ) := by
+private lemma bohrGAPDim_le (hκ : 2 ≤ κ) : bohrGAPDim κ ≤ 260000 * κ * (1 + Real.log κ) := by
   unfold bohrGAPDim
   push_cast
   nlinarith [deltaBound_le hκ, Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
@@ -138,7 +136,7 @@ private lemma log_eight_mul_bohrGAPDim_le (hκ : 2 ≤ κ) :
   push_cast
   linarith [Real.log_two_lt_d9, Real.log_le_sub_one_of_pos (by linarith : 0 < 1 + Real.log κ)]
 
-private lemma translateCount_le (hκ : 2 ≤ κ) : (translateCount κ : ℝ) ≤ 7 / 2 * κ := by
+private lemma translateCount_le (hκ : 2 ≤ κ) : translateCount κ ≤ 7 / 2 * κ := by
   unfold translateCount
   linarith [Nat.ceil_lt_add_one (R := ℝ) (a := 3 * κ) (by linarith)]
 

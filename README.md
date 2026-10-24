@@ -47,12 +47,13 @@ Theorems 1 and 2 have the same bound on the dimension, and a bound on the size t
 $|X|$ too, with a larger exponent.
 
 [Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 and 4, under the
-library names with a prime and with `sorry` placeholders, together with the definitions of `GAP`,
-of its points, dimension, properness and sum, and of `GAP.TwoProper`. They are stated in terms of
-Mathlib, which has no Freiman dimension, so Theorems 1 and 2 are not part of `Challenge.lean`.
+library names with a prime and with `sorry` placeholders, together with the definitions of `GAP`
+and of its points, dimension, properness and sum. A progression `P` is `2`-proper when
+`(P + P).Proper`. The statements are in terms of Mathlib, which has no Freiman dimension, so
+Theorems 1 and 2 are not part of `Challenge.lean`.
 [Solution.lean](ChangFreimanRuzsaPalomar/Solution.lean) proves each statement by the library
-theorem. The library and the solution contain no `sorry`, and the
-theorems depend on no axioms other than `propext`, `Classical.choice` and `Quot.sound`.
+theorem. The library and the solution contain no `sorry`, and the theorems depend on no axioms
+other than `propext`, `Classical.choice` and `Quot.sound`.
 
 The library also states the theorems with named exponents, which the explicit bounds above replace:
 
@@ -93,8 +94,8 @@ scope, and the use of AI coding agents.
 
 `Challenge.lean` imports only the Mathlib modules `Mathlib.Analysis.Complex.Exponential`,
 `Mathlib.Data.Finsupp.Interval` and `Mathlib.Data.Nat.Prime.Defs`. It repeats the library
-definitions of `GAP`, `GAP.eval`, `GAP.carrier`, `GAP.dim`, `GAP.Proper`, the sum of progressions
-and `GAP.TwoProper` and states `exists_twoProperGAP_subset_dim_le_card_le'` and
+definitions of `GAP`, `GAP.eval`, `GAP.carrier`, `GAP.dim`, `GAP.Proper` and the sum of
+progressions, and states `exists_twoProperGAP_subset_dim_le_card_le'` and
 `exists_twoProperGAP_zmod_subset_dim_le_card_le'` with `sorry`. `comparator.json` names these
 two theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
 modules to compare, and `propext`, `Classical.choice` and `Quot.sound` as the permitted axioms.

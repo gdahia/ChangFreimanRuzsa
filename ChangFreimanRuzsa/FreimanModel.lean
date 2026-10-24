@@ -83,7 +83,7 @@ private lemma intCast_add_intCast_eq_iff {r : ℕ} {a b c e : Fin r → ℤ} :
   norm_cast
 
 /-- The model map is a Freiman isomorphism of order `2` from `X` onto its image. -/
-lemma modelFn_isAddFreimanIso (hP : P.TwoProper) (hXP : X ⊆ P.carrier) :
+lemma modelFn_isAddFreimanIso (hP : (P + P).Proper) (hXP : X ⊆ P.carrier) :
     IsAddFreimanIso 2 (X : Set G)
       ((X.image (modelFn P X x₀) : Finset (Fin (modelDim P X x₀) → ℚ)) :
         Set (Fin (modelDim P X x₀) → ℚ)) (modelFn P X x₀) := by
@@ -136,7 +136,7 @@ lemma finrank_direction_affineSpan_modelFn (hx₀ : x₀ ∈ X) :
     by simp [latticeCoordinates_zero]⟩
 
 /-- The dimension of the model is at most the Freiman dimension of `X`. -/
-lemma modelDim_le_freimanDim (hP : P.TwoProper) (hXP : X ⊆ P.carrier) (hx₀ : x₀ ∈ X) :
+lemma modelDim_le_freimanDim (hP : (P + P).Proper) (hXP : X ⊆ P.carrier) (hx₀ : x₀ ∈ X) :
     modelDim P X x₀ ≤ freimanDim X :=
   le_freimanDim_of_model ((integerGeneratedRank_le_card _).trans card_image_le)
     ⟨modelFn P X x₀, modelFn_isAddFreimanIso hP hXP, finrank_direction_affineSpan_modelFn hx₀⟩

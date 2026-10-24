@@ -36,8 +36,8 @@ of `P` as `P.origin + ∑ i, w i • P.step i` with `w i < P.length i`.
 
 * `GAP.carrier_add`: the points of `P + Q` are the sums of a point of `P` and a point of `Q`.
 * `GAP.proper_iff_card_eq_size`: a GAP `P` is proper if and only if it has `P.size` elements.
-* `GAP.proper_iff_injective` and `GAP.twoProper_iff_injective`: properness and `2`-properness in
-  terms of the numbered steps and lengths.
+* `GAP.proper_iff_injective` and `GAP.proper_add_self_iff_injective`: properness and
+  `2`-properness in terms of the numbered steps and lengths.
 * `GAP.coordinateMap_bijOn_iff`: a GAP is proper if and only if its coordinate map is a bijection
   onto its box.
 * `GAP.coordinateMap_isAddFreimanIso_iff`: the coordinate map of a GAP is a Freiman
@@ -396,12 +396,12 @@ lemma add_eq_ofSteps {P Q : GAP G} (h : Q.bound = P.bound) :
 
 /-- A GAP is `2`-proper if and only if the points `2 • P.origin + ∑ i, w i • P.step i` with
 `w i < 2 * P.length i - 1` are distinct. -/
-lemma twoProper_iff_injective (P : GAP G) : P.TwoProper ↔
+lemma proper_add_self_iff_injective (P : GAP G) : (P + P).Proper ↔
     Function.Injective (gapMap (P.origin + P.origin) P.step fun i ↦ 2 * P.length i - 1) := by
-  rw [TwoProper, add_eq_ofSteps rfl]
+  rw [add_eq_ofSteps rfl]
   exact proper_ofSteps_iff P.step_injective fun i ↦ by grind [P.length_pos i]
 
-lemma TwoProper.proper {P : GAP G} (h : P.TwoProper) : P.Proper := by
+lemma Proper.of_add_self {P : GAP G} (h : (P + P).Proper) : P.Proper := by
   intro c hc c' hc' he
   refine h (le_add_right (Set.mem_Iic.1 hc)) (le_add_right (Set.mem_Iic.1 hc')) ?_
   rw [← add_zero c, ← add_zero c', eval_add, eval_add, he]
@@ -510,24 +510,24 @@ lemma coordinateMap_bijOn_iff : Set.BijOn P.coordinateMap P.carrier P.box ↔ P.
   rw [proper_iff_card_eq_prod_length, ← card_box]
   exact Set.BijOn.finsetCard_eq _ h
 
-lemma coordinateMap_add_eq_iff {P : GAP G} (h : P.TwoProper) {a b c d : G}
+lemma coordinateMap_add_eq_iff {P : GAP G} (h : (P + P).Proper) {a b c d : G}
     (ha : a ∈ P.carrier) (hb : b ∈ P.carrier) (hc : c ∈ P.carrier)
     (hd : d ∈ P.carrier) :
     P.coordinateMap a + P.coordinateMap b = P.coordinateMap c + P.coordinateMap d ↔
       a + b = c + d := by
   conv_rhs => rw [← P.gapMap_coeff ha, ← P.gapMap_coeff hb, ← P.gapMap_coeff hc,
     ← P.gapMap_coeff hd, P.gapMap_add_eq, P.gapMap_add_eq,
-    (P.twoProper_iff_injective.1 h).eq_iff, sumCoefficients_eq_iff]
+    (P.proper_add_self_iff_injective.1 h).eq_iff, sumCoefficients_eq_iff]
   rfl
 
 /-- The coordinate map of a GAP `P` is a Freiman `2`-isomorphism onto its box if and only if `P` is
 `2`-proper. The first condition says that `P` is an `F₂`-progression in the sense of Bilu. -/
 lemma coordinateMap_isAddFreimanIso_iff :
-    IsAddFreimanIso 2 P.carrier P.box P.coordinateMap ↔ P.TwoProper := by
+    IsAddFreimanIso 2 P.carrier P.box P.coordinateMap ↔ (P + P).Proper := by
   constructor
   · intro h
     have hP := P.coordinateMap_bijOn_iff.1 h.bijOn
-    rw [twoProper_iff_injective]
+    rw [proper_add_self_iff_injective]
     intro u₁ u₂ hu
     obtain ⟨w₁, w₂, rfl⟩ := P.exists_sumCoefficients_eq u₁
     obtain ⟨w₃, w₄, rfl⟩ := P.exists_sumCoefficients_eq u₂
@@ -537,10 +537,10 @@ lemma coordinateMap_isAddFreimanIso_iff :
       hP.coordinateMap_gapMap] at hu
     exact P.sumCoefficients_eq_iff.2 hu
   · intro h
-    exact isAddFreimanIso_two.mpr ⟨P.coordinateMap_bijOn h.proper,
+    exact isAddFreimanIso_two.mpr ⟨P.coordinateMap_bijOn h.of_add_self,
       fun _ ha _ hb _ hc _ hd ↦ coordinateMap_add_eq_iff h ha hb hc hd⟩
 
-lemma coordinateMap_isAddFreimanIso {P : GAP G} (h : P.TwoProper) :
+lemma coordinateMap_isAddFreimanIso {P : GAP G} (h : (P + P).Proper) :
     IsAddFreimanIso 2 P.carrier P.box P.coordinateMap :=
   P.coordinateMap_isAddFreimanIso_iff.2 h
 

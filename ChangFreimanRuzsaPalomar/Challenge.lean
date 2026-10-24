@@ -17,8 +17,7 @@ Chang's polynomial form of Freiman's theorem for finite sets of integers and for
 progression of comparable size.
 
 A generalized arithmetic progression has an `origin` and a finitely supported `bound`, and its
-points are `origin + ∑ v, c v • v` with `c ≤ bound`. It is `2`-proper when `P + P` is proper, a
-weaker condition than the `2`-properness of Green and Tao.
+points are `origin + ∑ v, c v • v` with `c ≤ bound`. It is `2`-proper when `P + P` is proper.
 
 The proofs are in `Solution.lean`.
 -/
@@ -61,11 +60,6 @@ def Proper (P : GAP G) : Prop := Set.InjOn P.eval (Set.Iic P.bound)
 instance : Add (GAP G) where
   add P Q := ⟨P.origin + Q.origin, P.bound + Q.bound⟩
 
-/-- A progression is `2`-proper if the progression `P + P` is proper. Green and Tao ask instead
-that the points `2 • origin + ∑ i, w i • s i` with `w i < 2 * ℓ i` be distinct, for the steps
-`s i` and the lengths `ℓ i`, which is a stronger condition. -/
-def TwoProper (P : GAP G) : Prop := (P + P).Proper
-
 end GAP
 
 end
@@ -75,9 +69,9 @@ end
 progression of dimension at most `2 * κ - 1` with at most `Real.exp (10 ^ 32 * κ ^ 7) * #X`
 points. -/
 theorem exists_twoProperGAP_subset_dim_le_card_le' {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
-    (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X) :
-    ∃ P : GAP ℤ, P.TwoProper ∧ X ⊆ P.carrier ∧ (P.dim : ℝ) ≤ 2 * κ - 1 ∧
-      (#P.carrier : ℝ) ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X :=
+    (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
+    ∃ P : GAP ℤ, (P + P).Proper ∧ X ⊆ P.carrier ∧ P.dim ≤ 2 * κ - 1 ∧
+      #P.carrier ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X :=
   sorry
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`. A set `X` with `#(X + X) ≤ κ * #X`, where
@@ -86,11 +80,10 @@ theorem exists_twoProperGAP_subset_dim_le_card_le' {κ : ℝ} (X : Finset ℤ) (
 progression of dimension at most `2 * κ - 1` with at most `Real.exp (10 ^ 30 * κ ^ 7) * #X`
 points. -/
 theorem exists_twoProperGAP_zmod_subset_dim_le_card_le' {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
-    (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : (#(X + X) : ℝ) ≤ κ * #X)
-    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
+    (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
     (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.TwoProper ∧ X ⊆ Q.carrier ∧ (Q.dim : ℝ) ≤ 2 * κ - 1 ∧
-      (#Q.carrier : ℝ) ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X :=
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ 2 * κ - 1 ∧
+      #Q.carrier ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X :=
   sorry
 
 end ChangFreimanRuzsa

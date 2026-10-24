@@ -68,7 +68,7 @@ lemma boringEnergy_two_eq_addEnergy [Finite G] (s : Finset G) : boringEnergy 2 s
 
 /-- If `X` is nonempty and `#(X + X) ≤ κ * #X`, then `#X ^ 3 ≤ κ * E[X]`. -/
 lemma card_pow_three_le_mul_addEnergy {X : Finset G} {κ : ℝ} (hX : X.Nonempty)
-    (hXX : (#(X + X) : ℝ) ≤ κ * #X) : (#X : ℝ) ^ 3 ≤ κ * E[X] := by
+    (hXX : #(X + X) ≤ κ * #X) : #X ^ 3 ≤ κ * E[X] := by
   have hX₀ : (0 : ℝ) < #X := by exact_mod_cast hX.card_pos
   nlinarith [(by exact_mod_cast le_card_add_mul_addEnergy X X :
       (#X : ℝ) ^ 2 * #X ^ 2 ≤ #(X + X) * E[X]),
@@ -209,7 +209,7 @@ lemma mem_add_sub_add_of_forall_largeSpec_norm_one_sub_le {X : Finset G} {η ε 
 /-- If `#(X + X) ≤ κ * #X` with `2 ≤ κ`, every `x` with `‖1 - ψ x‖ ≤ 4⁻¹` for every `ψ` in the
 large spectrum of `𝟭_[X]` at threshold `√(8 * κ)⁻¹` lies in `X + X - (X + X)`. -/
 lemma mem_add_sub_add_of_card_add_le_of_forall_largeSpec {X : Finset G} {κ : ℝ} (hκ : 2 ≤ κ)
-    (hX : X.Nonempty) (hXX : (#(X + X) : ℝ) ≤ κ * #X) {x : G}
+    (hX : X.Nonempty) (hXX : #(X + X) ≤ κ * #X) {x : G}
     (hx : ∀ ψ ∈ largeSpec 𝟭_[(X : Set G)] (Real.sqrt (8 * κ)⁻¹), ‖1 - ψ x‖ ≤ 4⁻¹) :
     x ∈ (X + X) - (X + X) := by
   refine mem_add_sub_add_of_forall_largeSpec_norm_one_sub_le (by norm_num) ?_ hx
@@ -223,7 +223,7 @@ lemma mem_add_sub_add_of_card_add_le_of_forall_largeSpec {X : Finset G} {κ : �
 `√(8 * κ)⁻¹` lies in the span of `Δ`, then every `x` with `‖1 - ψ x‖ ≤ (4 * (#Δ + 1))⁻¹` for
 every `ψ ∈ Δ` lies in `X + X - (X + X)`. -/
 lemma mem_add_sub_add_of_largeSpec_subset_addSpan {X : Finset G} {κ : ℝ} (hκ : 2 ≤ κ)
-    (hX : X.Nonempty) (hXX : (#(X + X) : ℝ) ≤ κ * #X) {Δ : Finset (AddChar G ℂ)}
+    (hX : X.Nonempty) (hXX : #(X + X) ≤ κ * #X) {Δ : Finset (AddChar G ℂ)}
     (hΔ : largeSpec 𝟭_[(X : Set G)] (Real.sqrt (8 * κ)⁻¹) ⊆ Δ.addSpan) {x : G}
     (hx : ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ (4 * (#Δ + 1) : ℝ)⁻¹) : x ∈ (X + X) - (X + X) := by
   apply mem_add_sub_add_of_card_add_le_of_forall_largeSpec hκ hX hXX
