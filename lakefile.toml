@@ -1,7 +1,7 @@
 name = "ChangFreimanRuzsa"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["ChangFreimanRuzsa", "Challenge", "Solution"]
+defaultTargets = ["ChangFreimanRuzsa", "Solution"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
