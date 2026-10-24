@@ -5,8 +5,7 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.LatticeBox.GaugeBox
-public import Mathlib.Analysis.SpecialFunctions.Log.Basic
+public import ChangFreimanRuzsa.GeometryOfNumbers.GaugeBox
 
 /-!
 # Exponential bounds for properization

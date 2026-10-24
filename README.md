@@ -81,25 +81,22 @@ The library also states the theorems with named exponents, which the explicit bo
 
 | Files in `ChangFreimanRuzsa/` | Contents |
 | --- | --- |
-| `GeneralizedArithmeticProgression.lean`, `GapToolkit.lean` | Progressions, proper and `2`-proper progressions, Freiman isomorphisms |
-| `RuzsaModel.lean` | Ruzsa's model lemma |
-| `Fourier.lean` | Chang's lemma for subsets of `ZMod q`, Bohr sets |
-| `MinkowskiSecond.lean` | Minkowski's second theorem for a weighted sum of squares |
-| `BohrProgression.lean` | A proper progression inside a Bohr set |
-| `FreimanRigidity.lean` | Images of progressions under Freiman isomorphisms |
-| `Packing.lean` | Chang's covering argument |
-| `Container.lean` | The progression containing `X`, with the exponent `containerExponent` |
-| `GeometryOfNumbers.lean`, `ConvexGeometry.lean`, `IntVectorToReal.lean`, `Lattice.lean`, `BoxLatticePoints.lean` | Lattices, convex bodies and shortest lattice vectors |
-| `LatticeBox/` | Covering the lattice points of a convex body by a box in a lattice basis |
-| `Properization/` | Relations of a progression, saturated spans, Smith normal form quotients, short relations and the passage to a `2`-proper progression |
-| `Cyclic.lean` | Chang's theorem in `ZMod q` with named exponents |
-| `Integers.lean` | Chang's theorem for sets of integers with named exponents |
-| `Bound.lean` | Polynomial bounds for the exponents of `Container.lean`, `Cyclic.lean` and `Integers.lean` |
-| `ExplicitBounds.lean` | Theorems 1 to 6 |
-| `LatticeCoordinates.lean`, `LatticeBox/EffectiveLattice.lean` | Coordinates in a basis of the lattice of integer points of the span of a finite set of integer vectors |
-| `FreimanModel.lean` | The Freiman model of a subset of a `2`-proper progression |
-| `CoordinateReduction.lean` | A `2`-proper progression of dimension at most `freimanDim X` containing `X` |
-| `CyclicFreimanDimension.lean` | Chang's theorem in `ZMod q` and for sets of integers with dimension at most `freimanDim X`, with named exponents |
+| `GAP/Defs.lean`, `GAP/Basic.lean`, `GAP/Coeff.lean` | Progressions, proper and `2`-proper progressions, coefficients and the Freiman isomorphism onto the coefficient box |
+| `GAP/Relations.lean`, `GAP/ScaleLengths.lean`, `GAP/Symmetric.lean`, `GAP/Constructions.lean` | Relations among the steps, enlarged lengths, symmetric progressions, progressions containing subset sums and differences |
+| `GAP/FreimanHom.lean` | Images of progressions under Freiman isomorphisms |
+| `GeometryOfNumbers/Box.lean`, `GeometryOfNumbers/RealBox.lean` | Integer and real boxes, the packing bound, short lattice vectors |
+| `GeometryOfNumbers/IntegerLattice.lean`, `GeometryOfNumbers/SaturatedSpan.lean`, `GeometryOfNumbers/LatticeCoordinates.lean` | Integer lattices in subspaces, saturated spans, coordinates in a basis of the lattice of integer points of a span |
+| `GeometryOfNumbers/Gauge.lean`, `GeometryOfNumbers/ConvexDilate.lean`, `GeometryOfNumbers/GaugeBox.lean`, `GeometryOfNumbers/GaugeInduction.lean` | Shortest lattice vectors for a convex body, and a proper progression covering its lattice points |
+| `GeometryOfNumbers/MinkowskiSecond.lean` | Minkowski's second theorem for a weighted sum of squares |
+| `BogolyubovRuzsa/` | Ruzsa's model lemma, Chang's lemma and Bohr sets, a proper progression in a Bohr set, and the Bogolyubov–Ruzsa lemma in `ZMod q` |
+| `Covering/` | Chang's packing argument and the progression containing `X`, with the exponent `containerExponent` |
+| `Properization/` | Smith normal form quotients, short relations and the passage to a `2`-proper progression |
+| `FreimanDimension/` | The Freiman model of a subset of a `2`-proper progression, and a `2`-proper progression of dimension at most `freimanDim X` containing `X` |
+| `ZMod.lean` | Chang's theorem in `ZMod q` with named exponents |
+| `Int.lean` | Chang's theorem for sets of integers with named exponents |
+| `FreimanDim.lean` | Chang's theorem in `ZMod q` and for sets of integers with dimension at most `freimanDim X`, with named exponents |
+| `ExponentBounds.lean` | Polynomial bounds for the exponents of `Covering/Container.lean`, `ZMod.lean` and `Int.lean` |
+| `Explicit.lean` | Theorems 1 to 6 |
 
 [formalization.yaml](formalization.yaml) records the sources, the differences from them, the
 scope, and the use of AI coding agents.

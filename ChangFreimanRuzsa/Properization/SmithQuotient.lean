@@ -5,15 +5,14 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.BoxLatticePoints
-public import ChangFreimanRuzsa.Lattice
-public import ChangFreimanRuzsa.Properization.Relations
-public import ChangFreimanRuzsa.LatticeBox.GaugeBox
+public import ChangFreimanRuzsa.GAP.Relations
+public import ChangFreimanRuzsa.GeometryOfNumbers.GaugeBox
+public import ChangFreimanRuzsa.GeometryOfNumbers.RealBox
 public import Mathlib.LinearAlgebra.FreeModule.PID
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
-import ChangFreimanRuzsa.ConvexGeometry
-import ChangFreimanRuzsa.LatticeBox.GaugeInduction
-import ChangFreimanRuzsa.Properization.SaturatedSpan
+import ChangFreimanRuzsa.GeometryOfNumbers.Gauge
+import ChangFreimanRuzsa.GeometryOfNumbers.GaugeInduction
+import ChangFreimanRuzsa.GeometryOfNumbers.SaturatedSpan
 
 /-!
 # Quotients of the coefficient lattice by a saturated span

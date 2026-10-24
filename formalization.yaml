@@ -287,54 +287,54 @@ alignment:
         dimension at most 2 kappa - 1.
     - source: "Green and Tao, Proposition 1.3 with t = 2, for sets of integers"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_freimanDim_card_le"
-      module: "ChangFreimanRuzsa.ExplicitBounds"
+      module: "ChangFreimanRuzsa.Explicit"
       status: "proved"
       note: >-
         With at most exp(10^32 kappa^7) |X| points. Not in Challenge.lean, since Mathlib has
         no Freiman dimension.
     - source: "Green and Tao, Proposition 1.3 with t = 2, in ZMod q"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_freimanDim_card_le"
-      module: "ChangFreimanRuzsa.ExplicitBounds"
+      module: "ChangFreimanRuzsa.Explicit"
       status: "proved"
       note: >-
         With the hypotheses of the statement for ZMod q in Challenge.lean. Not in
         Challenge.lean, since Mathlib has no Freiman dimension.
     - source: "Chang's theorem for sets of integers, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_of_small_sumset"
-      module: "ChangFreimanRuzsa.Integers"
+      module: "ChangFreimanRuzsa.Int"
       status: "proved"
       note: >-
         With the exponents intExponent kappa <= 4 * 10^31 kappa^7 for the size and
         containerExponent (2 kappa) for the dimension.
     - source: "Chang's theorem for sets of integers that are not too small, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_int_of_small_sumset"
-      module: "ChangFreimanRuzsa.Integers"
+      module: "ChangFreimanRuzsa.Int"
       status: "proved"
       note: >-
         For 256 * bohrGAPDim kappa <= |X|, with the exponents of the statement for
         ZMod q. Not in Challenge.lean.
     - source: "Chang's theorem in ZMod q, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_of_small_sumset"
-      module: "ChangFreimanRuzsa.Cyclic"
+      module: "ChangFreimanRuzsa.ZMod"
       status: "proved"
       note: "With the exponents containerExponent and zmodExponent."
     - source: "Chang's theorem in ZMod q with dimension at most the Freiman dimension, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_dim_le_freimanDim"
-      module: "ChangFreimanRuzsa.CyclicFreimanDimension"
+      module: "ChangFreimanRuzsa.FreimanDim"
       status: "proved"
       note: >-
         With the exponents containerExponent and freimanDimExponent. Not in
         Challenge.lean.
     - source: "Chang's theorem for sets of integers with dimension at most the Freiman dimension, library form"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_int_dim_le_freimanDim"
-      module: "ChangFreimanRuzsa.CyclicFreimanDimension"
+      module: "ChangFreimanRuzsa.FreimanDim"
       status: "proved"
       note: >-
         With the exponent intFreimanDimExponent kappa <= 10^32 kappa^7. Not in
         Challenge.lean.
     - source: "Chang, Theorem 1"
       lean: "ChangFreimanRuzsa.exists_gap_int_subset_dim_le_card_le"
-      module: "ChangFreimanRuzsa.Integers"
+      module: "ChangFreimanRuzsa.Int"
       status: "proved"
       note: >-
         For 256 * bohrGAPDim kappa <= |X|. The dimension and log (|P| / |X|) are at most
@@ -342,7 +342,7 @@ alignment:
         C alpha^2 (log alpha)^2 of Theorem 1. Not in Challenge.lean.
     - source: "Chang, Proposition 2.1, in ZMod q"
       lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_card_le"
-      module: "ChangFreimanRuzsa.Container"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.Basic"
       status: "proved"
       note: >-
         For q prime and 256 * bohrGAPDim kappa <= |X|. The dimension is at most
@@ -351,39 +351,39 @@ alignment:
         exists_proper_gap_int_subset_add_sub_add_card_le of Integers.lean.
     - source: "Chang, Section 1, Step 1 (Ruzsa's model)"
       lean: "ChangFreimanRuzsa.exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le"
-      module: "ChangFreimanRuzsa.RuzsaModel"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.RuzsaModel"
       status: "proved"
       note: "From ZMod q with q prime, in place of Z, into ZMod m for any m >= |sX - sX|."
     - source: "Chang, Lemma 3.1"
       lean: "ChangFreimanRuzsa.exists_card_le_largeSpec_subset_addSpan"
-      module: "ChangFreimanRuzsa.Fourier"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.Fourier"
       status: "proved"
       note: >-
         Applies the lemma on large spectra of APAP, which bounds a set whose {-1, 0, 1}-span
         contains the large spectrum, in place of a maximal dissociated subset of it.
     - source: "Chang, Lemma 3.2"
       lean: "ChangFreimanRuzsa.mem_add_sub_add_of_card_add_le_of_forall_largeSpec"
-      module: "ChangFreimanRuzsa.Fourier"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.Fourier"
       status: "proved"
       note: "With the threshold (8 kappa)^(-1/2) and the chord width 1/4."
     - source: "Chang, Lemma 3.3"
       lean: "ChangFreimanRuzsa.card_pow_three_le_mul_addEnergy"
-      module: "ChangFreimanRuzsa.Fourier"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.Fourier"
       status: "proved"
       note: "Stated as |X|^3 <= kappa E(X) for the additive energy E(X)."
     - source: "Chang, Lemma 3.4"
       lean: "ChangFreimanRuzsa.mem_add_sub_add_of_largeSpec_subset_addSpan"
-      module: "ChangFreimanRuzsa.Fourier"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.Fourier"
       status: "proved"
       note: "With the chord width (4 (|Delta| + 1))^(-1)."
     - source: "Chang, Section 1, Step 3 (a proper progression in a Bohr set)"
       lean: "ChangFreimanRuzsa.exists_proper_gap_chordSet"
-      module: "ChangFreimanRuzsa.BohrProgression"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.BohrSet"
       status: "proved"
       note: "Through Minkowski's second theorem from Tau Ceti; ZMod q need not have q prime."
     - source: "Chang, Lemma 1.2"
       lean: "ChangFreimanRuzsa.GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso"
-      module: "ChangFreimanRuzsa.FreimanRigidity"
+      module: "ChangFreimanRuzsa.GAP.FreimanHom"
       status: "proved"
       note: >-
         For Freiman 2-isomorphisms on a proper progression. The transport of (1.22), from
@@ -391,23 +391,23 @@ alignment:
         exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso.
     - source: "Chang, Section 2"
       lean: "ChangFreimanRuzsa.exists_gap_subset_dim_le_card_le_of_subset_add_sub_add"
-      module: "ChangFreimanRuzsa.Container"
+      module: "ChangFreimanRuzsa.Covering.Container"
       status: "proved"
       note: >-
         In an arbitrary abelian group, with sets of ceil(3 kappa) translates and a final
         application of Ruzsa's covering lemma.
     - source: "Chang, Section 4"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap"
-      module: "ChangFreimanRuzsa.Cyclic"
+      module: "ChangFreimanRuzsa.ZMod"
       status: "proved"
       note: >-
         A different argument: properization through the short relations of the progression,
         followed by the reduction to the Freiman dimension,
         exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree in
-        ChangFreimanRuzsa.CoordinateReduction.
+        ChangFreimanRuzsa.FreimanDimension.CoordinateReduction.
     - source: "Chang, Section 1, definition of a proper progression"
       lean: "ChangFreimanRuzsa.GAP.proper_iff_card_eq_prod_length"
-      module: "ChangFreimanRuzsa.GapToolkit"
+      module: "ChangFreimanRuzsa.GAP.Basic"
       status: "proved"
       note: "Chang's |P| = l(P) is equivalent to GAP.Proper, the distinctness of the points."
 

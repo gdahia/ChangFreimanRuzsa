@@ -8,8 +8,8 @@ module
 public import Mathlib.Analysis.Complex.Exponential
 public import Mathlib.Data.Finsupp.Interval
 public import Mathlib.Data.Nat.Prime.Defs
-public import ChangFreimanRuzsa.GeneralizedArithmeticProgression
-import ChangFreimanRuzsa.ExplicitBounds
+public import ChangFreimanRuzsa.GAP.Defs
+import ChangFreimanRuzsa.Explicit
 
 /-!
 # Chang's theorem and the Bogolyubov–Ruzsa lemma
