@@ -342,7 +342,7 @@ alignment:
         C alpha^2 (log alpha)^2 of Theorem 1. Not in Challenge.lean.
     - source: "Chang, Proposition 2.1, in ZMod q"
       lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_card_le"
-      module: "ChangFreimanRuzsa.BogolyubovRuzsa.Basic"
+      module: "ChangFreimanRuzsa.BogolyubovRuzsa.ZMod"
       status: "proved"
       note: >-
         For q prime and 256 * bohrGAPDim kappa <= |X|. The dimension is at most

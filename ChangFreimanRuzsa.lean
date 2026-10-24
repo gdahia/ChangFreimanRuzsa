@@ -5,10 +5,10 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.BogolyubovRuzsa.Basic
 public import ChangFreimanRuzsa.BogolyubovRuzsa.BohrSet
 public import ChangFreimanRuzsa.BogolyubovRuzsa.Fourier
 public import ChangFreimanRuzsa.BogolyubovRuzsa.RuzsaModel
+public import ChangFreimanRuzsa.BogolyubovRuzsa.ZMod
 public import ChangFreimanRuzsa.Covering.Container
 public import ChangFreimanRuzsa.Covering.Packing
 public import ChangFreimanRuzsa.Explicit

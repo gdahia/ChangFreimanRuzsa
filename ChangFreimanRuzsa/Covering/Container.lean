@@ -5,7 +5,7 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.BogolyubovRuzsa.Basic
+public import ChangFreimanRuzsa.BogolyubovRuzsa.ZMod
 public import ChangFreimanRuzsa.GAP.Constructions
 import ChangFreimanRuzsa.Covering.Packing
 import Mathlib.Analysis.Complex.ExponentialBounds
@@ -17,7 +17,7 @@ import Mathlib.Combinatorics.Additive.RuzsaCovering
 
 Let `X` be a finite set with `#(X + X) ≤ κ * #X` in an abelian group, and let `X₁ ⊆ X` with
 `#X ≤ 8 * #X₁`. Given a proper progression `Q₁` in `X₁ + X₁ - (X₁ + X₁)` that is large compared
-with `#X`, as `ChangFreimanRuzsa.BogolyubovRuzsa.Basic` provides, the following steps put `X` in a
+with `#X`, as `ChangFreimanRuzsa.BogolyubovRuzsa.ZMod` provides, the following steps put `X` in a
 (not necessarily proper) GAP whose dimension, and whose size relative to `#X`, are bounded in terms
 of `κ` and of the dimension of `Q₁`. The numbering continues that of the Bogolyubov–Ruzsa lemma.
 
