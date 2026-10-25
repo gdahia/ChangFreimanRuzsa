@@ -109,4 +109,27 @@ theorem exists_twoProperGAP_zmod_subset_dim_le_card_le' {q : ℕ} {κ : ℝ} (X 
       #Q.carrier ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X :=
   sorry
 
+/-- **Chang's theorem** for sets of integers, with the dimension bound of Green and Tao. A finite
+set `X` of integers with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and with `κ * (2 * κ - 1) ≤ ε * #X`
+is contained in a `2`-proper generalized arithmetic progression of dimension at most
+`⌊κ - 1 + ε⌋₊` with at most `Real.exp (10 ^ 32 * κ ^ 7) * #X` points. -/
+theorem exists_twoProperGAP_subset_dim_le_floor_card_le' {κ ε : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
+    (hXX : #(X + X) ≤ κ * #X) (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
+    ∃ P : GAP ℤ, (P + P).Proper ∧ X ⊆ P.carrier ∧ P.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
+      #P.carrier ≤ Real.exp (10 ^ 32 * κ ^ 7) * #X :=
+  sorry
+
+/-- **Chang's theorem** in `ZMod q` for a prime `q`, with the dimension bound of Green and Tao. A
+set `X` with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, with at least `7 * 10 ^ 7 * κ ^ 2` elements, with
+`Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q` and with `κ * (2 * κ - 1) ≤ ε * #X` is contained in a
+`2`-proper generalized arithmetic progression of dimension at most `⌊κ - 1 + ε⌋₊` with at most
+`Real.exp (10 ^ 30 * κ ^ 7) * #X` points. -/
+theorem exists_twoProperGAP_zmod_subset_dim_le_floor_card_le' {q : ℕ} {κ ε : ℝ}
+    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
+    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) (hXupper : Real.exp (10 ^ 30 * κ ^ 7) * #X ≤ q)
+    (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
+      #Q.carrier ≤ Real.exp (10 ^ 30 * κ ^ 7) * #X :=
+  sorry
+
 end ChangFreimanRuzsa

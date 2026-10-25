@@ -37,28 +37,44 @@ hypotheses of Theorem 2, $X$ is contained in a $2$-proper progression $Q$ with
 
 $$\dim Q \le 2\kappa - 1, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
 
-Theorems 3 and 4 follow from Theorems 1 and 2, since the Freiman dimension of a nonempty set $X$
+**Theorem 5** (`ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_floor_card_le`). Let
+$\kappa \ge 2$, let $\varepsilon$ be a real number and let $X$ be a finite set of integers. If
+$|X + X| \le \kappa |X|$ and $\kappa (2\kappa - 1) \le \varepsilon |X|$, then $X$ is contained in
+a $2$-proper progression $P$ with
+
+$$\dim P \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad |P| \le \exp(10^{32} \kappa^7) |X|.$$
+
+**Theorem 6** (`ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_floor_card_le`). Under
+the hypotheses of Theorem 2, if moreover $\kappa (2\kappa - 1) \le \varepsilon |X|$, then $X$ is
+contained in a $2$-proper progression $Q$ with
+
+$$\dim Q \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad |Q| \le \exp(10^{30} \kappa^7) |X|.$$
+
+Theorems 3 to 6 follow from Theorems 1 and 2, since the Freiman dimension of a nonempty set $X$
 with $|X + X| \le \kappa |X|$ is at most $2\kappa - 1$
-(`SumOfSetsInSeveralDimensions.freimanDim_le_two_mul_sub_one_of_card_add_le`).
+(`SumOfSetsInSeveralDimensions.freimanDim_le_two_mul_sub_one_of_card_add_le`) and at most
+$\kappa - 1 + \kappa (2\kappa - 1) / |X|$
+(`SumOfSetsInSeveralDimensions.freimanDim_le_sub_one_add_mul_div_card_of_card_add_le`).
 
 Chang's theorem, as stated by Green and Tao, gives a progression with at most
-$\exp(C \kappa^2 \log^3 \kappa) |X|$ points and dimension at most the Freiman dimension of $X$.
-Theorems 1 and 2 have the same bound on the dimension, and a bound on the size that is linear in
-$|X|$ too, with a larger exponent.
+$\exp(C \kappa^2 \log^3 \kappa) |X|$ points and dimension at most the Freiman dimension of $X$,
+hence at most $\lfloor \kappa - 1 + \varepsilon \rfloor$ when $|X| \ge C \kappa^2 / \varepsilon$.
+Theorems 1, 2, 5 and 6 have the same bounds on the dimension, and a bound on the size that is
+linear in $|X|$ too, with a larger exponent.
 
 The first step of the proof is the Bogolyubov–Ruzsa lemma, a large proper progression inside
 $2X - 2X$.
 
-**Theorem 5** (`ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le`). Let
+**Theorem 7** (`ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le`). Let
 $\kappa \ge 2$ and let $X$ be a finite set of integers. If $|X + X| \le \kappa |X|$ and
 $|X| \ge 7 \cdot 10^7 \kappa^2$, then $X + X - (X + X)$ contains a proper progression $Q$ with
 
 $$\dim Q \le 3 \cdot 10^5 \kappa^2, \qquad |X| \le \exp(2 \cdot 10^7 \kappa^2) |Q|.$$
 
-**Theorem 6** (`ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le`).
+**Theorem 8** (`ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le`).
 The same holds for $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $q$ prime.
 
-[Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 to 6, under the
+[Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 to 8, under the
 library names with a prime and with `sorry` placeholders, together with the definitions of `GAP`
 and of its points, dimension, properness and sum. A progression `P` is `2`-proper when
 `(P + P).Proper`. The statements are in terms of Mathlib, which has no Freiman dimension, so
@@ -96,7 +112,7 @@ The library also states the theorems with named exponents, which the explicit bo
 | `Int.lean` | Chang's theorem for sets of integers with named exponents |
 | `FreimanDim.lean` | Chang's theorem in `ZMod q` and for sets of integers with dimension at most `freimanDim X`, with named exponents |
 | `ExponentBounds.lean` | Polynomial bounds for the exponents of `Covering/Container.lean`, `ZMod.lean` and `Int.lean` |
-| `Explicit.lean` | Theorems 1 to 6 |
+| `Explicit.lean` | Theorems 1 to 8 |
 
 [formalization.yaml](formalization.yaml) records the sources, the differences from them, the
 scope, and the use of AI coding agents.
@@ -108,9 +124,11 @@ scope, and the use of AI coding agents.
 definitions of `GAP`, `GAP.eval`, `GAP.carrier`, `GAP.dim`, `GAP.Proper` and the sum of
 progressions, and states `exists_proper_gap_subset_add_sub_add_dim_le_card_le'`,
 `exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le'`,
-`exists_twoProperGAP_subset_dim_le_card_le'` and
-`exists_twoProperGAP_zmod_subset_dim_le_card_le'` with `sorry`. `comparator.json` names these
-four theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
+`exists_twoProperGAP_subset_dim_le_card_le'`,
+`exists_twoProperGAP_zmod_subset_dim_le_card_le'`,
+`exists_twoProperGAP_subset_dim_le_floor_card_le'` and
+`exists_twoProperGAP_zmod_subset_dim_le_floor_card_le'` with `sorry`. `comparator.json` names
+these six theorems, `ChangFreimanRuzsaPalomar.Challenge` and `ChangFreimanRuzsaPalomar.Solution` as the
 modules to compare, and `propext`, `Classical.choice` and `Quot.sound` as the permitted axioms.
 The two modules sit in `ChangFreimanRuzsaPalomar/` rather than at the root, so that they do not
 clash with the `Challenge` and `Solution` modules of the projects this one requires or is

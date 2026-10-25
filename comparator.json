@@ -5,7 +5,9 @@
     "ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le'",
     "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le'",
     "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'",
-    "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'"
+    "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'",
+    "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_floor_card_le'",
+    "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_floor_card_le'"
   ],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],

@@ -8,11 +8,12 @@ project:
     progression P, one for which P + P is proper: a finite set X of integers with
     |X + X| <= kappa |X| is contained in a 2-proper generalized arithmetic progression of
     dimension at most the Freiman dimension of X, hence at most 2 kappa - 1, with at most
-    exp(10^32 kappa^7) |X| points. There is also a statement for subsets of ZMod q with q
-    prime, where the progression has at most exp(10^30 kappa^7) |X| points. The bound on the
-    size is weaker than that of Chang. The first step of the proof, the Bogolyubov-Ruzsa lemma,
-    is stated too: if moreover |X| >= 7 * 10^7 kappa^2, then 2X - 2X contains a proper
-    progression of dimension at most 3 * 10^5 kappa^2 with at least
+    exp(10^32 kappa^7) |X| points. If kappa (2 kappa - 1) <= epsilon |X|, the dimension is at
+    most floor(kappa - 1 + epsilon), as in Green and Tao. There is also a statement for subsets
+    of ZMod q with q prime, where the progression has at most exp(10^30 kappa^7) |X| points. The
+    bound on the size is weaker than that of Chang. The first step of the proof, the
+    Bogolyubov-Ruzsa lemma, is stated too: if moreover |X| >= 7 * 10^7 kappa^2, then 2X - 2X
+    contains a proper progression of dimension at most 3 * 10^5 kappa^2 with at least
     exp(-2 * 10^7 kappa^2) |X| points.
   authors:
     - "Gabriel Dahia"
@@ -100,9 +101,10 @@ related_formalizations:
     relationship: "builds-on"
     note: >-
       A Lake dependency and the source of the Freiman dimension,
-      SumOfSetsInSeveralDimensions.freimanDim, and of the bound
-      freimanDim_le_two_mul_sub_one_of_card_add_le, which applies Ruzsa's lower bound for
-      sumsets to a Freiman model of a set.
+      SumOfSetsInSeveralDimensions.freimanDim, and of the bounds
+      freimanDim_le_two_mul_sub_one_of_card_add_le and
+      freimanDim_le_sub_one_add_mul_div_card_of_card_add_le, which apply Ruzsa's lower bound
+      for sumsets and Freiman's lemma to a Freiman model of a set.
   - id: "https://github.com/YaelDillies/apap"
     relationship: "builds-on"
     note: >-
@@ -120,11 +122,13 @@ status:
     spectra is the one of APAP and Minkowski's second theorem the one of Tau Ceti. The main
     statements give a progression of dimension at most the Freiman dimension of the set.
     Mathlib has no Freiman dimension, so Challenge.lean states instead their corollaries with
-    dimension at most 2 kappa - 1, which use the bound freimanDim X <= 2 kappa - 1 for sets
-    with |X + X| <= kappa |X| from SumOfSetsInSeveralDimensions. Challenge.lean also states the
+    dimension at most 2 kappa - 1, and with dimension at most floor(kappa - 1 + epsilon) when
+    kappa (2 kappa - 1) <= epsilon |X|. These use the bounds freimanDim X <= 2 kappa - 1 and
+    freimanDim X <= kappa - 1 + kappa (2 kappa - 1) / |X| for sets with
+    |X + X| <= kappa |X| from SumOfSetsInSeveralDimensions. Challenge.lean also states the
     Bogolyubov-Ruzsa lemma for subsets of ZMod q with q prime and for finite sets of integers.
     The sorry counts refer to the library and Solution.lean; Challenge.lean has one placeholder
-    for each of its four statements.
+    for each of its six statements.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -162,7 +166,10 @@ automation:
         to check the documentation and one to drop the direct dependency on AddCombi. Later,
         one instruction to carry the removal of redundant casts in Challenge.lean over to the
         library and to drop the definition of 2-properness. Later, one instruction to add the
-        Bogolyubov-Ruzsa statements to Challenge.lean and Solution.lean.
+        Bogolyubov-Ruzsa statements to Challenge.lean and Solution.lean. Later, one instruction
+        to use the bound on the Freiman dimension added to SumOfSetsInSeveralDimensions to
+        deduce the bound on the dimension in the form of Green and Tao for sets that are large
+        in terms of the doubling.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -195,7 +202,10 @@ automation:
     agent removed the definition of 2-properness, which the statements now write as
     (P + P).Proper, and the casts that Lean inserts itself. Later, the agent stated the
     Bogolyubov-Ruzsa lemma with explicit bounds, bounding the dimension bohrGAPDim kappa and the
-    loss 8 bohrLoss (bohrGAPDim kappa), and added it to Challenge.lean and Solution.lean. Every
+    loss 8 bohrLoss (bohrGAPDim kappa), and added it to Challenge.lean and Solution.lean. Later,
+    the agent deduced the statements with dimension at most floor(kappa - 1 + epsilon) for
+    kappa (2 kappa - 1) <= epsilon |X| from the bound on the Freiman dimension of
+    SumOfSetsInSeveralDimensions, and added them to Challenge.lean and Solution.lean. Every
     proof is checked by Lean.
 
 fidelity:
@@ -225,9 +235,16 @@ fidelity:
     exp(10^30 kappa^7) |X| points. Chang works in Z only, so these statements have no
     counterpart in her paper.
 
-    Dimension at most 2 kappa - 1. The statements of Challenge.lean are the same with
-    dimension at most 2 kappa - 1 in place of freimanDim X. Green and Tao get
-    floor(K - 1 + epsilon) for |A| >= C K^2 / epsilon.
+    Dimension at most 2 kappa - 1. exists_twoProperGAP_subset_dim_le_card_le and
+    exists_twoProperGAP_zmod_subset_dim_le_card_le are the same with dimension at most
+    2 kappa - 1 in place of freimanDim X.
+
+    Dimension at most floor(kappa - 1 + epsilon). Green and Tao get floor(K - 1 + epsilon)
+    for |A| >= C K^2 / epsilon. exists_twoProperGAP_subset_dim_le_floor_card_le and
+    exists_twoProperGAP_zmod_subset_dim_le_floor_card_le add the hypothesis
+    kappa (2 kappa - 1) <= epsilon |X|, which holds for |X| >= 2 kappa^2 / epsilon, and give
+    dimension at most floor(kappa - 1 + epsilon) in place of freimanDim X. The statement for
+    integers does not assume X nonempty, since the hypothesis implies it.
 
     Bogolyubov-Ruzsa lemma. Chang's Proposition 2.1 puts in 2A - 2A a proper progression with
     the dimension of (2.1), of order alpha log alpha, and the size of (2.2).
@@ -290,6 +307,22 @@ alignment:
       note: >-
         For q prime, 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7) |X| <= q, with
         dimension at most 2 kappa - 1.
+    - source: "Green and Tao, Proposition 1.3 with t = 2 and dimension floor(K - 1 + epsilon)"
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_floor_card_le'"
+      module: "ChangFreimanRuzsaPalomar.Challenge"
+      status: "proved"
+      note: >-
+        For kappa (2 kappa - 1) <= epsilon |X|, with at most exp(10^32 kappa^7) |X| points
+        and dimension at most floor(kappa - 1 + epsilon).
+    - source: >-
+        Green and Tao, Proposition 1.3 with t = 2 and dimension floor(K - 1 + epsilon), in
+        ZMod q
+      lean: "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_floor_card_le'"
+      module: "ChangFreimanRuzsaPalomar.Challenge"
+      status: "proved"
+      note: >-
+        For q prime, 7 * 10^7 kappa^2 <= |X|, exp(10^30 kappa^7) |X| <= q and
+        kappa (2 kappa - 1) <= epsilon |X|, with dimension at most floor(kappa - 1 + epsilon).
     - source: "Green and Tao, Proposition 1.3 with t = 2, for sets of integers"
       lean: "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_freimanDim_card_le"
       module: "ChangFreimanRuzsa.Explicit"
