@@ -19,7 +19,7 @@ most `c` and of size at most `exp C * #X`.
 
 The proof has two stages. `exists_gap_zmod_subset_dim_le_card_le` puts `X` in a progression of
 dimension at most `c` and of size at most `exp c * #X`, and
-`exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul` replaces that progression by a
+`exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul` replaces that progression by a
 `2`-proper one. The second stage holds in every abelian group in which the small multiples of each
 nonzero element are distinct. It is stated in that generality as
 `exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap`, and `ChangFreimanRuzsa.Int` applies
@@ -55,19 +55,19 @@ Chang's theorem in `ZMod q`, where `c` is `containerExponent κ`. -/
 `c` and of size at most `exp C * #X`. -/
 lemma exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap {G : Type*} [DecidableEq G]
     [AddCommGroup G] {N : ℕ} {κ : ℝ} {X : Finset G} {P : GAP G}
-    (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hXP : X ⊆ P.carrier)
+    (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hXP : X ⊆ P.toFinset)
     (hPdim : P.dim ≤ containerExponent κ)
-    (hPcard : #P.carrier ≤ Real.exp (containerExponent κ) * #X)
+    (hPcard : #P.toFinset ≤ Real.exp (containerExponent κ) * #X)
     (hN : Real.exp (zmodExponent κ) * #X ≤ N) :
-    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ containerExponent κ ∧
-      #Q.carrier ≤ Real.exp (zmodExponent κ) * #X := by
-  have hP : Real.exp (properizationExponent P.dim) * #P.carrier ≤
+    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ containerExponent κ ∧
+      #Q.toFinset ≤ Real.exp (zmodExponent κ) * #X := by
+  have hP : Real.exp (properizationExponent P.dim) * #P.toFinset ≤
       Real.exp (zmodExponent κ) * #X := by
     rw [zmodExponent, Real.exp_add, mul_assoc]
     gcongr
     exact properizationExponent_mono (Nat.cast_nonneg _) hPdim
   obtain ⟨Q, hQ, hPQ, hQdim, hQcard⟩ :=
-    exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P hG (hP.trans hN)
+    exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul P hG (hP.trans hN)
   exact ⟨Q, hQ, hXP.trans hPQ, (Nat.cast_le.2 hQdim).trans hPdim, hQcard.trans hP⟩
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`. Write `c` for `containerExponent κ`, `C` for
@@ -78,8 +78,8 @@ theorem exists_twoProperGAP_zmod_of_small_sumset {q : ℕ} {κ : ℝ} (X : Finse
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (zmodExponent κ) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ containerExponent κ ∧
-      #Q.carrier ≤ Real.exp (zmodExponent κ) * #X := by
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ containerExponent κ ∧
+      #Q.toFinset ≤ Real.exp (zmodExponent κ) * #X := by
   obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
   exact exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) hXP hPdim hPcard hXupper

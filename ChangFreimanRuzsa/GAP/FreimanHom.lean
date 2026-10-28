@@ -22,11 +22,11 @@ abelian groups.
 
 ## Main statements
 
-* `GAP.apply_origin_add_linearCombination`: on the carrier of a GAP `Q`, a Freiman
+* `GAP.apply_origin_add_linearCombination`: on the points of a GAP `Q`, a Freiman
   `2`-homomorphism `f` is affine. It sends `Q.origin + ∑ i, w i • Q.step i` to
   `f Q.origin + ∑ i, w i • (f (Q.origin + Q.step i) - f Q.origin)`.
-* `GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso`: a Freiman `2`-isomorphism defined on
-  the carrier of a proper GAP maps it onto a proper GAP of at most the same dimension.
+* `GAP.exists_proper_toFinset_eq_image_of_isAddFreimanIso`: a Freiman `2`-isomorphism defined on
+  the points of a proper GAP maps it onto a proper GAP of at most the same dimension.
 * `card_add_le_of_isAddFreimanIso`: a Freiman `2`-isomorphism from `B` onto `A` satisfies
   `#(B + B) ≤ #(A + A)`.
 * `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`: a Freiman `8`-isomorphism from `A`
@@ -61,26 +61,28 @@ variable {G H : Type*} [DecidableEq G] [AddCommGroup G] [DecidableEq H] [AddComm
 /-! ### Rigidity of a progression under a Freiman 2-homomorphism -/
 
 lemma origin_add_linearCombination_mem (Q : GAP H) {w : Fin Q.dim → ℕ}
-    (hw : ∀ i, w i < Q.length i) : Q.origin + Fintype.linearCombination ℕ Q.step w ∈ Q.carrier := by
-  rw [Q.carrier_eq, mem_image]
+    (hw : ∀ i, w i < Q.length i) :
+    Q.origin + Fintype.linearCombination ℕ Q.step w ∈ Q.toFinset := by
+  rw [Q.toFinset_eq, mem_image]
   exact ⟨fun i ↦ ⟨w i, hw i⟩, mem_univ _, rfl⟩
 
 omit [DecidableEq G] in
-/-- Adding the `i`-th step inside the carrier of a GAP `Q` changes the image under a Freiman
+/-- Adding the `i`-th step inside the points of a GAP `Q` changes the image under a Freiman
 `2`-homomorphism `f` by `f (Q.origin + Q.step i) - f Q.origin`. -/
 lemma apply_add_step (Q : GAP H) {B : Set G} {f : H → G}
-    (hf : IsAddFreimanHom 2 (Q.carrier : Set H) B f) {i : Fin Q.dim} {x : H}
-    (hx : x ∈ Q.carrier) (hxi : x + Q.step i ∈ Q.carrier) (hi : Q.origin + Q.step i ∈ Q.carrier) :
+    (hf : IsAddFreimanHom 2 (Q.toFinset : Set H) B f) {i : Fin Q.dim} {x : H}
+    (hx : x ∈ Q.toFinset) (hxi : x + Q.step i ∈ Q.toFinset)
+    (hi : Q.origin + Q.step i ∈ Q.toFinset) :
     f (x + Q.step i) = f x + (f (Q.origin + Q.step i) - f Q.origin) := by
   rw [← add_sub_assoc, eq_sub_iff_add_eq]
   exact hf.add_eq_add hxi Q.origin_mem hx hi (by abel)
 
 omit [DecidableEq G] in
-/-- On the carrier of a GAP `Q`, a Freiman `2`-homomorphism `f` is affine: it sends
+/-- On the points of a GAP `Q`, a Freiman `2`-homomorphism `f` is affine: it sends
 `Q.origin + ∑ i, w i • Q.step i` to
 `f Q.origin + ∑ i, w i • (f (Q.origin + Q.step i) - f Q.origin)`. -/
 lemma apply_origin_add_linearCombination (Q : GAP H) {B : Set G} {f : H → G}
-    (hf : IsAddFreimanHom 2 (Q.carrier : Set H) B f) {w : Fin Q.dim → ℕ}
+    (hf : IsAddFreimanHom 2 (Q.toFinset : Set H) B f) {w : Fin Q.dim → ℕ}
     (hw : ∀ i, w i < Q.length i) :
     f (Q.origin + Fintype.linearCombination ℕ Q.step w) =
       f Q.origin +
@@ -100,24 +102,24 @@ lemma apply_origin_add_linearCombination (Q : GAP H) {B : Set G} {f : H → G}
 /-- The image of a GAP `Q` under a Freiman `2`-homomorphism `f` is the progression with origin
 `f Q.origin`, steps `f (Q.origin + Q.step i) - f Q.origin` and the same lengths. -/
 lemma image_gapMap_eq_image (Q : GAP H) {B : Set G} {f : H → G}
-    (hf : IsAddFreimanHom 2 (Q.carrier : Set H) B f) :
+    (hf : IsAddFreimanHom 2 (Q.toFinset : Set H) B f) :
     univ.image (gapMap (f Q.origin) (fun i ↦ f (Q.origin + Q.step i) - f Q.origin) Q.length) =
-      Q.carrier.image f := by
-  rw [Q.carrier_eq, image_image]
+      Q.toFinset.image f := by
+  rw [Q.toFinset_eq, image_image]
   congr with w
   exact (Q.apply_origin_add_linearCombination hf fun i ↦ (w i).isLt).symm
 
-/-- A Freiman `2`-isomorphism defined on the carrier of a proper GAP maps it onto a proper GAP of
+/-- A Freiman `2`-isomorphism defined on the points of a proper GAP maps it onto a proper GAP of
 at most the same dimension, with the same lengths.
 
 The image is proper because it has `∏ i, Q.length i` elements, so its coefficient map is
 injective. -/
-lemma exists_proper_carrier_eq_image_of_isAddFreimanIso {Q : GAP H} (hQ : Q.Proper) {B : Set G}
-    {f : H → G} (hf : IsAddFreimanIso 2 (Q.carrier : Set H) B f) :
-    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.carrier = Q.carrier.image f := by
+lemma exists_proper_toFinset_eq_image_of_isAddFreimanIso {Q : GAP H} (hQ : Q.Proper) {B : Set G}
+    {f : H → G} (hf : IsAddFreimanIso 2 (Q.toFinset : Set H) B f) :
+    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.toFinset = Q.toFinset.image f := by
   have himage := Q.image_gapMap_eq_image hf.isAddFreimanHom
   refine ⟨ofSteps (f Q.origin) (fun i ↦ f (Q.origin + Q.step i) - f Q.origin) Q.length,
-    proper_ofSteps Q.length_pos ?_, dim_ofSteps_le, (carrier_ofSteps Q.length_pos).trans himage⟩
+    proper_ofSteps Q.length_pos ?_, dim_ofSteps_le, (toFinset_ofSteps Q.length_pos).trans himage⟩
   rw [← Set.injOn_univ, ← coe_univ]
   apply injOn_of_card_image_eq
   rw [himage, card_image_of_injOn hf.bijOn.injOn, Q.card_eq_prod_length hQ, card_univ,
@@ -210,11 +212,11 @@ private lemma isAddFreimanIso_signedTransport {A : Finset G} {B : Finset H} {ψ 
 cardinality contained in `A + A - (A + A)`. -/
 lemma exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso {A : Finset G} {B : Finset H}
     {φ : G → H} (hφ : IsAddFreimanIso 8 (A : Set G) (B : Set H) φ) {Q : GAP H} (hQ : Q.Proper)
-    (hQB : Q.carrier ⊆ (B + B) - (B + B)) :
-    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.carrier.card = Q.carrier.card ∧
-      R.carrier ⊆ (A + A) - (A + A) := by
+    (hQB : Q.toFinset ⊆ (B + B) - (B + B)) :
+    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.toFinset.card = Q.toFinset.card ∧
+      R.toFinset ⊆ (A + A) - (A + A) := by
   have hf := isAddFreimanIso_signedTransport hφ.invFunOn (coe_subset.2 hQB)
-  obtain ⟨R, hR, hRdim, hRQ⟩ := GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso hQ hf
+  obtain ⟨R, hR, hRdim, hRQ⟩ := GAP.exists_proper_toFinset_eq_image_of_isAddFreimanIso hQ hf
   refine ⟨R, hR, hRdim, ?_, ?_⟩ <;> rw [hRQ]
   · exact card_image_of_injOn hf.bijOn.injOn
   · rw [image_subset_iff]

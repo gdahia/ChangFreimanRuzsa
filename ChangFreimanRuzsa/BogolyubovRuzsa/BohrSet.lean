@@ -347,7 +347,7 @@ lemma proper_freqGAP [NeZero q] (hDq : D ≤ q) (hv : LinearIndependent ℤ v)
 with `|a| ≤ D`. -/
 lemma exists_intCast_eq_mul_of_mem_freqGAP [NeZero q] (hmem : ∀ i, v i ∈ freqLattice r)
     (ht : ∀ i, 0 < t i) (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) {y : ZMod q}
-    (hy : y ∈ (freqGAP q v t).carrier) (j : Fin k) :
+    (hy : y ∈ (freqGAP q v t).toFinset) (j : Fin k) :
     ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D := by
   obtain ⟨n, hn, rfl⟩ := exists_coeff_of_mem_symmetricGAP hy
   refine ⟨(∑ i, n i • v i) j.succ, ?_, ?_⟩
@@ -365,8 +365,8 @@ factor `(4 * (k + 1)) ^ (2 * (k + 1))`. -/
 lemma exists_proper_gap_forall_exists_intCast_eq_mul {q k : ℕ} [NeZero q] (r : Fin k → ZMod q)
     {D : ℕ} (hD : 0 < D) (hDq : D ≤ q) :
     ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ k + 1 ∧
-      (∀ y ∈ Q.carrier, ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
-      q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * Q.carrier.card := by
+      (∀ y ∈ Q.toFinset, ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
+      q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * Q.toFinset.card := by
   obtain ⟨v, t, hv, hmem, ht, hshort, hprod⟩ := exists_linearIndependent_isShort_freqLattice r hD
   refine ⟨freqGAP q v t, proper_freqGAP hDq hv hmem ht hshort, dim_symmetricGAP_le,
     fun y hy j ↦ exists_intCast_eq_mul_of_mem_freqGAP hmem ht hshort hy j, ?_⟩
@@ -392,9 +392,9 @@ Bohr set can be `{0}`. -/
 lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMod q) ℂ)) {ε : ℝ}
     (hεq : 2 * Real.pi ≤ ε * q) (hε : ε ≤ 1) :
     ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ Δ.card + 1 ∧
-      (Q.carrier : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
+      (Q.toFinset : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
       (q : ℝ) * (ε / (2 * Real.pi)) ^ Δ.card ≤
-        (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * Q.carrier.card := by
+        (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * Q.toFinset.card := by
   have hq : (0 : ℝ) < q := by exact_mod_cast q.pos_of_neZero
   have hε0 : 0 < ε := by nlinarith [Real.pi_pos]
   choose r hr using fun i : Fin Δ.card ↦
@@ -415,7 +415,7 @@ lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMo
       _ ≤ q * (⌊ε * q / (2 * Real.pi)⌋₊ + 1 : ℝ) ^ Δ.card := by
           gcongr
           exact (Nat.lt_floor_add_one _).le
-      _ ≤ (4 * (Δ.card + 1 : ℝ)) ^ (2 * (Δ.card + 1)) * q ^ Δ.card * Q.carrier.card := hsize
+      _ ≤ (4 * (Δ.card + 1 : ℝ)) ^ (2 * (Δ.card + 1)) * q ^ Δ.card * Q.toFinset.card := hsize
       _ = _ := by ring
 
 end

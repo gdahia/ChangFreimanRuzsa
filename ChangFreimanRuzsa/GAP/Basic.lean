@@ -35,7 +35,7 @@ are those with `w i ≤ 2 * ℓ i - 2`, so the condition of Green and Tao is str
 ## Main definitions
 
 * `GAP G`: a generalized arithmetic progression in `G`, not necessarily proper.
-* `GAP.carrier`, `GAP.dim`: its set of points and its number of steps.
+* `GAP.toFinset`, `GAP.dim`: its set of points and its number of steps.
 * `GAP.Proper`: the points `origin + ∑ v, c v • v` with `c ≤ bound` are distinct.
 * `gapMap`: the point `origin + ∑ i, w i • step i` of the progression with numbered steps `step i`
   and lengths `length i`, for coordinates `w i < length i`.
@@ -48,7 +48,7 @@ are those with `w i ≤ 2 * ℓ i - 2`, so the condition of Green and Tao is str
 
 ## Main statements
 
-* `GAP.carrier_add`: the points of `P + Q` are the sums of a point of `P` and a point of `Q`.
+* `GAP.toFinset_add`: the points of `P + Q` are the sums of a point of `P` and a point of `Q`.
 * `GAP.proper_iff_card_eq_size`: a GAP `P` is proper if and only if it has `P.size` elements.
 * `GAP.proper_iff_injective` and `GAP.proper_add_self_iff_injective`: properness and
   `2`-properness in terms of the numbered steps and lengths.
@@ -83,7 +83,7 @@ variable {G : Type*} [AddCommMonoid G]
 def eval (P : GAP G) (c : G →₀ ℕ) : G := P.origin + c.sum fun v n ↦ n • v
 
 /-- The set of points of a progression. -/
-def carrier [DecidableEq G] (P : GAP G) : Finset G := (Finset.Iic P.bound).image P.eval
+def toFinset [DecidableEq G] (P : GAP G) : Finset G := (Finset.Iic P.bound).image P.eval
 
 /-- The dimension of a progression: the number of its steps. -/
 def dim (P : GAP G) : ℕ := P.bound.support.card
@@ -162,7 +162,7 @@ lemma mem_image_gapMap_iff {G : Type*} [DecidableEq G] [AddCommMonoid G] {d : �
     exact ⟨fun i ↦ ⟨c i, hc i⟩, Finset.mem_univ _, rfl⟩
 
 instance {G : Type*} [DecidableEq G] [AddCommMonoid G] : CoeOut (GAP G) (Finset G) where
-  coe P := P.carrier
+  coe P := P.toFinset
 
 namespace GAP
 
@@ -200,22 +200,22 @@ section Carrier
 
 variable [DecidableEq G]
 
-lemma mem_carrier {P : GAP G} {x : G} : x ∈ P.carrier ↔ ∃ c ≤ P.bound, P.eval c = x := by
-  simp [carrier]
+lemma mem_toFinset {P : GAP G} {x : G} : x ∈ P.toFinset ↔ ∃ c ≤ P.bound, P.eval c = x := by
+  simp [toFinset]
 
-lemma eval_mem_carrier (P : GAP G) {c : G →₀ ℕ} (hc : c ≤ P.bound) : P.eval c ∈ P.carrier :=
-  mem_carrier.2 ⟨c, hc, rfl⟩
+lemma eval_mem_toFinset (P : GAP G) {c : G →₀ ℕ} (hc : c ≤ P.bound) : P.eval c ∈ P.toFinset :=
+  mem_toFinset.2 ⟨c, hc, rfl⟩
 
-lemma origin_mem (P : GAP G) : P.origin ∈ P.carrier := by
-  simpa using P.eval_mem_carrier (c := 0) zero_le
+lemma origin_mem (P : GAP G) : P.origin ∈ P.toFinset := by
+  simpa using P.eval_mem_toFinset (c := 0) zero_le
 
-lemma nonempty (P : GAP G) : P.carrier.Nonempty :=
+lemma nonempty (P : GAP G) : P.toFinset.Nonempty :=
   ⟨_, P.origin_mem⟩
 
 /-- The points of `P + Q` are the sums of a point of `P` and a point of `Q`. -/
-lemma carrier_add (P Q : GAP G) : (P + Q).carrier = P.carrier + Q.carrier := by
+lemma toFinset_add (P Q : GAP G) : (P + Q).toFinset = P.toFinset + Q.toFinset := by
   ext x
-  simp only [mem_carrier, Finset.mem_add, bound_add]
+  simp only [mem_toFinset, Finset.mem_add, bound_add]
   constructor
   · rintro ⟨c, hc, rfl⟩
     obtain ⟨c₁, hc₁, c₂, hc₂, rfl⟩ := exists_add_eq_of_le_add hc
@@ -241,10 +241,10 @@ section OfSteps
 
 variable {d : ℕ} {origin : G} {step : Fin d → G} {length : Fin d → ℕ}
 
-lemma carrier_ofSteps [DecidableEq G] (hl : ∀ i, 0 < length i) :
-    (ofSteps origin step length).carrier = Finset.univ.image (gapMap origin step length) := by
+lemma toFinset_ofSteps [DecidableEq G] (hl : ∀ i, 0 < length i) :
+    (ofSteps origin step length).toFinset = Finset.univ.image (gapMap origin step length) := by
   ext x
-  simp only [mem_carrier, ofSteps, le_sum_single_iff, Finset.mem_image, Finset.mem_univ, true_and]
+  simp only [mem_toFinset, ofSteps, le_sum_single_iff, Finset.mem_image, Finset.mem_univ, true_and]
   constructor
   · rintro ⟨_, ⟨w, hw, rfl⟩, rfl⟩
     refine ⟨fun i ↦ ⟨w i, by grind [hw i, hl i]⟩, ?_⟩
@@ -310,9 +310,9 @@ lemma dim_ofSteps (hs : Function.Injective step) (hl : ∀ i, 1 < length i) :
     simp only [hs.eq_iff, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
     grind [hl j]
 
-lemma card_carrier_ofSteps_le [DecidableEq G] (hl : ∀ i, 0 < length i) :
-    (ofSteps origin step length).carrier.card ≤ ∏ i, length i := by
-  rw [carrier_ofSteps hl]
+lemma card_toFinset_ofSteps_le [DecidableEq G] (hl : ∀ i, 0 < length i) :
+    (ofSteps origin step length).toFinset.card ≤ ∏ i, length i := by
+  rw [toFinset_ofSteps hl]
   exact Finset.card_image_le.trans (by simp)
 
 end OfSteps
@@ -346,10 +346,10 @@ lemma bound_ofSteps_step_length (P : GAP G) (origin : G) :
 lemma ofSteps_step_length (P : GAP G) : ofSteps P.origin P.step P.length = P :=
   ext rfl (P.bound_ofSteps_step_length P.origin)
 
-lemma carrier_eq [DecidableEq G] (P : GAP G) :
-    P.carrier = Finset.univ.image (gapMap P.origin P.step P.length) := by
+lemma toFinset_eq [DecidableEq G] (P : GAP G) :
+    P.toFinset = Finset.univ.image (gapMap P.origin P.step P.length) := by
   conv_lhs => rw [← P.ofSteps_step_length]
-  exact carrier_ofSteps P.length_pos
+  exact toFinset_ofSteps P.length_pos
 
 /-- A GAP is proper if and only if its points `P.origin + ∑ i, w i • P.step i` with
 `w i < P.length i` are distinct. -/
@@ -360,10 +360,10 @@ lemma proper_iff_injective (P : GAP G) :
 
 /-- An element `x` lies in a GAP `P` if and only if `x = P.origin + ∑ i, c i • P.step i` for some
 natural numbers `c i < P.length i`. -/
-lemma mem_carrier_iff [DecidableEq G] (P : GAP G) {x : G} :
-    x ∈ P.carrier ↔ ∃ c : Fin P.dim → ℕ, (∀ i, c i < P.length i) ∧
+lemma mem_toFinset_iff [DecidableEq G] (P : GAP G) {x : G} :
+    x ∈ P.toFinset ↔ ∃ c : Fin P.dim → ℕ, (∀ i, c i < P.length i) ∧
       P.origin + ∑ i, c i • P.step i = x := by
-  rw [P.carrier_eq]
+  rw [P.toFinset_eq]
   exact mem_image_gapMap_iff
 
 /-! ## The size of a progression -/
@@ -384,26 +384,27 @@ section Size
 
 variable [DecidableEq G]
 
-lemma card_le_size (P : GAP G) : P.carrier.card ≤ P.size :=
+lemma card_le_size (P : GAP G) : P.toFinset.card ≤ P.size :=
   Finset.card_image_le.trans_eq P.size_eq_card_Iic.symm
 
 /-- A GAP `P` is proper if and only if it has `P.size` elements. This is the definition of
 properness of Chang and of Green. -/
-lemma proper_iff_card_eq_size (P : GAP G) : P.Proper ↔ P.carrier.card = P.size := by
-  rw [size_eq_card_Iic, carrier, Finset.card_image_iff, Finset.coe_Iic]
+lemma proper_iff_card_eq_size (P : GAP G) : P.Proper ↔ P.toFinset.card = P.size := by
+  rw [size_eq_card_Iic, toFinset, Finset.card_image_iff, Finset.coe_Iic]
   rfl
 
-lemma card_eq_size {P : GAP G} (h : P.Proper) : P.carrier.card = P.size :=
+lemma card_eq_size {P : GAP G} (h : P.Proper) : P.toFinset.card = P.size :=
   P.proper_iff_card_eq_size.1 h
 
 /-- A GAP `P` is proper if and only if it has `∏ i, P.length i` elements. -/
-lemma proper_iff_card_eq_prod_length (P : GAP G) : P.Proper ↔ P.carrier.card = ∏ i, P.length i := by
+lemma proper_iff_card_eq_prod_length (P : GAP G) :
+    P.Proper ↔ P.toFinset.card = ∏ i, P.length i := by
   rw [proper_iff_card_eq_size, size_eq_prod_length]
 
-lemma card_eq_prod_length (P : GAP G) (h : P.Proper) : P.carrier.card = ∏ i, P.length i :=
+lemma card_eq_prod_length (P : GAP G) (h : P.Proper) : P.toFinset.card = ∏ i, P.length i :=
   P.proper_iff_card_eq_prod_length.1 h
 
-lemma card_le_prod_length (P : GAP G) : P.carrier.card ≤ ∏ i, P.length i :=
+lemma card_le_prod_length (P : GAP G) : P.toFinset.card ≤ ∏ i, P.length i :=
   P.size_eq_prod_length ▸ P.card_le_size
 
 end Size
@@ -459,9 +460,9 @@ lemma Proper.of_add_self {P : GAP G} (h : (P + P).Proper) : P.Proper := by
 def map {H : Type*} [AddCommMonoid H] (f : G →+ H) (P : GAP G) : GAP H :=
   ofSteps (f P.origin) (fun i ↦ f (P.step i)) P.length
 
-lemma carrier_map [DecidableEq G] {H : Type*} [DecidableEq H] [AddCommMonoid H] (f : G →+ H)
-    (P : GAP G) : (P.map f).carrier = P.carrier.image f := by
-  rw [map, carrier_ofSteps P.length_pos, P.carrier_eq, Finset.image_image]
+lemma toFinset_map [DecidableEq G] {H : Type*} [DecidableEq H] [AddCommMonoid H] (f : G →+ H)
+    (P : GAP G) : (P.map f).toFinset = P.toFinset.image f := by
+  rw [map, toFinset_ofSteps P.length_pos, P.toFinset_eq, Finset.image_image]
   congr with w
   simp [gapMap, map_sum]
 
@@ -470,16 +471,16 @@ lemma dim_map_le {H : Type*} [AddCommMonoid H] (f : G →+ H) (P : GAP G) :
   dim_ofSteps_le
 
 lemma card_map_le [DecidableEq G] {H : Type*} [DecidableEq H] [AddCommMonoid H] (f : G →+ H)
-    (P : GAP G) : (P.map f).carrier.card ≤ P.carrier.card := by
-  rw [carrier_map]
+    (P : GAP G) : (P.map f).toFinset.card ≤ P.toFinset.card := by
+  rw [toFinset_map]
   exact Finset.card_image_le
 
 /-- Translate a GAP by a constant. -/
 def shift (P : GAP G) (c : G) : GAP G := ⟨P.origin + c, P.bound⟩
 
-lemma carrier_shift [DecidableEq G] (P : GAP G) (c : G) :
-    (P.shift c).carrier = P.carrier.image (· + c) := by
-  rw [carrier, carrier, Finset.image_image]
+lemma toFinset_shift [DecidableEq G] (P : GAP G) (c : G) :
+    (P.shift c).toFinset = P.toFinset.image (· + c) := by
+  rw [toFinset, toFinset, Finset.image_image]
   congr 1
   funext x
   simp [shift, eval, add_right_comm]

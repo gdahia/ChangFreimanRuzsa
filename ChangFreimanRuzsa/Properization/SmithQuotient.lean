@@ -97,8 +97,8 @@ lemma exists_proper_gap_image_realBox {d s : ℕ} {m : Fin d → ℕ}
     (hcast : ∀ v, π (intVectorToReal v) = intVectorToReal (πz v))
     (hπ : Function.Surjective π) {D : Finset (Fin s → ℤ)}
     (hD : ∀ v, v ∈ D ↔ intVectorToReal v ∈ π '' BoxLattice.realBox m) :
-    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.carrier ∧ P.dim ≤ s ∧
-      P.carrier.card ≤ latticeBoxFactor s * D.card :=
+    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.toFinset ∧ P.dim ≤ s ∧
+      P.toFinset.card ≤ latticeBoxFactor s * D.card :=
   exists_proper_gap_of_convex_body ((BoxLattice.convex_realBox m).linear_image π)
     ((BoxLattice.isCompact_realBox m).image (LinearMap.continuous_of_finiteDimensional π))
     (image_realBox_mem_nhds_of_surjective hm hπ)

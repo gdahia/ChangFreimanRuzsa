@@ -28,7 +28,7 @@ to `#X`, are bounded in terms of `κ` alone. The proof follows Chang's argument.
    characters whose size is bounded in terms of `κ` and whose Bohr set lies in
    `Y + Y - (Y + Y)`.
 3. (`exists_proper_gap_chordSet_card_le`) The Bohr set of `Δ` contains a proper progression `Q`
-   of dimension `d = #Δ + 1` with `m ≤ (8 * d) ^ (3 * d) * #Q.carrier` (`bohrLoss`).
+   of dimension `d = #Δ + 1` with `m ≤ (8 * d) ^ (3 * d) * #Q.toFinset` (`bohrLoss`).
 4. (`exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`) The Freiman isomorphism carries
    `Q` to a proper progression `Q₁` of `ZMod q` in `X₁ + X₁ - (X₁ + X₁)` with the same dimension
    and cardinality.
@@ -39,7 +39,7 @@ contain a Bohr progression.
 ## Main definitions
 
 * `deltaBound κ`, `bohrGAPDim κ` and `bohrLoss d`: the bounds on the size of `Δ`, on the dimension
-  of `Q` and on the loss `m / #Q.carrier`.
+  of `Q` and on the loss `m / #Q.toFinset`.
 
 ## Main statements
 
@@ -72,7 +72,7 @@ def deltaBound (κ : ℝ) : ℕ :=
 def bohrGAPDim (κ : ℝ) : ℕ := deltaBound κ + 1
 
 /-- The factor `(8 * d) ^ (3 * d)` lost when passing from `ZMod m` to a Bohr progression of
-dimension at most `d`: the progression `Q` satisfies `m ≤ (8 * d) ^ (3 * d) * #Q.carrier`. -/
+dimension at most `d`: the progression `Q` satisfies `m ≤ (8 * d) ^ (3 * d) * #Q.toFinset`. -/
 def bohrLoss (d : ℕ) : ℝ := (8 * d) ^ (3 * d)
 
 lemma bohrLoss_pos {d : ℕ} (hd : 1 ≤ d) : 0 < bohrLoss d :=
@@ -158,13 +158,13 @@ private lemma pow_mul_pow_le (k : ℕ) :
     ring
 
 /-- The Bohr set `{x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ (4 * (#Δ + 1))⁻¹}` in `ZMod m` contains a proper
-progression `Q` of dimension at most `d` with `m ≤ bohrLoss d * #Q.carrier`, provided `#Δ < d` and
+progression `Q` of dimension at most `d` with `m ≤ bohrLoss d * #Q.toFinset`, provided `#Δ < d` and
 `32 * d ≤ m`. -/
 lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (AddChar (ZMod m) ℂ))
     (hΔ : #Δ + 1 ≤ d) (hm : 32 * (d : ℝ) ≤ m) :
     ∃ Q : GAP (ZMod m), Q.Proper ∧ Q.dim ≤ d ∧
-      (Q.carrier : Set (ZMod m)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ∧
-      m ≤ bohrLoss d * #Q.carrier := by
+      (Q.toFinset : Set (ZMod m)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ∧
+      m ≤ bohrLoss d * #Q.toFinset := by
   have hΔR : (#Δ : ℝ) + 1 ≤ d := by exact_mod_cast hΔ
   have hε : 2 * Real.pi ≤ ((4 : ℝ) * (#Δ + 1))⁻¹ * m := by
     rw [inv_mul_eq_div, le_div_iff₀ (by positivity)]
@@ -185,7 +185,7 @@ lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (Ad
 /-- Let `q` be prime and let `X : Finset (ZMod q)` satisfy `#(X + X) ≤ κ * #X` and
 `256 * d ≤ #X`, where `d` is `bohrGAPDim κ`. Then `X` has a subset `X₁` with `#X ≤ 8 * #X₁`, and
 `X + X - (X + X)` contains a proper progression `Q₁` of dimension at most `d` with
-`#X ≤ 8 * bohrLoss d * #Q₁.carrier`. -/
+`#X ≤ 8 * bohrLoss d * #Q₁.toFinset`. -/
 lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : (X + X).card ≤ κ * X.card)
@@ -193,8 +193,8 @@ lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X 
     ∃ (X₁ : Finset (ZMod q)) (Q₁ : GAP (ZMod q)),
       X₁ ⊆ X ∧ X.card ≤ 8 * X₁.card ∧ Q₁.Proper ∧
         (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧
-        Q₁.carrier ⊆ (X + X) - (X + X) ∧
-        X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card := by
+        Q₁.toFinset ⊆ (X + X) - (X + X) ∧
+        X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.toFinset.card := by
   have hX : X.Nonempty := nonempty_of_mul_bohrGAPDim_le hXlower
   obtain ⟨m, X₁, φ, hm, hX₁X, hX₁, hφ, hXm, hmY, hYY⟩ :=
     exists_subset_isAddFreimanIso_eight_card_le hq (by linarith) hX hXX

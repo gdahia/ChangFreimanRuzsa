@@ -15,7 +15,7 @@ import Mathlib.Algebra.Field.ZMod
 # Short relations of a progression
 
 Let `P` be a GAP of dimension `d` in an abelian group in which the multiples `n • a` with `n < N` of
-every nonzero `a` are distinct, with `N` large compared with `#P.carrier`. The short relations of
+every nonzero `a` are distinct, with `N` large compared with `#P.toFinset`. The short relations of
 `P` are a maximal family of independent relations among its steps in the `2`-dilate of its
 coefficient box. Their saturated span consists of relations. Dividing the coefficient lattice by it
 and covering the image of the coefficient box by a proper progression gives a GAP of smaller
@@ -217,13 +217,13 @@ lemma injOn_nsmul_of_isAddTorsionFree [IsAddTorsionFree G] (N : ℕ) {a : G} (ha
 
 /-- Suppose that the multiples `n • a` with `n < N` of every nonzero `a` are distinct, as in a
 cyclic group of prime order `N` or in a torsion-free group, and that
-`(2 * (2 * d) + 1) ^ d * #P.carrier < N`. Then the saturated span of the short relations of `P`
+`(2 * (2 * d) + 1) ^ d * #P.toFinset < N`. Then the saturated span of the short relations of `P`
 consists of relations. Otherwise the first `N` multiples of the image of a vector in the span that
 is not a relation would be `N` distinct elements of the image of the `2 * d`-dilate of the
 coefficient box. -/
 lemma shortRelationSpan_le_relations [DecidableEq G] {N : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
-    (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.carrier.card < N) :
+    (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.toFinset.card < N) :
     (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations := by
   intro x hx
   by_contra hrel
@@ -287,8 +287,8 @@ lemma mem_smithQuotientCoords {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → �
 lemma exists_proper_gap_smithQuotientCoords {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → ℤ)}
     (snf : Module.Basis.SmithNormalForm (saturatedSpan S) (Fin P.dim) n) :
     ∃ Q : GAP (Fin (P.dim - n) → ℤ), Q.Proper ∧
-      P.smithQuotientCoords snf ⊆ Q.carrier ∧ Q.dim ≤ P.dim - n ∧
-      Q.carrier.card ≤ latticeBoxFactor (P.dim - n) * (P.smithQuotientCoords snf).card :=
+      P.smithQuotientCoords snf ⊆ Q.toFinset ∧ Q.dim ≤ P.dim - n ∧
+      Q.toFinset.card ≤ latticeBoxFactor (P.dim - n) * (P.smithQuotientCoords snf).card :=
   exists_proper_gap_image_realBox P.halfWidth_pos (smithRealQuotientMap_intCast snf)
     (smithRealQuotientMap_surjective snf) fun _ ↦ mem_smithQuotientCoords
 
@@ -307,18 +307,18 @@ lemma smithQuotientMap_mem_smithQuotientCoords {P : GAP G} {n : ℕ} {S : Finset
 
 /-- If a saturated span consists of relations, then `P` lies in the image of every progression
 containing the integer points of the projected coefficient box, translated by the origin of `P`. -/
-lemma carrier_subset_shift_map [DecidableEq G] {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → ℤ)}
+lemma toFinset_subset_shift_map [DecidableEq G] {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → ℤ)}
     {snf : Module.Basis.SmithNormalForm (saturatedSpan S) (Fin P.dim) n}
     (hrel : (saturatedSpan S).toAddSubgroup ≤ P.relations)
-    {Q : GAP (Fin (P.dim - n) → ℤ)} (hQ : P.smithQuotientCoords snf ⊆ Q.carrier) :
-    P.carrier ⊆ ((Q.map (stepsHom (P.smithQuotientStep snf))).shift P.origin).carrier := by
+    {Q : GAP (Fin (P.dim - n) → ℤ)} (hQ : P.smithQuotientCoords snf ⊆ Q.toFinset) :
+    P.toFinset ⊆ ((Q.map (stepsHom (P.smithQuotientStep snf))).shift P.origin).toFinset := by
   intro x hx
-  obtain ⟨c, hc, rfl⟩ := P.mem_carrier_iff_exists_intCoeffs.mp hx
-  have hcQ : smithQuotientMap snf c ∈ Q.carrier := by
+  obtain ⟨c, hc, rfl⟩ := P.mem_toFinset_iff_exists_intCoeffs.mp hx
+  have hcQ : smithQuotientMap snf c ∈ Q.toFinset := by
     refine hQ (smithQuotientMap_mem_smithQuotientCoords snf (mem_symBox.mpr ?_))
     intro i
     grind [abs_of_nonneg, hc i]
-  rw [carrier_shift, carrier_map]
+  rw [toFinset_shift, toFinset_map]
   refine Finset.mem_image.mpr ⟨_, Finset.mem_image_of_mem _ hcQ, ?_⟩
   rw [P.stepHom_smithQuotientMap snf hrel]
   exact add_comm _ _
@@ -326,16 +326,16 @@ lemma carrier_subset_shift_map [DecidableEq G] {P : GAP G} {n : ℕ} {S : Finset
 /-- If a saturated span of rank `n` consists of relations, then `P` lies in a GAP of dimension at
 most `d - n` whose size exceeds the number of integer points of the projected coefficient box by
 a factor depending only on `d - n`. -/
-lemma exists_carrier_subset_dim_le_card_le_of_saturatedSpan_le_relations [DecidableEq G]
+lemma exists_toFinset_subset_dim_le_card_le_of_saturatedSpan_le_relations [DecidableEq G]
     {P : GAP G} {n : ℕ} {S : Finset (Fin P.dim → ℤ)}
     (snf : Module.Basis.SmithNormalForm (saturatedSpan S) (Fin P.dim) n)
     (hrel : (saturatedSpan S).toAddSubgroup ≤ P.relations) :
-    ∃ Q : GAP G, P.carrier ⊆ Q.carrier ∧ Q.dim ≤ P.dim - n ∧
-      (Q.carrier.card : ℝ) ≤
+    ∃ Q : GAP G, P.toFinset ⊆ Q.toFinset ∧ Q.dim ≤ P.dim - n ∧
+      (Q.toFinset.card : ℝ) ≤
         latticeBoxFactor (P.dim - n) * (P.smithQuotientCoords snf).card := by
   obtain ⟨Q, -, hQ, hdim, hcard⟩ := exists_proper_gap_smithQuotientCoords snf
-  refine ⟨_, carrier_subset_shift_map hrel hQ, (Q.dim_map_le _).trans hdim, ?_⟩
-  rw [carrier_shift]
+  refine ⟨_, toFinset_subset_shift_map hrel hQ, (Q.dim_map_le _).trans hdim, ?_⟩
+  rw [toFinset_shift]
   exact_mod_cast (Finset.card_image_le.trans (Q.card_map_le _)).trans hcard
 
 /-! ### Counting the projected integer points
@@ -379,12 +379,12 @@ lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {n : ℕ}
 
 /-- If the saturated span of the short relations consists of relations, then the image in the group
 of the integer points of the projected coefficient box lies in the image of the `(2 * r + 1)`-dilate
-of the coefficient box, so it has at most `(2 * (2 * r + 1) + 1) ^ d * #P.carrier` elements. -/
+of the coefficient box, so it has at most `(2 * (2 * r + 1) + 1) ^ d * #P.toFinset` elements. -/
 lemma card_image_smithQuotientCoords_le [DecidableEq G] {P : GAP G} {n : ℕ}
     (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
     (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations) :
     ((P.smithQuotientCoords snf).image (stepsHom (P.smithQuotientStep snf))).card ≤
-      (2 * (2 * P.shortRelationRank 2 + 1) + 1) ^ P.dim * P.carrier.card := by
+      (2 * (2 * P.shortRelationRank 2 + 1) + 1) ^ P.dim * P.toFinset.card := by
   refine (Finset.card_le_card ?_).trans (P.card_boundedStepImage_le _)
   intro x hx
   obtain ⟨y, hy, rfl⟩ := Finset.mem_image.mp hx
@@ -474,14 +474,14 @@ lemma card_filter_stepsHom_eq_le {P : GAP G} {n : ℕ}
     exact hinj.image_of_comp
 
 /-- If the saturated span of the short relations consists of relations, then the projected
-coefficient box has at most `((2 * r + 4) * (2 * (2 * r + 1) + 1)) ^ d * #P.carrier` integer
+coefficient box has at most `((2 * r + 4) * (2 * (2 * r + 1) + 1)) ^ d * #P.toFinset` integer
 points, by the bound on their image in the group and the bound on each fiber. -/
 lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
     (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
     (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations) :
     (P.smithQuotientCoords snf).card ≤
       ((2 * P.shortRelationRank 2 + 4) * (2 * (2 * P.shortRelationRank 2 + 1) + 1)) ^ P.dim *
-        P.carrier.card := by
+        P.toFinset.card := by
   refine (Finset.card_le_mul_card_image (f := stepsHom (P.smithQuotientStep snf)) _
     ((2 * P.shortRelationRank 2 + 4) ^ P.dim) ?_).trans ?_
   · intro g hg
@@ -493,23 +493,24 @@ lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
 /-! ### One step of properization -/
 
 /-- One step of properization. Suppose that the multiples `n • a` with `n < N` of every nonzero `a`
-are distinct and that `(2 * (2 * d) + 1) ^ d * #P.carrier < N`. Then either `P` is `2`-proper, or
+are distinct and that `(2 * (2 * d) + 1) ^ d * #P.toFinset < N`. Then either `P` is `2`-proper, or
 dividing by the saturated span of the short relations gives a GAP of smaller dimension containing
-`P`, of size at most `exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.carrier`. -/
+`P`, of size at most `exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.toFinset`. -/
 lemma proper_add_self_or_exists_gap_dim_lt {N : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
-    (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.carrier.card < N) :
-    (P + P).Proper ∨ ∃ Q : GAP G, P.carrier ⊆ Q.carrier ∧ Q.dim < P.dim ∧
-      Q.carrier.card ≤ Real.exp (2 * (P.dim + 2) ^ 2 * Real.log (P.dim + 2)) * P.carrier.card := by
+    (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.toFinset.card < N) :
+    (P + P).Proper ∨ ∃ Q : GAP G, P.toFinset ⊆ Q.toFinset ∧ Q.dim < P.dim ∧
+      Q.toFinset.card ≤
+        Real.exp (2 * (P.dim + 2) ^ 2 * Real.log (P.dim + 2)) * P.toFinset.card := by
   by_cases hrank : P.shortRelationRank 2 = 0
   · exact Or.inl (proper_add_self_of_shortRelationRank_eq_zero hrank)
   obtain ⟨snf⟩ := P.nonempty_smithNormalForm_shortRelationSpan 2
   have hrel := shortRelationSpan_le_relations hG hcard
   obtain ⟨Q, hPQ, hdim, hQcard⟩ :=
-    exists_carrier_subset_dim_le_card_le_of_saturatedSpan_le_relations snf hrel
+    exists_toFinset_subset_dim_le_card_le_of_saturatedSpan_le_relations snf hrel
   have hcoords : ((P.smithQuotientCoords snf).card : ℝ) ≤
       ((2 * (P.shortRelationRank 2 : ℝ) + 4) * (2 * (2 * (P.shortRelationRank 2 : ℝ) + 1) + 1)) ^
-        P.dim * P.carrier.card := by
+        P.dim * P.toFinset.card := by
     exact_mod_cast card_smithQuotientCoords_le snf hrel
   refine Or.inr ⟨Q, hPQ, hdim.trans_lt (by grind [P.shortRelationRank_le_dim 2]),
     hQcard.trans ((mul_le_mul_of_nonneg_left hcoords (by positivity)).trans ?_)⟩

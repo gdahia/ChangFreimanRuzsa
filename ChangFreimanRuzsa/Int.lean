@@ -164,7 +164,7 @@ private lemma card_image_intCast_add_le (q : ℕ) (X : Finset ℤ) :
 
 /-- Let `d` be `bohrGAPDim κ`. A finite set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` and
 `256 * d ≤ #X` has a subset `X₁` with `#X ≤ 8 * #X₁` and a proper progression `Q₁` in
-`X + X - (X + X)` of dimension at most `d` with `#X ≤ 8 * bohrLoss d * #Q₁.carrier`.
+`X + X - (X + X)` of dimension at most `d` with `#X ≤ 8 * bohrLoss d * #Q₁.toFinset`.
 
 The progression is the one that `exists_proper_gap_zmod_subset_add_sub_add_card_le` gives for the
 reduction of `X` modulo a large prime, carried back to `ℤ` by
@@ -172,8 +172,8 @@ reduction of `X` modulo a large prime, carried back to `ℤ` by
 lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : Finset ℤ)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
     ∃ (X₁ : Finset ℤ) (Q₁ : GAP ℤ), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧ Q₁.Proper ∧
-      (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧ Q₁.carrier ⊆ (X + X) - (X + X) ∧
-      #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q₁.carrier := by
+      (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧ Q₁.toFinset ⊆ (X + X) - (X + X) ∧
+      #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q₁.toFinset := by
   obtain ⟨q, hq, hprime⟩ := Nat.exists_infinite_primes (16 * X.sup Int.natAbs + 1)
   have hiso := isAddFreimanIso_intCast (q := q) (X := X) (by grind)
   have hcard : #(X.image (Int.cast : ℤ → ZMod q)) = #X := card_image_of_injOn hiso.bijOn.injOn
@@ -192,8 +192,8 @@ lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : Finset �
 at most `c` and of size at most `exp c * #X`. -/
 lemma exists_gap_int_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
-    ∃ P : GAP ℤ, X ⊆ P.carrier ∧ P.dim ≤ containerExponent κ ∧
-      #P.carrier ≤ Real.exp (containerExponent κ) * #X := by
+    ∃ P : GAP ℤ, X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
+      #P.toFinset ≤ Real.exp (containerExponent κ) * #X := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁, hQ₁dim, hQ₁sub, hQ₁card⟩ :=
     exists_proper_gap_int_subset_add_sub_add_card_le X hκ hXX hXlower
   exact exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
@@ -207,8 +207,8 @@ lemma exists_gap_int_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 
 generalized arithmetic progression of dimension at most `c` and of size at most `exp C * #X`. -/
 theorem exists_twoProperGAP_int_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
-    ∃ Q : GAP ℤ, (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ containerExponent κ ∧
-      #Q.carrier ≤ Real.exp (zmodExponent κ) * #X := by
+    ∃ Q : GAP ℤ, (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ containerExponent κ ∧
+      #Q.toFinset ≤ Real.exp (zmodExponent κ) * #X := by
   obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_int_subset_dim_le_card_le X hκ hXX hXlower
   exact exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap
     (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _) hXP hPdim hPcard (Nat.le_ceil _)
@@ -226,8 +226,8 @@ at most `containerExponent (2 * κ)` and of size at most `exp C * #X`, where `C`
 `intExponent κ`. -/
 theorem exists_twoProperGAP_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
-    ∃ P : GAP ℤ, (P + P).Proper ∧ X ⊆ P.carrier ∧ P.dim ≤ containerExponent (2 * κ) ∧
-      #P.carrier ≤ Real.exp (intExponent κ) * #X := by
+    ∃ P : GAP ℤ, (P + P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ containerExponent (2 * κ) ∧
+      #P.toFinset ≤ Real.exp (intExponent κ) * #X := by
   have hκ' : (2 : ℝ) ≤ 2 * κ := by linarith
   obtain ⟨X', hXX', hX'X', hX'lower, hX'upper⟩ :=
     exists_large_superset_of_card_add_le hX hXX (Real.one_le_exp (containerExponent_pos hκ').le)

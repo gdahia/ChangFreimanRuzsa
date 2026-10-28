@@ -43,10 +43,10 @@ def symmetricGAP {G : Type*} [AddCommGroup G] {d : ℕ} (x : Fin d → G)
 
 variable {G : Type*} [AddCommGroup G] {d : ℕ} {x : Fin d → G} {L : Fin d → ℕ}
 
-lemma carrier_symmetricGAP [DecidableEq G] :
-    (symmetricGAP x L).carrier =
+lemma toFinset_symmetricGAP [DecidableEq G] :
+    (symmetricGAP x L).toFinset =
       Finset.univ.image (gapMap (stepsHom x fun i ↦ -(L i : ℤ)) x fun i ↦ 2 * L i + 1) :=
-  GAP.carrier_ofSteps fun _ ↦ Nat.succ_pos _
+  GAP.toFinset_ofSteps fun _ ↦ Nat.succ_pos _
 
 lemma dim_symmetricGAP_le : (symmetricGAP x L).dim ≤ d :=
   GAP.dim_ofSteps_le
@@ -64,9 +64,9 @@ lemma gapMap_symmetricGAP (w : (i : Fin d) → Fin (2 * L i + 1)) :
 /-- Every element of the symmetric progression is a combination of its steps with coefficients
 `n i` satisfying `|n i| ≤ L i`. -/
 lemma exists_coeff_of_mem_symmetricGAP [DecidableEq G] {y : G}
-    (hy : y ∈ (symmetricGAP x L).carrier) :
+    (hy : y ∈ (symmetricGAP x L).toFinset) :
     ∃ n : Fin d → ℤ, (∀ i, |n i| ≤ L i) ∧ y = stepsHom x n := by
-  rw [carrier_symmetricGAP] at hy
+  rw [toFinset_symmetricGAP] at hy
   obtain ⟨w, -, rfl⟩ := Finset.mem_image.mp hy
   refine ⟨fun i ↦ (w i : ℤ) - L i, ?_, gapMap_symmetricGAP w⟩
   intro i
@@ -100,8 +100,8 @@ lemma proper_symmetricGAP
 
 lemma card_symmetricGAP [DecidableEq G]
     (h : ∀ n : Fin d → ℤ, (∀ i, |n i| ≤ 2 * L i) → stepsHom x n = 0 → ∀ i, n i = 0) :
-    (symmetricGAP x L).carrier.card = ∏ i, (2 * L i + 1) := by
-  rw [carrier_symmetricGAP, Finset.card_image_of_injective _ (injective_gapMap_symmetricGAP h)]
+    (symmetricGAP x L).toFinset.card = ∏ i, (2 * L i + 1) := by
+  rw [toFinset_symmetricGAP, Finset.card_image_of_injective _ (injective_gapMap_symmetricGAP h)]
   simp
 
 
@@ -113,16 +113,16 @@ lemma proper_symmetricGAP_of_injective (hx : Function.Injective (stepsHom x)) :
 /-- The symmetric progression contains every combination of its steps with coefficients `n i`
 satisfying `|n i| ≤ L i`. -/
 lemma stepsHom_mem_symmetricGAP [DecidableEq G] {n : Fin d → ℤ} (hn : ∀ i, |n i| ≤ L i) :
-    stepsHom x n ∈ (symmetricGAP x L).carrier := by
-  rw [carrier_symmetricGAP, Finset.mem_image]
+    stepsHom x n ∈ (symmetricGAP x L).toFinset := by
+  rw [toFinset_symmetricGAP, Finset.mem_image]
   refine ⟨fun i ↦ ⟨(n i + L i).toNat, by grind [abs_le, hn i]⟩, Finset.mem_univ _, ?_⟩
   rw [gapMap_symmetricGAP]
   congr with i
   grind [abs_le, hn i]
 
 lemma card_symmetricGAP_le [DecidableEq G] :
-    (symmetricGAP x L).carrier.card ≤ ∏ i, (2 * L i + 1) :=
-  GAP.card_carrier_ofSteps_le fun _ ↦ Nat.succ_pos _
+    (symmetricGAP x L).toFinset.card ≤ ∏ i, (2 * L i + 1) :=
+  GAP.card_toFinset_ofSteps_le fun _ ↦ Nat.succ_pos _
 
 end
 

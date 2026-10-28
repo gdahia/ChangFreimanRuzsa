@@ -2,8 +2,8 @@
   "challenge_module": "ChangFreimanRuzsaPalomar.Challenge",
   "solution_module": "ChangFreimanRuzsaPalomar.Solution",
   "theorem_names": [
-    "ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le'",
-    "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le'",
+    "ChangFreimanRuzsa.exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le'",
+    "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le'",
     "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_card_le'",
     "ChangFreimanRuzsa.exists_twoProperGAP_zmod_subset_dim_le_card_le'",
     "ChangFreimanRuzsa.exists_twoProperGAP_subset_dim_le_floor_card_le'",

@@ -157,8 +157,8 @@ lemma exists_proper_gap_card_le_of_gauge_le {D : Finset (Fin s → ℤ)} {K : Se
     (hcover : ∀ x ∈ K, x ∈ (⊤ : AddSubgroup (Fin s → ℤ)).map intVectorToReal →
       ∃ c ∈ intBox m, ∑ i, (c i : ℝ) • b i = x)
     (hgauge : ∀ i, m i * gauge K (b i) ≤ a) :
-    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.carrier ∧ P.dim ≤ s ∧
-      P.carrier.card ≤ (2 * (s * a) + 1) ^ s * D.card := by
+    ∃ P : GAP (Fin s → ℤ), P.Proper ∧ D ⊆ P.toFinset ∧ P.dim ≤ s ∧
+      P.toFinset.card ≤ (2 * (s * a) + 1) ^ s * D.card := by
   choose step _ hstep using fun i ↦ AddSubgroup.mem_map.mp (hbL i)
   obtain rfl : (fun i ↦ intVectorToReal (step i)) = b := funext hstep
   have hinj := injective_stepsHom_of_linearIndependent hb

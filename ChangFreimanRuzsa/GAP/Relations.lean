@@ -19,7 +19,7 @@ The relations of a GAP with steps `step : Fin d → G` are the integer vectors `
   `|v i| < length i` for all `i`.
 * `GAP.proper_add_self_iff`: a progression is `2`-proper if and only if no nonzero relation has
   `|v i| < 2 * P.length i - 1` for all `i`.
-* `GAP.mem_carrier_iff_exists_intCoeffs`: membership in a progression through integer
+* `GAP.mem_toFinset_iff_exists_intCoeffs`: membership in a progression through integer
   coefficients.
 -/
 
@@ -96,10 +96,10 @@ lemma proper_add_self_iff (P : GAP G) :
   simp [relations, stepHom, h]
 
 /-- Membership in a progression, in terms of integer coefficients in the coefficient box. -/
-lemma mem_carrier_iff_exists_intCoeffs [DecidableEq G] (P : GAP G) {x : G} :
-    x ∈ P.carrier ↔ ∃ c : Fin P.dim → ℤ, (∀ i, 0 ≤ c i ∧ c i < P.length i) ∧
+lemma mem_toFinset_iff_exists_intCoeffs [DecidableEq G] (P : GAP G) {x : G} :
+    x ∈ P.toFinset ↔ ∃ c : Fin P.dim → ℤ, (∀ i, 0 ≤ c i ∧ c i < P.length i) ∧
       x = P.origin + stepsHom P.step c := by
-  rw [P.carrier_eq]
+  rw [P.toFinset_eq]
   exact mem_image_gapMap_iff_exists_intCoeffs
 
 end GAP

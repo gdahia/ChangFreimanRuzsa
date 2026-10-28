@@ -7,8 +7,7 @@ set with small doubling lies in a generalized arithmetic progression of comparab
 size by ensuring that the progression $P$ is $2$-proper in the sense that $P +
 P$ is proper. The bounds proved here are weaker than Chang's. The proof uses
 Chang's lemma on large spectra from [APAP](https://github.com/YaelDillies/apap)
-and Minkowski's second theorem from [Tau
-Ceti](https://github.com/TauCetiProject/TauCeti).
+and Minkowski's second theorem from [Tau Ceti](https://github.com/TauCetiProject/TauCeti).
 
 ## Results
 
@@ -65,13 +64,13 @@ linear in $|X|$ too, with a larger exponent.
 The first step of the proof is the Bogolyubov–Ruzsa lemma, a large proper progression inside
 $2X - 2X$.
 
-**Theorem 7** (`ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le`). Let
+**Theorem 7** (`ChangFreimanRuzsa.exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le`). Let
 $\kappa \ge 2$ and let $X$ be a finite set of integers. If $|X + X| \le \kappa |X|$ and
-$|X| \ge 7 \cdot 10^7 \kappa^2$, then $X + X - (X + X)$ contains a proper progression $Q$ with
+$|X| \ge 7 \cdot 10^7 \kappa^2$, then $2X - 2X$ contains a proper progression $Q$ with
 
 $$\dim Q \le 3 \cdot 10^5 \kappa^2, \qquad |X| \le \exp(2 \cdot 10^7 \kappa^2) |Q|.$$
 
-**Theorem 8** (`ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le`).
+**Theorem 8** (`ChangFreimanRuzsa.exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le`).
 The same holds for $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $q$ prime.
 
 [Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 to 8, under the
@@ -121,9 +120,9 @@ scope, and the use of AI coding agents.
 
 `Challenge.lean` imports only the Mathlib modules `Mathlib.Analysis.Complex.Exponential`,
 `Mathlib.Data.Finsupp.Interval` and `Mathlib.Data.Nat.Prime.Defs`. It repeats the library
-definitions of `GAP`, `GAP.eval`, `GAP.carrier`, `GAP.dim`, `GAP.Proper` and the sum of
-progressions, and states `exists_proper_gap_subset_add_sub_add_dim_le_card_le'`,
-`exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le'`,
+definitions of `GAP`, `GAP.eval`, `GAP.toFinset`, `GAP.dim`, `GAP.Proper` and the sum of
+progressions, and states `exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le'`,
+`exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le'`,
 `exists_twoProperGAP_subset_dim_le_card_le'`,
 `exists_twoProperGAP_zmod_subset_dim_le_card_le'`,
 `exists_twoProperGAP_subset_dim_le_floor_card_le'` and

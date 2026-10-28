@@ -209,8 +209,8 @@ lemma exists_proper_gap_of_convex_body {s : ℕ} {K : Set (Fin s → ℝ)} (hcon
     (hspan : Submodule.span ℝ (K ∩
       ((⊤ : AddSubgroup (Fin s → ℤ)).map intVectorToReal : Set (Fin s → ℝ))) = ⊤)
     {D : Finset (Fin s → ℤ)} (hD : ∀ v, v ∈ D ↔ intVectorToReal v ∈ K) :
-    ∃ Q : GAP (Fin s → ℤ), Q.Proper ∧ D ⊆ Q.carrier ∧ Q.dim ≤ s ∧
-      Q.carrier.card ≤ latticeBoxFactor s * D.card := by
+    ∃ Q : GAP (Fin s → ℤ), Q.Proper ∧ D ⊆ Q.toFinset ∧ Q.dim ≤ s ∧
+      Q.toFinset.card ≤ latticeBoxFactor s * D.card := by
   have := BoxLattice.discreteTopology_map (⊤ : AddSubgroup (Fin s → ℤ))
   obtain ⟨b, m, hbL, hb, hcover, hgauge⟩ :=
     exists_linearIndependent_mem_intBox_gauge_le (finrank_fin_fun ℝ) hconv hcompact hK₀ hsymm hspan

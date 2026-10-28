@@ -110,11 +110,11 @@ variable {G : Type*} [AddCommGroup G]
 /-- The progression `{0, a}`, with the step `a` of length `2`. -/
 def pair (a : G) : GAP G := ⟨0, Finsupp.single a 1⟩
 
-lemma pair_subset_carrier_pair [DecidableEq G] (a : G) : {0, a} ⊆ (pair a).carrier := by
+lemma pair_subset_toFinset_pair [DecidableEq G] (a : G) : {0, a} ⊆ (pair a).toFinset := by
   rw [insert_subset_iff, singleton_subset_iff]
   constructor
   · simpa [pair] using (pair a).origin_mem
-  · simpa [pair, eval] using (pair a).eval_mem_carrier le_rfl
+  · simpa [pair, eval] using (pair a).eval_mem_toFinset le_rfl
 
 lemma size_pair (a : G) : (pair a).size = 2 := by
   simp [pair, size]
@@ -127,9 +127,9 @@ lemma dim_pair_le (a : G) : (pair a).dim ≤ 1 := by
 def consBinary (P : GAP G) (a : G) : GAP G := P + pair a
 
 lemma add_pair_subset_consBinary [DecidableEq G] (P : GAP G) (a : G) :
-    P.carrier + {0, a} ⊆ (P.consBinary a).carrier := by
-  rw [consBinary, carrier_add]
-  exact add_subset_add_left (pair_subset_carrier_pair a)
+    P.toFinset + {0, a} ⊆ (P.consBinary a).toFinset := by
+  rw [consBinary, toFinset_add]
+  exact add_subset_add_left (pair_subset_toFinset_pair a)
 
 lemma dim_consBinary_le (P : GAP G) (a : G) : (P.consBinary a).dim ≤ P.dim + 1 :=
   (P.dim_add_le _).trans (Nat.add_le_add_left (dim_pair_le a) _)
@@ -144,7 +144,7 @@ def consBinaryList (P : GAP G) : List G → GAP G
   | a :: l => (P.consBinaryList l).consBinary a
 
 lemma add_listSubsetSum_subset_consBinaryList [DecidableEq G] (P : GAP G) (l : List G) :
-    P.carrier + listSubsetSum l ⊆ (P.consBinaryList l).carrier := by
+    P.toFinset + listSubsetSum l ⊆ (P.consBinaryList l).toFinset := by
   induction l with
   | nil => simp [consBinaryList]
   | cons a l ih =>
@@ -152,7 +152,7 @@ lemma add_listSubsetSum_subset_consBinaryList [DecidableEq G] (P : GAP G) (l : L
     exact (add_subset_add_right ih).trans ((P.consBinaryList l).add_pair_subset_consBinary a)
 
 lemma add_subset_consBinaryList_toList [DecidableEq G] {P : GAP G} {S : Finset G}
-    (hS : S ⊆ P.carrier) (W : Finset G) : S + W ⊆ (P.consBinaryList W.toList).carrier :=
+    (hS : S ⊆ P.toFinset) (W : Finset G) : S + W ⊆ (P.consBinaryList W.toList).toFinset :=
   (add_subset_add hS fun _ hw ↦ mem_listSubsetSum_of_mem (mem_toList.2 hw)).trans
     (P.add_listSubsetSum_subset_consBinaryList W.toList)
 
@@ -176,13 +176,13 @@ lemma size_consBinaryList_le (P : GAP G) (l : List G) :
 `P`. -/
 def neg (P : GAP G) : GAP G := ⟨-P.eval P.bound, P.bound⟩
 
-lemma neg_carrier_subset_carrier_neg [DecidableEq G] (P : GAP G) :
-    -P.carrier ⊆ P.neg.carrier := by
+lemma neg_toFinset_subset_toFinset_neg [DecidableEq G] (P : GAP G) :
+    -P.toFinset ⊆ P.neg.toFinset := by
   intro z hz
   obtain ⟨x, hx, rfl⟩ := mem_neg.1 hz
-  obtain ⟨c, hc, rfl⟩ := mem_carrier.1 hx
+  obtain ⟨c, hc, rfl⟩ := mem_toFinset.1 hx
   obtain ⟨e, he⟩ := exists_add_of_le hc
-  refine mem_carrier.2 ⟨e, le_add_self.trans_eq he.symm, ?_⟩
+  refine mem_toFinset.2 ⟨e, le_add_self.trans_eq he.symm, ?_⟩
   simp only [neg, eval_eq_linearCombination, he, map_add]
   abel
 
@@ -191,12 +191,12 @@ and the bound `2 • P.bound`. -/
 def difference (P : GAP G) : GAP G := P + P.neg
 
 lemma sub_subset_difference [DecidableEq G] (P : GAP G) :
-    P.carrier - P.carrier ⊆ P.difference.carrier := by
-  rw [difference, carrier_add, sub_eq_add_neg]
-  exact add_subset_add_left P.neg_carrier_subset_carrier_neg
+    P.toFinset - P.toFinset ⊆ P.difference.toFinset := by
+  rw [difference, toFinset_add, sub_eq_add_neg]
+  exact add_subset_add_left P.neg_toFinset_subset_toFinset_neg
 
 lemma sub_subset_difference_of_subset [DecidableEq G] {P : GAP G} {S : Finset G}
-    (hS : S ⊆ P.carrier) : S - S ⊆ P.difference.carrier :=
+    (hS : S ⊆ P.toFinset) : S - S ⊆ P.difference.toFinset :=
   (sub_subset_sub hS hS).trans P.sub_subset_difference
 
 lemma dim_difference_le (P : GAP G) : P.difference.dim ≤ P.dim := by

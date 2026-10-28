@@ -22,7 +22,7 @@ where `E` is `intFreimanDimExponent κ`.
 
 Write `c` for `containerExponent κ`. In `ZMod q` the proof has three stages.
 `exists_gap_zmod_subset_dim_le_card_le` puts `X` in a progression of dimension at most `c` and of
-size at most `exp c * #X`, `exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul`
+size at most `exp c * #X`, `exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul`
 replaces that progression by a `2`-proper one, and
 `exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul` replaces the `2`-proper progression by one
 of dimension at most `freimanDim X`. For sets of integers,
@@ -73,21 +73,21 @@ progression of dimension at most `freimanDim X` and of size at most `exp F * #X`
 lemma exists_twoProperGAP_dim_le_freimanDim_of_subset_gap {G : Type*} [DecidableEq G]
     [AddCommGroup G] {N : ℕ} {κ : ℝ} {X : Finset G} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hX : X.Nonempty)
-    (hXP : X ⊆ P.carrier) (hPdim : P.dim ≤ containerExponent κ)
-    (hPcard : #P.carrier ≤ Real.exp (containerExponent κ) * #X)
+    (hXP : X ⊆ P.toFinset) (hPdim : P.dim ≤ containerExponent κ)
+    (hPcard : #P.toFinset ≤ Real.exp (containerExponent κ) * #X)
     (hXN : Real.exp (freimanDimExponent κ) * #X ≤ N) :
-    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      #Q.carrier ≤ Real.exp (freimanDimExponent κ) * #X := by
+    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤ Real.exp (freimanDimExponent κ) * #X := by
   have hc : 0 ≤ containerExponent κ := (Nat.cast_nonneg _).trans hPdim
-  have hPX : Real.exp (properizationExponent P.dim) * #P.carrier ≤
+  have hPX : Real.exp (properizationExponent P.dim) * #P.toFinset ≤
       Real.exp (freimanDimExponent κ) * #X := by
     rw [freimanDimExponent, Real.exp_add, mul_assoc]
     gcongr
     exact (properizationExponent_mono (Nat.cast_nonneg _) hPdim).trans
       (le_add_of_nonneg_right (coordinateReductionExponent_nonneg hc))
   obtain ⟨P₂, hP₂, hPP₂, hP₂dim, hP₂card⟩ :=
-    exists_twoProperGAP_carrier_subset_dim_le_card_le_of_injOn_nsmul P hG (hPX.trans hXN)
-  have hP₂X : Real.exp (coordinateReductionExponent P₂.dim) * #P₂.carrier ≤
+    exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul P hG (hPX.trans hXN)
+  have hP₂X : Real.exp (coordinateReductionExponent P₂.dim) * #P₂.toFinset ≤
       Real.exp (freimanDimExponent κ) * #X := by
     rw [freimanDimExponent, add_comm (properizationExponent _), add_assoc, Real.exp_add,
       Real.exp_add, mul_assoc, mul_assoc]
@@ -110,8 +110,8 @@ theorem exists_twoProperGAP_zmod_dim_le_freimanDim {q : ℕ} {κ : ℝ} (X : Fin
     (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (freimanDimExponent κ) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      #Q.carrier ≤ Real.exp (freimanDimExponent κ) * #X := by
+    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤ Real.exp (freimanDimExponent κ) * #X := by
   obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_zmod_subset_dim_le_card_le X hq hκ hXX hXlower
   exact exists_twoProperGAP_dim_le_freimanDim_of_subset_gap
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) (nonempty_of_mul_bohrGAPDim_le hXlower) hXP hPdim
@@ -123,8 +123,8 @@ Write `E` for `intFreimanDimExponent κ`. A finite nonempty set `X : Finset ℤ`
 at most `freimanDim X` and of size at most `exp E * #X`. -/
 theorem exists_twoProperGAP_int_dim_le_freimanDim {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
-    ∃ Q : GAP ℤ, (Q + Q).Proper ∧ X ⊆ Q.carrier ∧ Q.dim ≤ freimanDim X ∧
-      #Q.carrier ≤ Real.exp (intFreimanDimExponent κ) * #X := by
+    ∃ Q : GAP ℤ, (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤ Real.exp (intFreimanDimExponent κ) * #X := by
   obtain ⟨P, hP, hXP, hPdim, hPcard⟩ := exists_twoProperGAP_of_small_sumset X hX hκ hXX
   obtain ⟨Q, hQ, hXQ, hQdim, hQcard⟩ :=
     exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree hX hP hXP

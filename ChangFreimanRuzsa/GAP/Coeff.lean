@@ -92,12 +92,12 @@ variable [DecidableEq G] (P : GAP G)
 /-- Coefficients `w i < P.length i` of an element `x` of a GAP, so that
 `x = P.origin + ∑ i, w i • P.step i`. They are all `0` when `x` does not lie in the GAP. -/
 def coeff (x : G) : (i : Fin P.dim) → Fin (P.length i) :=
-  if hx : x ∈ P.carrier then (Finset.mem_image.1 (P.carrier_eq ▸ hx)).choose
+  if hx : x ∈ P.toFinset then (Finset.mem_image.1 (P.toFinset_eq ▸ hx)).choose
   else fun i ↦ ⟨0, P.length_pos i⟩
 
-lemma gapMap_coeff {x : G} (hx : x ∈ P.carrier) :
+lemma gapMap_coeff {x : G} (hx : x ∈ P.toFinset) :
     gapMap P.origin P.step P.length (P.coeff x) = x := by
-  obtain ⟨-, h⟩ := (Finset.mem_image.1 (P.carrier_eq ▸ hx)).choose_spec
+  obtain ⟨-, h⟩ := (Finset.mem_image.1 (P.toFinset_eq ▸ hx)).choose_spec
   rwa [coeff, dite_eq_left hx]
 
 /-- The coefficients `P.coeff x` of `x`, as an integer vector. -/
@@ -107,20 +107,20 @@ def coordinateMap (x : G) : Fin P.dim → ℤ :=
 lemma coordinateMap_mem_box (x : G) : P.coordinateMap x ∈ P.box :=
   Finset.mem_image_of_mem _ (Finset.mem_univ (P.coeff x))
 
-lemma gapMap_mem_carrier (w : (i : Fin P.dim) → Fin (P.length i)) :
-    gapMap P.origin P.step P.length w ∈ P.carrier := by
-  simp [P.carrier_eq]
+lemma gapMap_mem_toFinset (w : (i : Fin P.dim) → Fin (P.length i)) :
+    gapMap P.origin P.step P.length w ∈ P.toFinset := by
+  simp [P.toFinset_eq]
 
 lemma Proper.coeff_gapMap {P : GAP G} (h : P.Proper) (w : (i : Fin P.dim) → Fin (P.length i)) :
     P.coeff (gapMap P.origin P.step P.length w) = w :=
-  P.proper_iff_injective.1 h (P.gapMap_coeff (P.gapMap_mem_carrier w))
+  P.proper_iff_injective.1 h (P.gapMap_coeff (P.gapMap_mem_toFinset w))
 
 lemma Proper.coordinateMap_gapMap {P : GAP G} (h : P.Proper)
     (w : (i : Fin P.dim) → Fin (P.length i)) :
     P.coordinateMap (gapMap P.origin P.step P.length w) = fun i ↦ (w i : ℤ) :=
   funext fun i ↦ by simp [coordinateMap, h.coeff_gapMap]
 
-lemma coordinateMap_injOn : Set.InjOn P.coordinateMap P.carrier := by
+lemma coordinateMap_injOn : Set.InjOn P.coordinateMap P.toFinset := by
   intro x hx y hy hxy
   rw [← P.gapMap_coeff hx, ← P.gapMap_coeff hy]
   congr 1
@@ -128,22 +128,22 @@ lemma coordinateMap_injOn : Set.InjOn P.coordinateMap P.carrier := by
   simpa [coordinateMap] using congr_fun hxy i
 
 lemma coordinateMap_bijOn (h : P.Proper) :
-    Set.BijOn P.coordinateMap P.carrier P.box := by
+    Set.BijOn P.coordinateMap P.toFinset P.box := by
   refine ⟨fun x _ ↦ P.coordinateMap_mem_box x, P.coordinateMap_injOn, ?_⟩
   intro y hy
   obtain ⟨w, -, rfl⟩ := Finset.mem_image.1 hy
-  exact ⟨gapMap P.origin P.step P.length w, P.gapMap_mem_carrier w, h.coordinateMap_gapMap w⟩
+  exact ⟨gapMap P.origin P.step P.length w, P.gapMap_mem_toFinset w, h.coordinateMap_gapMap w⟩
 
 /-- The coordinate map of a GAP is a bijection onto its box if and only if the GAP is proper. -/
-lemma coordinateMap_bijOn_iff : Set.BijOn P.coordinateMap P.carrier P.box ↔ P.Proper := by
+lemma coordinateMap_bijOn_iff : Set.BijOn P.coordinateMap P.toFinset P.box ↔ P.Proper := by
   refine ⟨?_, P.coordinateMap_bijOn⟩
   intro h
   rw [proper_iff_card_eq_prod_length, ← card_box]
   exact Set.BijOn.finsetCard_eq _ h
 
 lemma coordinateMap_add_eq_iff {P : GAP G} (h : (P + P).Proper) {a b c d : G}
-    (ha : a ∈ P.carrier) (hb : b ∈ P.carrier) (hc : c ∈ P.carrier)
-    (hd : d ∈ P.carrier) :
+    (ha : a ∈ P.toFinset) (hb : b ∈ P.toFinset) (hc : c ∈ P.toFinset)
+    (hd : d ∈ P.toFinset) :
     P.coordinateMap a + P.coordinateMap b = P.coordinateMap c + P.coordinateMap d ↔
       a + b = c + d := by
   conv_rhs => rw [← P.gapMap_coeff ha, ← P.gapMap_coeff hb, ← P.gapMap_coeff hc,
@@ -154,7 +154,7 @@ lemma coordinateMap_add_eq_iff {P : GAP G} (h : (P + P).Proper) {a b c d : G}
 /-- The coordinate map of a GAP `P` is a Freiman `2`-isomorphism onto its box if and only if `P` is
 `2`-proper. The first condition says that `P` is an `F₂`-progression in the sense of Bilu. -/
 lemma coordinateMap_isAddFreimanIso_iff :
-    IsAddFreimanIso 2 P.carrier P.box P.coordinateMap ↔ (P + P).Proper := by
+    IsAddFreimanIso 2 P.toFinset P.box P.coordinateMap ↔ (P + P).Proper := by
   constructor
   · intro h
     have hP := P.coordinateMap_bijOn_iff.1 h.bijOn
@@ -162,8 +162,8 @@ lemma coordinateMap_isAddFreimanIso_iff :
     intro u₁ u₂ hu
     obtain ⟨w₁, w₂, rfl⟩ := P.exists_sumCoefficients_eq u₁
     obtain ⟨w₃, w₄, rfl⟩ := P.exists_sumCoefficients_eq u₂
-    rw [← P.gapMap_add_eq, ← P.gapMap_add_eq, ← h.add_eq_add (P.gapMap_mem_carrier w₁)
-      (P.gapMap_mem_carrier w₂) (P.gapMap_mem_carrier w₃) (P.gapMap_mem_carrier w₄)] at hu
+    rw [← P.gapMap_add_eq, ← P.gapMap_add_eq, ← h.add_eq_add (P.gapMap_mem_toFinset w₁)
+      (P.gapMap_mem_toFinset w₂) (P.gapMap_mem_toFinset w₃) (P.gapMap_mem_toFinset w₄)] at hu
     rw [hP.coordinateMap_gapMap, hP.coordinateMap_gapMap, hP.coordinateMap_gapMap,
       hP.coordinateMap_gapMap] at hu
     exact P.sumCoefficients_eq_iff.2 hu
@@ -172,7 +172,7 @@ lemma coordinateMap_isAddFreimanIso_iff :
       fun _ ha _ hb _ hc _ hd ↦ coordinateMap_add_eq_iff h ha hb hc hd⟩
 
 lemma coordinateMap_isAddFreimanIso {P : GAP G} (h : (P + P).Proper) :
-    IsAddFreimanIso 2 P.carrier P.box P.coordinateMap :=
+    IsAddFreimanIso 2 P.toFinset P.box P.coordinateMap :=
   P.coordinateMap_isAddFreimanIso_iff.2 h
 
 end Coefficients
@@ -181,7 +181,7 @@ end GAP
 
 variable {G : Type*} [AddCommGroup G]
 
-lemma stepHom_coordinateMap [DecidableEq G] (P : GAP G) {x : G} (hx : x ∈ P.carrier) :
+lemma stepHom_coordinateMap [DecidableEq G] (P : GAP G) {x : G} (hx : x ∈ P.toFinset) :
     stepHom P (P.coordinateMap x) = x - P.origin := by
   rw [eq_sub_iff_add_eq, add_comm]
   simpa [gapMap, stepHom, stepsHom_apply, GAP.coordinateMap] using P.gapMap_coeff hx

@@ -2,19 +2,18 @@
 version: "v0.4"
 
 project:
-  name: "Chang's theorem"
+  name: "Chang's version of Freiman's theorem and the Bogolyubov–Ruzsa lemma"
   description: >-
-    Formalization of Chang's polynomial form of Freiman's theorem, with a 2-proper
-    progression P, one for which P + P is proper: a finite set X of integers with
-    |X + X| <= kappa |X| is contained in a 2-proper generalized arithmetic progression of
-    dimension at most the Freiman dimension of X, hence at most 2 kappa - 1, with at most
-    exp(10^32 kappa^7) |X| points. If kappa (2 kappa - 1) <= epsilon |X|, the dimension is at
-    most floor(kappa - 1 + epsilon), as in Green and Tao. There is also a statement for subsets
-    of ZMod q with q prime, where the progression has at most exp(10^30 kappa^7) |X| points. The
-    bound on the size is weaker than that of Chang. The first step of the proof, the
-    Bogolyubov-Ruzsa lemma, is stated too: if moreover |X| >= 7 * 10^7 kappa^2, then 2X - 2X
-    contains a proper progression of dimension at most 3 * 10^5 kappa^2 with at least
-    exp(-2 * 10^7 kappa^2) |X| points.
+    Formalization of Chang's version of Freiman's theorem, with a 2-proper progression P:
+    a finite set X of integers with |X + X| <= kappa |X| is contained in a 2-proper generalized
+    arithmetic progression of dimension at most the Freiman dimension of X, hence at most
+    2 kappa - 1, with at most exp(10^32 kappa^7) |X| points. If kappa (2 kappa - 1) <= epsilon |X|,
+    the dimension is at most floor(kappa - 1 + epsilon), as in Green and Tao. There is also a
+    statement for subsets of ZMod q with q prime, where the progression has at most
+    exp(10^30 kappa^7) |X| points. The bound on the size is weaker than that of Chang. The first
+    step of the proof, the Bogolyubov-Ruzsa lemma, is stated too: if moreover
+    |X| >= 7 * 10^7 kappa^2, then 2X - 2X contains a proper progression of dimension at most
+    3 * 10^5 kappa^2 with at least exp(-2 * 10^7 kappa^2) |X| points.
   authors:
     - "Gabriel Dahia"
   license: "Apache-2.0"
@@ -248,8 +247,8 @@ fidelity:
 
     Bogolyubov-Ruzsa lemma. Chang's Proposition 2.1 puts in 2A - 2A a proper progression with
     the dimension of (2.1), of order alpha log alpha, and the size of (2.2).
-    exists_proper_gap_subset_add_sub_add_dim_le_card_le and
-    exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le need 2 <= kappa and
+    exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le and
+    exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le need 2 <= kappa and
     |X| >= 7 * 10^7 kappa^2, and the latter q prime. They give dimension at most
     3 * 10^5 kappa^2 and |X| <= exp(2 * 10^7 kappa^2) |Q|.
 
@@ -282,14 +281,14 @@ alignment:
   namespace: "ChangFreimanRuzsa"
   statements:
     - source: "Chang, Proposition 2.1 (the Bogolyubov-Ruzsa lemma)"
-      lean: "ChangFreimanRuzsa.exists_proper_gap_subset_add_sub_add_dim_le_card_le'"
+      lean: "ChangFreimanRuzsa.exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
         For |X| >= 7 * 10^7 kappa^2, with dimension at most 3 * 10^5 kappa^2 and
         |X| <= exp(2 * 10^7 kappa^2) |Q|.
     - source: "Chang, Proposition 2.1 (the Bogolyubov-Ruzsa lemma), in ZMod q"
-      lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_dim_le_card_le'"
+      lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
@@ -420,7 +419,7 @@ alignment:
       status: "proved"
       note: "Through Minkowski's second theorem from Tau Ceti; ZMod q need not have q prime."
     - source: "Chang, Lemma 1.2"
-      lean: "ChangFreimanRuzsa.GAP.exists_proper_carrier_eq_image_of_isAddFreimanIso"
+      lean: "ChangFreimanRuzsa.GAP.exists_proper_toFinset_eq_image_of_isAddFreimanIso"
       module: "ChangFreimanRuzsa.GAP.FreimanHom"
       status: "proved"
       note: >-

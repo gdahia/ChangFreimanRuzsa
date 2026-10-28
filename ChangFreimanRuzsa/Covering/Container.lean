@@ -23,7 +23,7 @@ of `κ` and of the dimension of `Q₁`. The numbering continues that of the Bogo
 
 5. (`exists_length_le_iterationBound_subset_add_sub`) The packing argument adds to `Q₁` sets
    `S ⊆ X₁` of `⌈3 * κ⌉₊` elements, collected in a list `l`, until `X₁ ⊆ F + (Q' - Q')` with
-   `#F ≤ ⌈3 * κ⌉₊`, where `Q' = Q₁.carrier + l.sum`.
+   `#F ≤ ⌈3 * κ⌉₊`, where `Q' = Q₁.toFinset + l.sum`.
 6. (`exists_card_le_subset_sub_sub_add`) Let `T = Q' + U`, where `U = listSubsetSum F.toList` is
    the set of subset sums of `F`. It contains `0` and `F`, so `X₁ ⊆ T - T`
    (`add_sub_subset_add_sub_add`), and Ruzsa's covering lemma gives `X ⊆ T - T - (T - T) + W`
@@ -65,8 +65,8 @@ them is optimal.
 -/
 
 /-- The number `m = ⌈3 * κ⌉₊` of disjoint translates added at each step of the packing argument.
-Since `3 * κ ≤ m`, after `k` steps the size `#Q₁.carrier * m ^ k` of the current set stays below
-the Plünnecke–Ruzsa bound `κ ^ (k + 4) * #X` only if `3 ^ k * #Q₁.carrier ≤ κ ^ 4 * #X`. -/
+Since `3 * κ ≤ m`, after `k` steps the size `#Q₁.toFinset * m ^ k` of the current set stays below
+the Plünnecke–Ruzsa bound `κ ^ (k + 4) * #X` only if `3 ^ k * #Q₁.toFinset ≤ κ ^ 4 * #X`. -/
 def translateCount (κ : ℝ) : ℕ := ⌈3 * κ⌉₊
 
 /-- The bound `3 + 4 * κ + 3 * d * log (8 * d)` on the number of steps of the packing argument,
@@ -230,13 +230,13 @@ namespace GAP
 
 /-- The progression of the packing argument. Starting from `Q`, it adds one step of length `2` for
 each entry of `l`, applies `GAP.difference` twice and adds one step of length `2` for each element
-of `W`. If `S ⊆ Q.carrier + listSubsetSum l`, then it contains `S - S - (S - S) + W`. -/
+of `W`. If `S ⊆ Q.toFinset + listSubsetSum l`, then it contains `S - S - (S - S) + W`. -/
 def packingContainer (Q : GAP G) (l : List G) (W : Finset G) : GAP G :=
   (Q.consBinaryList l).difference.difference.consBinaryList W.toList
 
 lemma sub_sub_add_subset_packingContainer {Q : GAP G} {l : List G} {S : Finset G}
-    (hS : S ⊆ Q.carrier + listSubsetSum l) (W : Finset G) :
-    S - S - (S - S) + W ⊆ (Q.packingContainer l W).carrier :=
+    (hS : S ⊆ Q.toFinset + listSubsetSum l) (W : Finset G) :
+    S - S - (S - S) + W ⊆ (Q.packingContainer l W).toFinset :=
   add_subset_consBinaryList_toList (sub_subset_difference_of_subset
     (sub_subset_difference_of_subset (hS.trans (Q.add_listSubsetSum_subset_consBinaryList l)))) W
 
@@ -298,11 +298,11 @@ lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
     (hXX : (X + X).card ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
     (hQ₁proper : Q₁.Proper) (hQ₁dimle : (Q₁.dim : ℝ) ≤ bohrGAPDim κ)
-    (hQ₁subX : Q₁.carrier ⊆ (X + X) - (X + X))
-    (hQlow : X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.carrier.card) :
+    (hQ₁subX : Q₁.toFinset ⊆ (X + X) - (X + X))
+    (hQlow : X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.toFinset.card) :
     ∃ P : GAP G,
-      X ⊆ P.carrier ∧ P.dim ≤ containerExponent κ ∧
-        P.carrier.card ≤ Real.exp (containerExponent κ) * X.card := by
+      X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
+        P.toFinset.card ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨l, F, hl, hlen, hQ₁X, hF, hcover⟩ := exists_length_le_iterationBound_subset_add_sub
     hXne (by linarith) hXX hX₁X Q₁.nonempty hQ₁subX hQlow
   obtain ⟨W, hW, hXW⟩ := exists_card_le_subset_sub_sub_add (by linarith) hXX
@@ -342,8 +342,8 @@ lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZM
     (hXX : (X + X).card ≤ κ * X.card)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ P : GAP (ZMod q),
-      X ⊆ P.carrier ∧ P.dim ≤ containerExponent κ ∧
-        P.carrier.card ≤ Real.exp (containerExponent κ) * X.card := by
+      X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
+        P.toFinset.card ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
     exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX hXlower
   exact exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
