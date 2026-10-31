@@ -15,11 +15,12 @@ import ChangFreimanRuzsa.Properization.ShortRelations
 /-!
 # Reducing the dimension of a progression to the Freiman dimension
 
-Let `q` be a prime, let `P` be a `2`-proper generalized arithmetic progression in `ZMod q` and let
-`X ⊆ P.toFinset` be nonempty. Write `d` for the dimension of `P` and
-`E d = 4 * (d + 2) ^ 3 * log (d + 2)` for `coordinateReductionExponent d`. If
-`exp (E d) * #P.toFinset ≤ q`, then `X` lies in a `2`-proper progression of dimension at most
-`freimanDim X` and of size at most `exp (E d) * #P.toFinset`.
+Let `q` be a prime, let `P` be a `2`-proper generalized arithmetic progression in `ZMod q`, let
+`X ⊆ P.toFinset` be nonempty and let `2 ≤ t`. Write `d` for the dimension of `P`,
+`E d = 4 * (d + 2) ^ 3 * log (d + 2)` for `coordinateReductionExponent d` and `F` for
+`E d + tProperExponent t (freimanDim X)`. If `exp F * #P.toFinset ≤ q`, then `X` lies in a
+`t`-proper progression of dimension at most `freimanDim X` and of size at most
+`exp F * #P.toFinset`.
 
 The construction is the one of Appendix A of Marcelo Campos, Gabriel Dahia and João Pedro
 Marciano, *On the independence number of sparser random Cayley graphs*, J. London Math. Soc. 110
@@ -33,8 +34,8 @@ are covered by a proper progression of dimension `r` in `ℤ ^ r` with at most
 progression under the homomorphism `ℤ ^ r →+ ZMod q` that sends coordinates to the corresponding
 combination of the steps of `P`, translated by `x₀`, contains `X`. Its dimension `r` is the
 dimension of the Freiman model of `ChangFreimanRuzsa.FreimanDimension.Model`, so `r` is at most
-`freimanDim X`. Finally `exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul` makes
-the progression `2`-proper without increasing its dimension.
+`freimanDim X`. Finally `exists_tProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul` makes
+the progression `t`-proper without increasing its dimension.
 
 The same construction works in a torsion-free group, for instance in `ℤ`, with no condition on the
 size of `P`. Both cases follow from one statement for an abelian group in which the multiples
@@ -46,11 +47,11 @@ size of `P`. Both cases follow from one statement for an abelian group in which 
 
 ## Main statements
 
-* `exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul`: the reduction in an abelian group in
+* `exists_tProperGAP_dim_le_freimanDim_of_injOn_nsmul`: the reduction in an abelian group in
   which the multiples `n • a` with `n < N` of every nonzero `a` are distinct.
-* `exists_twoProperGAP_dim_le_freimanDim`: the reduction to dimension at most `freimanDim X` in
+* `exists_tProperGAP_dim_le_freimanDim`: the reduction to dimension at most `freimanDim X` in
   `ZMod q`.
-* `exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree`: the reduction in a torsion-free
+* `exists_tProperGAP_dim_le_freimanDim_of_isAddTorsionFree`: the reduction in a torsion-free
   group.
 -/
 
@@ -219,7 +220,7 @@ private lemma exists_gap_dim_le_modelDim (hP : P.Proper) (hXP : X ⊆ P.toFinset
 /-! ## The reduction -/
 
 /-- The exponent `4 * (d + 2) ^ 3 * log (d + 2)` in the size bound of
-`exists_twoProperGAP_dim_le_freimanDim`. -/
+`exists_tProperGAP_dim_le_freimanDim`. -/
 def coordinateReductionExponent (d : ℝ) : ℝ := 4 * (d + 2) ^ 3 * Real.log (d + 2)
 
 lemma coordinateReductionExponent_nonneg {d : ℝ} (hd : 0 ≤ d) :
@@ -241,52 +242,67 @@ lemma properizationExponent_add_le_coordinateReductionExponent {d : ℝ} (hd : 0
     mul_nonneg (pow_nonneg (by linarith : 0 ≤ d + 2) 3) (log_add_two_pos hd).le]
 
 /-- Let `P` be a `2`-proper progression of dimension `d` in an abelian group in which the
-multiples `n • a` with `n < N` of every nonzero `a` are distinct. Write `E` for
-`coordinateReductionExponent` and suppose that `exp (E d) * #P.toFinset ≤ N`. A nonempty set
-`X ⊆ P.toFinset` is contained in a `2`-proper progression of dimension at most `freimanDim X` and of
-size at most `exp (E d) * #P.toFinset`. -/
-lemma exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul {N : ℕ} {X : Finset G} {P : GAP G}
-    (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N)) (hX : X.Nonempty)
-    (hP : (P + P).Proper) (hXP : X ⊆ P.toFinset)
-    (hPN : Real.exp (coordinateReductionExponent P.dim) * #P.toFinset ≤ N) :
-    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
-      #Q.toFinset ≤ Real.exp (coordinateReductionExponent P.dim) * #P.toFinset := by
+multiples `n • a` with `n < N` of every nonzero `a` are distinct, and let `2 ≤ t`. Write `F` for
+`coordinateReductionExponent d + tProperExponent t (freimanDim X)` and suppose that
+`exp F * #P.toFinset ≤ N`. A nonempty set `X ⊆ P.toFinset` is contained in a `t`-proper progression
+of dimension at most `freimanDim X` and of size at most `exp F * #P.toFinset`. -/
+lemma exists_tProperGAP_dim_le_freimanDim_of_injOn_nsmul {N t : ℕ} {X : Finset G} {P : GAP G}
+    (ht : 2 ≤ t) (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
+    (hX : X.Nonempty) (hP : (P + P).Proper) (hXP : X ⊆ P.toFinset)
+    (hPN : Real.exp (coordinateReductionExponent P.dim + tProperExponent t (freimanDim X)) *
+      #P.toFinset ≤ N) :
+    ∃ Q : GAP G, (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤
+        Real.exp (coordinateReductionExponent P.dim + tProperExponent t (freimanDim X)) *
+          #P.toFinset := by
   obtain ⟨x₀, hx₀⟩ := hX
   obtain ⟨Q₀, hXQ₀, hdim, hcard⟩ := exists_gap_dim_le_modelDim hP.of_add_self hXP hx₀
-  have hQ₀P : Real.exp (properizationExponent Q₀.dim) * #Q₀.toFinset ≤
-      Real.exp (coordinateReductionExponent P.dim) * #P.toFinset := by
-    refine (mul_le_mul (Real.exp_le_exp.2 (properizationExponent_mono (Nat.cast_nonneg _)
-      (Nat.cast_le.2 (hdim.trans (integerGeneratedRank_le _))))) hcard (Nat.cast_nonneg _)
-      (Real.exp_nonneg _)).trans ?_
+  have hQ₀F := hdim.trans (modelDim_le_freimanDim hP hXP hx₀)
+  have hQ₀P : Real.exp (properizationExponent Q₀.dim + tProperExponent t Q₀.dim) * #Q₀.toFinset ≤
+      Real.exp (coordinateReductionExponent P.dim + tProperExponent t (freimanDim X)) *
+        #P.toFinset := by
+    refine (mul_le_mul (Real.exp_le_exp.2 (add_le_add
+      (properizationExponent_mono (Nat.cast_nonneg _)
+        (Nat.cast_le.2 (hdim.trans (integerGeneratedRank_le _))))
+      (tProperExponent_mono ht (Nat.cast_nonneg _) (Nat.cast_le.2 hQ₀F)))) hcard
+      (Nat.cast_nonneg _) (Real.exp_nonneg _)).trans ?_
     rw [← mul_assoc, ← Real.exp_add]
-    gcongr
-    exact properizationExponent_add_le_coordinateReductionExponent (Nat.cast_nonneg _)
+    refine mul_le_mul_of_nonneg_right (Real.exp_le_exp.2 ?_) (Nat.cast_nonneg _)
+    linarith [properizationExponent_add_le_coordinateReductionExponent
+      (Nat.cast_nonneg (α := ℝ) P.dim)]
   obtain ⟨Q, hQ, hQ₀Q, hQdim, hQcard⟩ :=
-    exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul Q₀ hG (hQ₀P.trans hPN)
-  exact ⟨Q, hQ, hXQ₀.trans hQ₀Q, hQdim.trans (hdim.trans (modelDim_le_freimanDim hP hXP hx₀)),
-    hQcard.trans hQ₀P⟩
+    exists_tProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul Q₀ ht hG (hQ₀P.trans hPN)
+  exact ⟨Q, hQ, hXQ₀.trans hQ₀Q, hQdim.trans hQ₀F, hQcard.trans hQ₀P⟩
 
-/-- Let `q` be a prime and let `P` be a `2`-proper progression of dimension `d` in `ZMod q`. Write
-`E` for `coordinateReductionExponent` and suppose that `exp (E d) * #P.toFinset ≤ q`. A nonempty set
-`X ⊆ P.toFinset` is contained in a `2`-proper progression of dimension at most `freimanDim X` and of
-size at most `exp (E d) * #P.toFinset`. -/
-lemma exists_twoProperGAP_dim_le_freimanDim {q : ℕ} {X : Finset (ZMod q)} {P : GAP (ZMod q)}
-    (hq : q.Prime) (hX : X.Nonempty) (hP : (P + P).Proper) (hXP : X ⊆ P.toFinset)
-    (hPq : Real.exp (coordinateReductionExponent P.dim) * #P.toFinset ≤ q) :
-    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
-      #Q.toFinset ≤ Real.exp (coordinateReductionExponent P.dim) * #P.toFinset :=
-  exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul
+/-- Let `q` be a prime, let `P` be a `2`-proper progression of dimension `d` in `ZMod q` and let
+`2 ≤ t`. Write `F` for `coordinateReductionExponent d + tProperExponent t (freimanDim X)` and
+suppose that `exp F * #P.toFinset ≤ q`. A nonempty set `X ⊆ P.toFinset` is contained in a
+`t`-proper progression of dimension at most `freimanDim X` and of size at most
+`exp F * #P.toFinset`. -/
+lemma exists_tProperGAP_dim_le_freimanDim {q t : ℕ} {X : Finset (ZMod q)} {P : GAP (ZMod q)}
+    (hq : q.Prime) (ht : 2 ≤ t) (hX : X.Nonempty) (hP : (P + P).Proper) (hXP : X ⊆ P.toFinset)
+    (hPq : Real.exp (coordinateReductionExponent P.dim + tProperExponent t (freimanDim X)) *
+      #P.toFinset ≤ q) :
+    ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤
+        Real.exp (coordinateReductionExponent P.dim + tProperExponent t (freimanDim X)) *
+          #P.toFinset :=
+  exists_tProperGAP_dim_le_freimanDim_of_injOn_nsmul ht
     (fun _ ↦ GAP.injOn_nsmul_of_prime hq) hX hP hXP hPq
 
 /-- Let `P` be a `2`-proper progression of dimension `d` in a torsion-free abelian group, for
-instance in `ℤ`, and write `E` for `coordinateReductionExponent`. A nonempty set `X ⊆ P.toFinset`
-is contained in a `2`-proper progression of dimension at most `freimanDim X` and of size at most
-`exp (E d) * #P.toFinset`. -/
-lemma exists_twoProperGAP_dim_le_freimanDim_of_isAddTorsionFree [IsAddTorsionFree G]
-    {X : Finset G} {P : GAP G} (hX : X.Nonempty) (hP : (P + P).Proper) (hXP : X ⊆ P.toFinset) :
-    ∃ Q : GAP G, (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
-      #Q.toFinset ≤ Real.exp (coordinateReductionExponent P.dim) * #P.toFinset :=
-  exists_twoProperGAP_dim_le_freimanDim_of_injOn_nsmul
+instance in `ℤ`, and let `2 ≤ t`. Write `F` for
+`coordinateReductionExponent d + tProperExponent t (freimanDim X)`. A nonempty set
+`X ⊆ P.toFinset` is contained in a `t`-proper progression of dimension at most `freimanDim X` and of
+size at most `exp F * #P.toFinset`. -/
+lemma exists_tProperGAP_dim_le_freimanDim_of_isAddTorsionFree [IsAddTorsionFree G] {t : ℕ}
+    {X : Finset G} {P : GAP G} (ht : 2 ≤ t) (hX : X.Nonempty) (hP : (P + P).Proper)
+    (hXP : X ⊆ P.toFinset) :
+    ∃ Q : GAP G, (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤
+        Real.exp (coordinateReductionExponent P.dim + tProperExponent t (freimanDim X)) *
+          #P.toFinset :=
+  exists_tProperGAP_dim_le_freimanDim_of_injOn_nsmul ht
     (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _) hX hP hXP (Nat.le_ceil _)
 
 end

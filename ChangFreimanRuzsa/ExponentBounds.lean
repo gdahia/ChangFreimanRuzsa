@@ -181,7 +181,7 @@ lemma containerExponent_le (hκ : 2 ≤ κ) : containerExponent κ ≤ 2 * 10 ^ 
     pow_pos (by linarith : (0 : ℝ) < κ) 2]
 
 /-- `containerExponent (2 * κ)` is at most `16 * 10 ^ 8 * κ ^ 3`. This bounds the dimension in
-`exists_twoProperGAP_of_small_sumset`. -/
+`exists_tProperGAP_of_small_sumset`. -/
 lemma containerExponent_two_mul_le (hκ : 2 ≤ κ) :
     containerExponent (2 * κ) ≤ 16 * 10 ^ 8 * κ ^ 3 := by
   have h := containerExponent_le (κ := 2 * κ) (by linarith)

@@ -15,12 +15,12 @@ import Mathlib.Algebra.Field.ZMod
 # Short relations of a progression
 
 Let `P` be a GAP of dimension `d` in an abelian group in which the multiples `n • a` with `n < N` of
-every nonzero `a` are distinct, with `N` large compared with `#P.toFinset`. The short relations of
-`P` are a maximal family of independent relations among its steps in the `2`-dilate of its
-coefficient box. Their saturated span consists of relations. Dividing the coefficient lattice by it
-and covering the image of the coefficient box by a proper progression gives a GAP of smaller
-dimension containing `P`, unless `P` has no short relation, in which case `P` is `2`-proper. This
-step costs a factor `exp (2 * (d + 2) ^ 2 * log (d + 2))`.
+every nonzero `a` are distinct, with `N` large compared with `#P.toFinset`, and let `2 ≤ t`. The
+short relations of `P` are a maximal family of independent relations among its steps in the
+`t`-dilate of its coefficient box. Their saturated span consists of relations. Dividing the
+coefficient lattice by it and covering the image of the coefficient box by a proper progression
+gives a GAP of smaller dimension containing `P`, unless `P` has no short relation, in which case `P`
+is `t`-proper. This step costs a factor `exp (2 * (d + 2) ^ 2 * log (d + 2) + d * log (t / 2))`.
 `ChangFreimanRuzsa.Properization.Iteration` iterates it.
 
 ## Main definitions
@@ -34,7 +34,7 @@ step costs a factor `exp (2 * (d + 2) ^ 2 * log (d + 2))`.
 
 * `GAP.mem_shortRelationSpan`: every relation in the dilate lies in the saturated span.
 * `GAP.shortRelationSpan_le_relations`: the saturated span consists of relations.
-* `GAP.proper_add_self_or_exists_gap_dim_lt`: one step of properization.
+* `GAP.proper_nsmul_or_exists_gap_dim_lt`: one step of properization.
 -/
 
 @[expose] public section
@@ -102,18 +102,18 @@ lemma hasIndependentShort_shortRelationRank (P : GAP G) (t : ℝ) :
   Nat.findGreatest_spec (P := fun k ↦ HasIndependentShort P.relations P.halfWidth k t)
     (Nat.zero_le _) ⟨Fin.elim0, linearIndependent_empty_type, fun j ↦ j.elim0⟩
 
-/-- A progression with no nonzero relation in the `2`-dilate of its coefficient box is `2`-proper.
-Indeed a relation `v` in the coefficient box of `P + P` has `|v i| ≤ 2 * (P.length i - 1)`. -/
-lemma proper_add_self_of_shortRelationRank_eq_zero {P : GAP G}
-    (hrank : P.shortRelationRank 2 = 0) : (P + P).Proper := by
-  rw [proper_add_self_iff]
-  intro v hv hlt
+/-- A progression with no nonzero relation in the `t`-dilate of its coefficient box is `t`-proper.
+Indeed a relation `v` in the coefficient box of `t • P` has `|v i| ≤ t * (P.length i - 1)`. -/
+lemma proper_nsmul_of_shortRelationRank_eq_zero {P : GAP G} {t : ℕ}
+    (hrank : P.shortRelationRank t = 0) : (t • P).Proper := by
+  rw [proper_nsmul_iff]
+  intro v hv hle
   by_contra hne
   obtain ⟨i₀, -⟩ := Function.ne_iff.1 hne
-  have hshort : IsShort P.halfWidth 2 v := by
+  have hshort : IsShort P.halfWidth t v := by
     intro i
     rw [← Int.cast_abs, P.cast_halfWidth]
-    exact_mod_cast (by grind [P.length_pos i, hlt i] : |v i| ≤ 2 * ((P.length i : ℤ) - 1))
+    exact_mod_cast hle i
   grind [le_shortRelationRank (Nat.succ_le_of_lt i₀.pos)
     ⟨fun _ ↦ v, linearIndependent_unique_iff.mpr hne, fun _ ↦ ⟨hv, hshort⟩⟩]
 
@@ -185,22 +185,23 @@ lemma mem_shortRelationSpan {P : GAP G} {t : ℝ} {w : Fin P.dim → ℤ} (hw : 
       ⟨P.shortRelations_mem_relations t j, P.isShort_shortRelations t j⟩⟩]
 
 /-- The image under the step map of a vector in the saturated span of the short relations lies in
-the image of the `2 * d`-dilate of the coefficient box. Indeed rounding the coefficients of its
+the image of the `t * d`-dilate of the coefficient box. Indeed rounding the coefficients of its
 expansion in the short relations leaves a vector of that dilate with the same image. -/
-lemma stepHom_mem_boundedStepImage_of_mem_shortRelationSpan [DecidableEq G] {P : GAP G}
-    {x : Fin P.dim → ℤ} (hx : x ∈ P.shortRelationSpan 2) :
-    stepHom P x ∈ P.boundedStepImage (2 * P.dim) := by
-  obtain ⟨y, hxy, hy⟩ := exists_congr_span_isShort (P.isShort_shortRelations 2) hx
+lemma stepHom_mem_boundedStepImage_of_mem_shortRelationSpan [DecidableEq G] {P : GAP G} {t : ℕ}
+    {x : Fin P.dim → ℤ} (hx : x ∈ P.shortRelationSpan t) :
+    stepHom P x ∈ P.boundedStepImage (t * P.dim) := by
+  obtain ⟨y, hxy, hy⟩ := exists_congr_span_isShort (P.isShort_shortRelations t) hx
   have hstep : stepHom P x = stepHom P y := by
     rw [← sub_eq_zero, ← map_sub]
-    exact P.span_shortRelations_le_relations 2 hxy
+    exact P.span_shortRelations_le_relations t hxy
   rw [hstep]
   refine stepHom_mem_boundedStepImage (mem_intBox_of_abs_le ?_)
   intro i
   refine (hy i).trans ?_
   push_cast
-  nlinarith [(Nat.cast_le.mpr (P.shortRelationRank_le_dim 2) : (_ : ℝ) ≤ P.dim),
-    (Nat.cast_nonneg (P.halfWidth i) : (0 : ℝ) ≤ _)]
+  linarith [mul_le_mul_of_nonneg_right
+    (Nat.cast_le.mpr (P.shortRelationRank_le_dim t) : (_ : ℝ) ≤ P.dim)
+    (by positivity : (0 : ℝ) ≤ t * P.halfWidth i)]
 
 /-- Multiples of a nonzero element of a prime cyclic group are distinct below the modulus. -/
 lemma injOn_nsmul_of_prime {q : ℕ} (hq : Nat.Prime q) {a : ZMod q} (ha : a ≠ 0) :
@@ -217,24 +218,24 @@ lemma injOn_nsmul_of_isAddTorsionFree [IsAddTorsionFree G] (N : ℕ) {a : G} (ha
 
 /-- Suppose that the multiples `n • a` with `n < N` of every nonzero `a` are distinct, as in a
 cyclic group of prime order `N` or in a torsion-free group, and that
-`(2 * (2 * d) + 1) ^ d * #P.toFinset < N`. Then the saturated span of the short relations of `P`
+`(2 * (t * d) + 1) ^ d * #P.toFinset < N`. Then the saturated span of the short relations of `P`
 consists of relations. Otherwise the first `N` multiples of the image of a vector in the span that
-is not a relation would be `N` distinct elements of the image of the `2 * d`-dilate of the
+is not a relation would be `N` distinct elements of the image of the `t * d`-dilate of the
 coefficient box. -/
-lemma shortRelationSpan_le_relations [DecidableEq G] {N : ℕ} {P : GAP G}
+lemma shortRelationSpan_le_relations [DecidableEq G] {N t : ℕ} {P : GAP G}
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
-    (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.toFinset.card < N) :
-    (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations := by
+    (hcard : (2 * (t * P.dim) + 1) ^ P.dim * P.toFinset.card < N) :
+    (P.shortRelationSpan t).toAddSubgroup ≤ P.relations := by
   intro x hx
   by_contra hrel
   have hmaps : Set.MapsTo (fun n : ℕ ↦ n • stepHom P x) (Finset.range N)
-      (P.boundedStepImage (2 * P.dim)) := by
+      (P.boundedStepImage (t * P.dim)) := by
     intro n _
     dsimp only
     rw [← map_nsmul]
     exact stepHom_mem_boundedStepImage_of_mem_shortRelationSpan (nsmul_mem hx n)
   grind [Finset.card_le_card_of_injOn _ hmaps (by simpa using hG (stepHom P x) hrel),
-    Finset.card_range, P.card_boundedStepImage_le (2 * P.dim)]
+    Finset.card_range, P.card_boundedStepImage_le (t * P.dim)]
 
 /-! ### Projecting by a saturated span -/
 
@@ -340,35 +341,35 @@ lemma exists_toFinset_subset_dim_le_card_le_of_saturatedSpan_le_relations [Decid
 
 /-! ### Counting the projected integer points
 
-From here on the saturated span is that of the short relations, and `r` denotes the short rank
-`P.shortRelationRank 2`. -/
+From here on the saturated span is that of the short relations in the `t`-dilate, and `r` denotes
+the short rank `P.shortRelationRank t`. -/
 
 /-- Let `y` be an integer point of the quotient that is the image of a real vector `b`. Then `y` is
-the image of an integer vector `z` with `|z i| ≤ |b i| + r * (2 * P.halfWidth i)`. Indeed the lift
+the image of an integer vector `z` with `|z i| ≤ |b i| + r * (t * P.halfWidth i)`. Indeed the lift
 of `y` with zero coordinates along the span differs from `b` by a real combination of the short
 relations, whose coefficients can be rounded. -/
-lemma exists_smithQuotientMap_eq_of_smithRealQuotientMap_eq {P : GAP G} {n : ℕ}
-    (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
+lemma exists_smithQuotientMap_eq_of_smithRealQuotientMap_eq {P : GAP G} {n t : ℕ}
+    (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n)
     {y : Fin (P.dim - n) → ℤ} {b : Fin P.dim → ℝ}
     (hb : smithRealQuotientMap snf b = intVectorToReal y) :
     ∃ z, smithQuotientMap snf z = y ∧
-      ∀ i, |(z i : ℝ)| ≤ |b i| + P.shortRelationRank 2 * (2 * P.halfWidth i) := by
+      ∀ i, |(z i : ℝ)| ≤ |b i| + P.shortRelationRank t * (t * P.halfWidth i) := by
   have hspan : intVectorToReal (smithQuotientLift snf y) - b ∈
-      integerGeneratedSubspace (Finset.univ.image (P.shortRelations 2)) := by
+      integerGeneratedSubspace (Finset.univ.image (P.shortRelations t)) := by
     rw [← smithRealQuotientMap_eq_zero_iff snf, map_sub, smithRealQuotientMap_intCast,
       smithQuotientMap_lift, hb, sub_self]
   rw [integerGeneratedSubspace_image_univ] at hspan
-  obtain ⟨z, hz, hbound⟩ := exists_congr_close_isShort (P.isShort_shortRelations 2) hspan
+  obtain ⟨z, hz, hbound⟩ := exists_congr_close_isShort (P.isShort_shortRelations t) hspan
   refine ⟨z, ?_, hbound⟩
   rw [← smithQuotientMap_lift snf y, eq_comm, smithQuotientMap_eq_iff]
   exact span_range_le_saturatedSpan _ hz
 
 /-- Every integer point of the projected coefficient box is the image of an integer vector in the
-`(2 * r + 1)`-dilate of the coefficient box. -/
-lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {n : ℕ}
-    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
+`(t * r + 1)`-dilate of the coefficient box. -/
+lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {n t : ℕ}
+    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n}
     {y : Fin (P.dim - n) → ℤ} (hy : y ∈ P.smithQuotientCoords snf) :
-    ∃ z ∈ intBox fun i ↦ (2 * P.shortRelationRank 2 + 1) * P.halfWidth i,
+    ∃ z ∈ intBox fun i ↦ (t * P.shortRelationRank t + 1) * P.halfWidth i,
       smithQuotientMap snf z = y := by
   obtain ⟨b, hb, hby⟩ := mem_smithQuotientCoords.mp hy
   obtain ⟨z, hzy, hz⟩ := exists_smithQuotientMap_eq_of_smithRealQuotientMap_eq snf hby
@@ -378,13 +379,13 @@ lemma exists_bounded_lift_smithQuotientCoords {P : GAP G} {n : ℕ}
   linarith [hz i, BoxLattice.mem_realBox.mp hb i]
 
 /-- If the saturated span of the short relations consists of relations, then the image in the group
-of the integer points of the projected coefficient box lies in the image of the `(2 * r + 1)`-dilate
-of the coefficient box, so it has at most `(2 * (2 * r + 1) + 1) ^ d * #P.toFinset` elements. -/
-lemma card_image_smithQuotientCoords_le [DecidableEq G] {P : GAP G} {n : ℕ}
-    (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
-    (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations) :
+of the integer points of the projected coefficient box lies in the image of the `(t * r + 1)`-dilate
+of the coefficient box, so it has at most `(2 * (t * r + 1) + 1) ^ d * #P.toFinset` elements. -/
+lemma card_image_smithQuotientCoords_le [DecidableEq G] {P : GAP G} {n t : ℕ}
+    (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n)
+    (hrel : (P.shortRelationSpan t).toAddSubgroup ≤ P.relations) :
     ((P.smithQuotientCoords snf).image (stepsHom (P.smithQuotientStep snf))).card ≤
-      (2 * (2 * P.shortRelationRank 2 + 1) + 1) ^ P.dim * P.toFinset.card := by
+      (2 * (t * P.shortRelationRank t + 1) + 1) ^ P.dim * P.toFinset.card := by
   refine (Finset.card_le_card ?_).trans (P.card_boundedStepImage_le _)
   intro x hx
   obtain ⟨y, hy, rfl⟩ := Finset.mem_image.mp hx
@@ -393,15 +394,15 @@ lemma card_image_smithQuotientCoords_le [DecidableEq G] {P : GAP G} {n : ℕ}
   exact stepHom_mem_boundedStepImage hz
 
 /-- Two integer points of the projected coefficient box with the same image in the group differ by
-the image of a relation in the `(2 * r + 2)`-dilate of the coefficient box. -/
-lemma exists_bounded_relation_of_stepsHom_eq {P : GAP G} {n : ℕ}
-    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
-    (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations)
+the image of a relation in the `(t * r + 2)`-dilate of the coefficient box. -/
+lemma exists_bounded_relation_of_stepsHom_eq {P : GAP G} {n t : ℕ}
+    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n}
+    (hrel : (P.shortRelationSpan t).toAddSubgroup ≤ P.relations)
     {y y₀ : Fin (P.dim - n) → ℤ} (hy : y ∈ P.smithQuotientCoords snf)
     (hy₀ : y₀ ∈ P.smithQuotientCoords snf)
     (himage : stepsHom (P.smithQuotientStep snf) y = stepsHom (P.smithQuotientStep snf) y₀) :
     ∃ z ∈ P.relations, smithQuotientMap snf z = y - y₀ ∧
-      z ∈ intBox fun i ↦ (2 * P.shortRelationRank 2 + 2) * P.halfWidth i := by
+      z ∈ intBox fun i ↦ (t * P.shortRelationRank t + 2) * P.halfWidth i := by
   obtain ⟨b, hb, hby⟩ := mem_smithQuotientCoords.mp hy
   obtain ⟨b₀, hb₀, hby₀⟩ := mem_smithQuotientCoords.mp hy₀
   obtain ⟨z, hzy, hz⟩ := exists_smithQuotientMap_eq_of_smithRealQuotientMap_eq snf
@@ -414,51 +415,51 @@ lemma exists_bounded_relation_of_stepsHom_eq {P : GAP G} {n : ℕ}
     linarith [hz i, abs_sub (b i) (b₀ i), BoxLattice.mem_realBox.mp hb i,
       BoxLattice.mem_realBox.mp hb₀ i]
 
-/-- Two relations of `P` with distinct images in the quotient are separated by the `2`-dilate of
-the coefficient box. Otherwise their difference would be a relation in the `2`-dilate outside the
+/-- Two relations of `P` with distinct images in the quotient are separated by the `t`-dilate of
+the coefficient box. Otherwise their difference would be a relation in the `t`-dilate outside the
 saturated span of the short relations. -/
-lemma exists_lt_abs_sub_of_smithQuotientMap_ne {P : GAP G} {n : ℕ}
-    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
+lemma exists_lt_abs_sub_of_smithQuotientMap_ne {P : GAP G} {n t : ℕ}
+    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n}
     {z z' : Fin P.dim → ℤ} (hz : z ∈ P.relations) (hz' : z' ∈ P.relations)
     (hne : smithQuotientMap snf z ≠ smithQuotientMap snf z') :
-    ∃ i, ((2 * P.halfWidth i : ℕ) : ℤ) < |z i - z' i| := by
+    ∃ i, ((t * P.halfWidth i : ℕ) : ℤ) < |z i - z' i| := by
   by_contra! h
   refine hne ((smithQuotientMap_eq_iff snf z z').mpr (mem_shortRelationSpan
     (P.relations.sub_mem hz hz') ?_))
   intro i
   exact_mod_cast h i
 
-/-- Relations of `P` in the `(2 * r + 2)`-dilate of the coefficient box with distinct images in the
-quotient number at most `(2 * r + 4) ^ d`, by the packing bound. -/
-lemma card_le_of_injOn_smithQuotientMap {P : GAP G} {n : ℕ}
-    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
+/-- For `2 ≤ t`, relations of `P` in the `(t * r + 2)`-dilate of the coefficient box with distinct
+images in the quotient number at most `(2 * r + 4) ^ d`, by the packing bound. -/
+lemma card_le_of_injOn_smithQuotientMap {P : GAP G} {n t : ℕ} (ht : 2 ≤ t)
+    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n}
     {Z : Finset (Fin P.dim → ℤ)} (hrel : ∀ z ∈ Z, z ∈ P.relations)
-    (hbox : Z ⊆ intBox fun i ↦ (2 * P.shortRelationRank 2 + 2) * P.halfWidth i)
+    (hbox : Z ⊆ intBox fun i ↦ (t * P.shortRelationRank t + 2) * P.halfWidth i)
     (hinj : Set.InjOn (smithQuotientMap snf) Z) :
-    Z.card ≤ (2 * P.shortRelationRank 2 + 4) ^ P.dim := by
+    Z.card ≤ (2 * P.shortRelationRank t + 4) ^ P.dim := by
   refine Nat.le_of_mul_le_mul_right ((card_mul_prod_le_of_separated hbox
     fun u hu w hw huw ↦ exists_lt_abs_sub_of_smithQuotientMap_ne (hrel u hu) (hrel w hw)
       (hinj.ne hu hw huw)).trans ?_) (by positivity)
   rw [← Fin.prod_const, ← Finset.prod_mul_distrib]
-  gcongr
-  nlinarith
+  gcongr with i
+  nlinarith [Nat.mul_le_mul_right (P.halfWidth i) ht]
 
 variable [DecidableEq G]
 
-/-- If the saturated span of the short relations consists of relations, then each fiber of the
-map to the group on the integer points of the projected coefficient box has at most
+/-- For `2 ≤ t`, if the saturated span of the short relations consists of relations, then each fiber
+of the map to the group on the integer points of the projected coefficient box has at most
 `(2 * r + 4) ^ d` elements. -/
-lemma card_filter_stepsHom_eq_le {P : GAP G} {n : ℕ}
-    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n}
-    (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations)
+lemma card_filter_stepsHom_eq_le {P : GAP G} {n t : ℕ} (ht : 2 ≤ t)
+    {snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n}
+    (hrel : (P.shortRelationSpan t).toAddSubgroup ≤ P.relations)
     {y₀ : Fin (P.dim - n) → ℤ} (hy₀ : y₀ ∈ P.smithQuotientCoords snf) :
     ((P.smithQuotientCoords snf).filter fun y ↦
       stepsHom (P.smithQuotientStep snf) y = stepsHom (P.smithQuotientStep snf) y₀).card ≤
-        (2 * P.shortRelationRank 2 + 4) ^ P.dim := by
+        (2 * P.shortRelationRank t + 4) ^ P.dim := by
   set F := (P.smithQuotientCoords snf).filter fun y ↦
     stepsHom (P.smithQuotientStep snf) y = stepsHom (P.smithQuotientStep snf) y₀
   have hlift : ∀ y ∈ F, ∃ z ∈ P.relations, smithQuotientMap snf z = y - y₀ ∧
-      z ∈ intBox fun i ↦ (2 * P.shortRelationRank 2 + 2) * P.halfWidth i := by
+      z ∈ intBox fun i ↦ (t * P.shortRelationRank t + 2) * P.halfWidth i := by
     intro y hy
     obtain ⟨hy, himage⟩ := Finset.mem_filter.mp hy
     exact exists_bounded_relation_of_stepsHom_eq hrel hy hy₀ himage
@@ -467,56 +468,57 @@ lemma card_filter_stepsHom_eq_le {P : GAP G} {n : ℕ}
     intro a ha b hb hab
     simpa [hzmap a ha, hzmap b hb] using hab
   rw [← Finset.card_image_of_injOn hinj.of_comp]
-  apply card_le_of_injOn_smithQuotientMap
+  apply card_le_of_injOn_smithQuotientMap ht
   · simpa using hzrel
   · simpa [Finset.image_subset_iff] using hzbox
   · rw [Finset.coe_image]
     exact hinj.image_of_comp
 
-/-- If the saturated span of the short relations consists of relations, then the projected
-coefficient box has at most `((2 * r + 4) * (2 * (2 * r + 1) + 1)) ^ d * #P.toFinset` integer
-points, by the bound on their image in the group and the bound on each fiber. -/
-lemma card_smithQuotientCoords_le {P : GAP G} {n : ℕ}
-    (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan 2) (Fin P.dim) n)
-    (hrel : (P.shortRelationSpan 2).toAddSubgroup ≤ P.relations) :
+/-- For `2 ≤ t`, if the saturated span of the short relations consists of relations, then the
+projected coefficient box has at most `((2 * r + 4) * (2 * (t * r + 1) + 1)) ^ d * #P.toFinset`
+integer points, by the bound on their image in the group and the bound on each fiber. -/
+lemma card_smithQuotientCoords_le {P : GAP G} {n t : ℕ} (ht : 2 ≤ t)
+    (snf : Module.Basis.SmithNormalForm (P.shortRelationSpan t) (Fin P.dim) n)
+    (hrel : (P.shortRelationSpan t).toAddSubgroup ≤ P.relations) :
     (P.smithQuotientCoords snf).card ≤
-      ((2 * P.shortRelationRank 2 + 4) * (2 * (2 * P.shortRelationRank 2 + 1) + 1)) ^ P.dim *
+      ((2 * P.shortRelationRank t + 4) * (2 * (t * P.shortRelationRank t + 1) + 1)) ^ P.dim *
         P.toFinset.card := by
   refine (Finset.card_le_mul_card_image (f := stepsHom (P.smithQuotientStep snf)) _
-    ((2 * P.shortRelationRank 2 + 4) ^ P.dim) ?_).trans ?_
+    ((2 * P.shortRelationRank t + 4) ^ P.dim) ?_).trans ?_
   · intro g hg
     obtain ⟨y₀, hy₀, rfl⟩ := Finset.mem_image.mp hg
-    exact card_filter_stepsHom_eq_le hrel hy₀
+    exact card_filter_stepsHom_eq_le ht hrel hy₀
   · rw [mul_pow, mul_assoc]
     exact Nat.mul_le_mul_left _ (card_image_smithQuotientCoords_le snf hrel)
 
 /-! ### One step of properization -/
 
-/-- One step of properization. Suppose that the multiples `n • a` with `n < N` of every nonzero `a`
-are distinct and that `(2 * (2 * d) + 1) ^ d * #P.toFinset < N`. Then either `P` is `2`-proper, or
-dividing by the saturated span of the short relations gives a GAP of smaller dimension containing
-`P`, of size at most `exp (2 * (d + 2) ^ 2 * log (d + 2)) * #P.toFinset`. -/
-lemma proper_add_self_or_exists_gap_dim_lt {N : ℕ} {P : GAP G}
+/-- One step of properization. Let `2 ≤ t`. Suppose that the multiples `n • a` with `n < N` of every
+nonzero `a` are distinct and that `(2 * (t * d) + 1) ^ d * #P.toFinset < N`. Then either `P` is
+`t`-proper, or dividing by the saturated span of the short relations gives a GAP of smaller
+dimension containing `P`, of size at most
+`exp (2 * (d + 2) ^ 2 * log (d + 2) + d * log (t / 2)) * #P.toFinset`. -/
+lemma proper_nsmul_or_exists_gap_dim_lt {N t : ℕ} {P : GAP G} (ht : 2 ≤ t)
     (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
-    (hcard : (2 * (2 * P.dim) + 1) ^ P.dim * P.toFinset.card < N) :
-    (P + P).Proper ∨ ∃ Q : GAP G, P.toFinset ⊆ Q.toFinset ∧ Q.dim < P.dim ∧
-      Q.toFinset.card ≤
-        Real.exp (2 * (P.dim + 2) ^ 2 * Real.log (P.dim + 2)) * P.toFinset.card := by
-  by_cases hrank : P.shortRelationRank 2 = 0
-  · exact Or.inl (proper_add_self_of_shortRelationRank_eq_zero hrank)
-  obtain ⟨snf⟩ := P.nonempty_smithNormalForm_shortRelationSpan 2
+    (hcard : (2 * (t * P.dim) + 1) ^ P.dim * P.toFinset.card < N) :
+    (t • P).Proper ∨ ∃ Q : GAP G, P.toFinset ⊆ Q.toFinset ∧ Q.dim < P.dim ∧
+      Q.toFinset.card ≤ Real.exp (2 * (P.dim + 2) ^ 2 * Real.log (P.dim + 2) +
+        P.dim * Real.log ((t : ℝ) / 2)) * P.toFinset.card := by
+  by_cases hrank : P.shortRelationRank t = 0
+  · exact Or.inl (proper_nsmul_of_shortRelationRank_eq_zero hrank)
+  obtain ⟨snf⟩ := P.nonempty_smithNormalForm_shortRelationSpan t
   have hrel := shortRelationSpan_le_relations hG hcard
   obtain ⟨Q, hPQ, hdim, hQcard⟩ :=
     exists_toFinset_subset_dim_le_card_le_of_saturatedSpan_le_relations snf hrel
   have hcoords : ((P.smithQuotientCoords snf).card : ℝ) ≤
-      ((2 * (P.shortRelationRank 2 : ℝ) + 4) * (2 * (2 * (P.shortRelationRank 2 : ℝ) + 1) + 1)) ^
+      ((2 * (P.shortRelationRank t : ℝ) + 4) * (2 * (t * (P.shortRelationRank t : ℝ) + 1) + 1)) ^
         P.dim * P.toFinset.card := by
-    exact_mod_cast card_smithQuotientCoords_le snf hrel
-  refine Or.inr ⟨Q, hPQ, hdim.trans_lt (by grind [P.shortRelationRank_le_dim 2]),
+    exact_mod_cast card_smithQuotientCoords_le ht snf hrel
+  refine Or.inr ⟨Q, hPQ, hdim.trans_lt (by grind [P.shortRelationRank_le_dim t]),
     hQcard.trans ((mul_le_mul_of_nonneg_left hcoords (by positivity)).trans ?_)⟩
   rw [← mul_assoc]
   gcongr
-  exact latticeBoxFactor_mul_pow_le_exp (P.shortRelationRank_le_dim 2)
+  exact latticeBoxFactor_mul_pow_mul_le_exp (P.shortRelationRank_le_dim t) ht
 
 end GAP
 

@@ -20,17 +20,20 @@ A generalized arithmetic progression (GAP) in an additive monoid `G` is given by
 and a finitely supported `bound : G →₀ ℕ`. Its points are `origin + ∑ v, c v • v` with
 `c ≤ bound`. The steps are the elements `v` with `bound v ≠ 0`, and the length of the step `v` is
 `bound v + 1`. The sum of two progressions adds the origins and the bounds, so that the points of
-`P + Q` are the sums of a point of `P` and a point of `Q`.
+`P + Q` are the sums of a point of `P` and a point of `Q`. The multiple `t • P` multiplies the
+origin and the bound by `t`, so that its points are the sums of `t` points of `P`.
 
 Numbering the steps as `P.step i` for `i : Fin P.dim`, with lengths
 `P.length i = P.bound (P.step i) + 1 ≥ 2`, gives the usual description of the points of `P` as
 `P.origin + ∑ i, w i • P.step i` with `w i < P.length i`.
 
-A progression `P` is `2`-proper when `P + P` is proper, as in Bilu's condition `F₂` and in Tao and
-Vu. Green and Tao call a progression with numbered steps `s i` and lengths `ℓ i` `2`-proper when
-the points `2 • origin + ∑ i, w i • s i` with `w i < 2 * ℓ i` are distinct. The points of `P + P`
-are those with `w i ≤ 2 * ℓ i - 2`, so the condition of Green and Tao is stronger. The progression
-`{0, 1}` in `ZMod 3` is `2`-proper but not `2`-proper in the sense of Green and Tao.
+A progression `P` is `t`-proper when `t • P` is proper. For `t = 2` this says that `P + P` is
+proper, as in Bilu's condition `F₂` and in Tao and Vu. Green and Tao call a progression with
+numbered steps `s i` and lengths `ℓ i` `t`-proper when the points `t • origin + ∑ i, w i • s i` with
+`w i < t * ℓ i` are distinct. The points of `t • P` are those with `w i ≤ t * (ℓ i - 1)`, so the
+condition of Green and Tao is stronger. It follows from `(2 * t) • P` being proper, by
+`GAP.injective_gapMap_mul_length_of_proper_two_mul_nsmul`. The progression `{0, 1}` in `ZMod 3` is
+`2`-proper but not `2`-proper in the sense of Green and Tao.
 
 ## Main definitions
 
@@ -49,9 +52,11 @@ are those with `w i ≤ 2 * ℓ i - 2`, so the condition of Green and Tao is str
 ## Main statements
 
 * `GAP.toFinset_add`: the points of `P + Q` are the sums of a point of `P` and a point of `Q`.
+* `GAP.toFinset_nsmul`: the points of `t • P` are the sums of `t` points of `P`.
 * `GAP.proper_iff_card_eq_size`: a GAP `P` is proper if and only if it has `P.size` elements.
-* `GAP.proper_iff_injective` and `GAP.proper_add_self_iff_injective`: properness and
-  `2`-properness in terms of the numbered steps and lengths.
+* `GAP.proper_iff_injective`, `GAP.proper_nsmul_iff_injective` and
+  `GAP.proper_add_self_iff_injective`: properness, `t`-properness and `2`-properness in terms of the
+  numbered steps and lengths.
 -/
 
 @[expose] public section
@@ -95,6 +100,11 @@ def Proper (P : GAP G) : Prop := Set.InjOn P.eval (Set.Iic P.bound)
 /-- The sum of two progressions adds the origins and the bounds. -/
 instance : Add (GAP G) where
   add P Q := ⟨P.origin + Q.origin, P.bound + Q.bound⟩
+
+/-- The multiple `t • P` of a progression multiplies the origin and the bound by `t`. A progression
+`P` is `t`-proper when `t • P` is proper. -/
+instance : SMul ℕ (GAP G) where
+  smul t P := ⟨t • P.origin, t • P.bound⟩
 
 end GAP
 
@@ -179,6 +189,17 @@ lemma ext {P Q : GAP G} (horigin : P.origin = Q.origin) (hbound : P.bound = Q.bo
 
 @[simp] lemma bound_add (P Q : GAP G) : (P + Q).bound = P.bound + Q.bound := rfl
 
+@[simp] lemma origin_nsmul (t : ℕ) (P : GAP G) : (t • P).origin = t • P.origin := rfl
+
+@[simp] lemma bound_nsmul (t : ℕ) (P : GAP G) : (t • P).bound = t • P.bound := rfl
+
+/-- The multiple `2 • P` is the sum `P + P`. -/
+lemma two_nsmul (P : GAP G) : 2 • P = P + P :=
+  ext (_root_.two_nsmul _) (_root_.two_nsmul _)
+
+lemma succ_nsmul (t : ℕ) (P : GAP G) : (t + 1) • P = t • P + P :=
+  ext (_root_.succ_nsmul _ _) (_root_.succ_nsmul _ _)
+
 lemma eval_eq_linearCombination (P : GAP G) (c : G →₀ ℕ) :
     P.eval c = P.origin + Finsupp.linearCombination ℕ id c := by
   rw [eval, Finsupp.linearCombination_apply]
@@ -222,6 +243,14 @@ lemma toFinset_add (P Q : GAP G) : (P + Q).toFinset = P.toFinset + Q.toFinset :=
     exact ⟨_, ⟨c₁, hc₁, rfl⟩, _, ⟨c₂, hc₂, rfl⟩, (eval_add P Q c₁ c₂).symm⟩
   · rintro ⟨_, ⟨c₁, hc₁, rfl⟩, _, ⟨c₂, hc₂, rfl⟩, rfl⟩
     exact ⟨c₁ + c₂, add_le_add hc₁ hc₂, eval_add P Q c₁ c₂⟩
+
+/-- The points of `t • P` are the sums of `t` points of `P`. -/
+lemma toFinset_nsmul (t : ℕ) (P : GAP G) : (t • P).toFinset = t • P.toFinset := by
+  induction t with
+  | zero =>
+    ext x
+    simp [mem_toFinset, eq_comm]
+  | succ t ih => rw [succ_nsmul, toFinset_add, ih, _root_.succ_nsmul]
 
 end Carrier
 
@@ -429,7 +458,22 @@ lemma size_add_le_of_bound_eq {P Q : GAP G} (h : Q.bound = P.bound) :
   simp only [Finsupp.add_apply]
   grind
 
-/-! ## Two-proper progressions -/
+/-! ## `t`-proper progressions -/
+
+/-- The multiple `t • P` of a GAP is the GAP with the steps of `P` and the lengths
+`t * (P.length i - 1) + 1`. -/
+lemma nsmul_eq_ofSteps (t : ℕ) (P : GAP G) :
+    t • P = ofSteps (t • P.origin) P.step fun i ↦ t * (P.length i - 1) + 1 := by
+  refine ext rfl ?_
+  rw [bound_nsmul, ← P.bound_ofSteps_step_length 0]
+  simp only [ofSteps, Finset.smul_sum, Finsupp.smul_single, smul_eq_mul, Nat.add_sub_cancel]
+
+/-- A GAP is `t`-proper if and only if the points `t • P.origin + ∑ i, w i • P.step i` with
+`w i < t * (P.length i - 1) + 1` are distinct. -/
+lemma proper_nsmul_iff_injective (t : ℕ) (P : GAP G) : (t • P).Proper ↔
+    Function.Injective (gapMap (t • P.origin) P.step fun i ↦ t * (P.length i - 1) + 1) := by
+  rw [nsmul_eq_ofSteps]
+  exact proper_ofSteps_iff P.step_injective fun i ↦ Nat.succ_pos _
 
 /-- The sum of a GAP `P` and a GAP with the same bound is the GAP with the steps of `P` and the
 lengths `2 * P.length i - 1`. -/

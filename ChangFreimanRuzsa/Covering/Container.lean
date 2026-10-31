@@ -335,7 +335,7 @@ end Packing
 of size at most `exp E * #X`, where `E` is `containerExponent κ`.
 
 No upper bound on `#X` in terms of `q` is needed, because the Fourier-analytic steps take place in
-`ZMod m` with `m ≤ κ ^ 16 * #X`. The lemma `exists_twoProperGAP_dim_le_freimanDim` then bounds the
+`ZMod m` with `m ≤ κ ^ 16 * #X`. The lemma `exists_tProperGAP_dim_le_freimanDim` then bounds the
 dimension by the Freiman dimension of `X`. -/
 lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)

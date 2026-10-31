@@ -14,7 +14,8 @@ Each step of the properization of a GAP of dimension `d` costs a factor
 `exp (C * (d + 2) ^ 2 * log (d + 2))` for a constant `C`, and the steps lower the dimension. This
 file bounds the factors of one step and shows that they telescope to
 `exp (C * (d + 2) ^ 3 * log (d + 2))`. The bounds come from writing each factor as a power of
-`d + 2`.
+`d + 2`. Passing from `2`-properness to `t`-properness multiplies the factor of one step by
+`(t / 2) ^ d`.
 
 ## Main statements
 
@@ -23,6 +24,8 @@ file bounds the factors of one step and shows that they telescope to
 * `latticeBoxFactor_mul_pow_le_exp`, `latticeBoxFactor_mul_two_pow_le_exp` and
   `two_mul_two_mul_add_one_pow_le_exp`: the factors of one step are at most
   `exp (2 * (d + 2) ^ 2 * log (d + 2))`.
+* `latticeBoxFactor_mul_pow_mul_le_exp` and `two_mul_mul_add_one_pow_le_exp`: the factors of one
+  step towards `t`-properness, with the additional term `d * log (t / 2)` in the exponent.
 * `mul_pow_three_mul_log_add_le`: for `e < d`,
   `A * (e + 2) ^ 3 * log (e + 2) + A * (d + 2) ^ 2 * log (d + 2) ≤ A * (d + 2) ^ 3 * log (d + 2)`.
 -/
@@ -97,6 +100,50 @@ lemma two_mul_two_mul_add_one_pow_le_exp (d : ℕ) :
     (by nlinarith : 2 * (2 * (d : ℝ)) + 1 ≤ ((d : ℝ) + 2) ^ 2) d).trans ?_
   rw [← pow_mul]
   exact add_two_pow_le_exp_mul_log (by push_cast; nlinarith)
+
+lemma log_div_two_nonneg {t : ℕ} (ht : 2 ≤ t) : 0 ≤ Real.log ((t : ℝ) / 2) :=
+  Real.log_nonneg ((one_le_div two_pos).2 (mod_cast ht))
+
+/-- For `2 ≤ t`, `(t / 2) ^ d = exp (d * log (t / 2))`. -/
+lemma div_two_pow_eq_exp {t : ℕ} (ht : 2 ≤ t) (d : ℕ) :
+    ((t : ℝ) / 2) ^ d = Real.exp (d * Real.log ((t : ℝ) / 2)) := by
+  rw [Real.exp_nat_mul, Real.exp_log (div_pos (mod_cast (by grind : 0 < t)) two_pos)]
+
+/-- For `r ≤ d` and `2 ≤ t`, the factor
+`latticeBoxFactor (d - r) * ((2 * r + 4) * (2 * (t * r + 1) + 1)) ^ d` of one quotient step is at
+most `exp (2 * (d + 2) ^ 2 * log (d + 2) + d * log (t / 2))`. Indeed
+`2 * (t * r + 1) + 1 ≤ t / 2 * (2 * (2 * r + 1) + 1)`. -/
+lemma latticeBoxFactor_mul_pow_mul_le_exp {r d t : ℕ} (hrd : r ≤ d) (ht : 2 ≤ t) :
+    (latticeBoxFactor (d - r) : ℝ) * ((2 * (r : ℝ) + 4) * (2 * (t * (r : ℝ) + 1) + 1)) ^ d ≤
+      Real.exp (2 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2) + d * Real.log ((t : ℝ) / 2)) := by
+  have ht' : (2 : ℝ) ≤ t := mod_cast ht
+  have hr := Nat.cast_nonneg (α := ℝ) r
+  rw [Real.exp_add, ← div_two_pow_eq_exp ht]
+  calc (latticeBoxFactor (d - r) : ℝ) * ((2 * (r : ℝ) + 4) * (2 * (t * (r : ℝ) + 1) + 1)) ^ d
+      ≤ (latticeBoxFactor (d - r) : ℝ) *
+          ((t : ℝ) / 2 * ((2 * (r : ℝ) + 4) * (2 * (2 * (r : ℝ) + 1) + 1))) ^ d := by
+        refine mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (by positivity) ?_ d) (Nat.cast_nonneg _)
+        nlinarith [mul_nonneg (by linarith : (0 : ℝ) ≤ 2 * r + 4) (sub_nonneg.2 ht')]
+    _ = (latticeBoxFactor (d - r) : ℝ) *
+          ((2 * (r : ℝ) + 4) * (2 * (2 * (r : ℝ) + 1) + 1)) ^ d * ((t : ℝ) / 2) ^ d := by
+        rw [mul_pow]
+        ring
+    _ ≤ _ := by
+        gcongr
+        exact latticeBoxFactor_mul_pow_le_exp hrd
+
+/-- For `2 ≤ t`,
+`(2 * (t * d) + 1) ^ d ≤ exp ((d + 2) ^ 2 * log (d + 2) + d * log (t / 2))`. Indeed
+`2 * (t * d) + 1 ≤ t / 2 * (2 * (2 * d) + 1)`. -/
+lemma two_mul_mul_add_one_pow_le_exp {t : ℕ} (ht : 2 ≤ t) (d : ℕ) :
+    (2 * (t * (d : ℝ)) + 1) ^ d ≤
+      Real.exp (((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2) + d * Real.log ((t : ℝ) / 2)) := by
+  have ht' : (2 : ℝ) ≤ t := mod_cast ht
+  rw [Real.exp_add, ← div_two_pow_eq_exp ht, mul_comm _ (((t : ℝ) / 2) ^ d)]
+  refine (pow_le_pow_left₀ (by positivity)
+    (by nlinarith : 2 * (t * (d : ℝ)) + 1 ≤ (t : ℝ) / 2 * (2 * (2 * d) + 1)) d).trans ?_
+  rw [mul_pow]
+  exact mul_le_mul_of_nonneg_left (two_mul_two_mul_add_one_pow_le_exp d) (by positivity)
 
 /-- For `0 ≤ A` and `e < d`,
 `A * (e + 2) ^ 3 * log (e + 2) + A * (d + 2) ^ 2 * log (d + 2) ≤ A * (d + 2) ^ 3 * log (d + 2)`.

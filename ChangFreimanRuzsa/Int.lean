@@ -12,11 +12,11 @@ import ChangFreimanRuzsa.Properization.ShortRelations
 /-!
 # Chang's theorem for sets of integers
 
-A finite set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` lies in a `2`-proper generalized arithmetic
-progression of dimension at most `containerExponent (2 * κ)` and of size at most `exp C * #X`,
-where `C` is `intExponent κ`. This is Chang's form of Freiman's theorem, Proposition 1.3 of Green
-and Tao, *Compressions, convex geometry and the Freiman–Bilu theorem*. The exponent
-`intExponent κ` is bounded by a polynomial in `κ`.
+Let `2 ≤ t`. A finite set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` lies in a `t`-proper generalized
+arithmetic progression of dimension at most `c = containerExponent (2 * κ)` and of size at most
+`exp C * #X`, where `C` is `intExponent κ + tProperExponent t c`. This is Chang's form of Freiman's
+theorem, Proposition 1.3 of Green and Tao, *Compressions, convex geometry and the Freiman–Bilu
+theorem*. The exponent `intExponent κ` is bounded by a polynomial in `κ`.
 
 A progression of `ZMod q` that contains the reduction of `X` modulo `q` need not come from a
 progression of `ℤ` that contains `X`, because it may wrap around. So the statement for `ZMod q`
@@ -25,7 +25,7 @@ a large prime `q`. It gives a proper progression inside `X + X - (X + X)` in the
 modulo `q`. The reduction is a Freiman isomorphism of order `8` on `X`, so
 `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso` carries this progression back to a
 proper progression of `ℤ` inside `X + X - (X + X)`. The rest of the argument, the covering of `X`
-by translates and the passage to a `2`-proper progression, takes place in `ℤ`. These steps are
+by translates and the passage to a `t`-proper progression, takes place in `ℤ`. These steps are
 stated for general groups in `ChangFreimanRuzsa.Covering.Container` and `ChangFreimanRuzsa.ZMod`.
 
 A set too small for this argument is first replaced by its sum with a long arithmetic progression
@@ -33,8 +33,8 @@ A set too small for this argument is first replaced by its sum with a long arith
 
 ## Main definitions
 
-* `intExponent κ`: the exponent of the bound for the size of the progression, a polynomially
-  bounded function of the doubling.
+* `intExponent κ`: the exponent of the bound for the size of the progression for `t = 2`, a
+  polynomially bounded function of the doubling.
 
 ## Main statements
 
@@ -42,9 +42,9 @@ A set too small for this argument is first replaced by its sum with a long arith
   is not too small has a large proper progression in `X + X - (X + X)`.
 * `exists_gap_int_subset_dim_le_card_le`: a set of integers with small doubling that is not too
   small lies in a progression of bounded dimension and size.
-* `exists_twoProperGAP_int_of_small_sumset`: Chang's theorem for sets of integers that are not too
+* `exists_tProperGAP_int_of_small_sumset`: Chang's theorem for sets of integers that are not too
   small.
-* `exists_twoProperGAP_of_small_sumset`: Chang's theorem for sets of integers.
+* `exists_tProperGAP_of_small_sumset`: Chang's theorem for sets of integers.
 -/
 
 public section
@@ -55,7 +55,7 @@ open scoped Pointwise
 namespace ChangFreimanRuzsa
 
 /-- The exponent of the bound for the size of the progression in Chang's theorem for sets of
-integers. -/
+integers for `t = 2`. -/
 @[expose] noncomputable def intExponent (κ : ℝ) : ℝ :=
   zmodExponent (2 * κ) + containerExponent (2 * κ) + 1
 
@@ -201,16 +201,16 @@ lemma exists_gap_int_subset_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 
 
 /-! ## Chang's theorem -/
 
-/-- **Chang's theorem** for sets of integers that are not too small. Write `c` for
-`containerExponent κ`, `C` for `zmodExponent κ` and `d` for `bohrGAPDim κ`. A finite set
-`X : Finset ℤ` with `#(X + X) ≤ κ * #X` and `256 * d ≤ #X` is contained in a `2`-proper
+/-- **Chang's theorem** for sets of integers that are not too small. Let `2 ≤ t`, write `c` for
+`containerExponent κ`, `C` for `zmodExponent κ + tProperExponent t c` and `d` for `bohrGAPDim κ`. A
+finite set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` and `256 * d ≤ #X` is contained in a `t`-proper
 generalized arithmetic progression of dimension at most `c` and of size at most `exp C * #X`. -/
-theorem exists_twoProperGAP_int_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
-    (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
-    ∃ Q : GAP ℤ, (Q + Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ containerExponent κ ∧
-      #Q.toFinset ≤ Real.exp (zmodExponent κ) * #X := by
+theorem exists_tProperGAP_int_of_small_sumset {t : ℕ} {κ : ℝ} (X : Finset ℤ) (ht : 2 ≤ t)
+    (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
+    ∃ Q : GAP ℤ, (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ containerExponent κ ∧
+      #Q.toFinset ≤ Real.exp (zmodExponent κ + tProperExponent t (containerExponent κ)) * #X := by
   obtain ⟨P, hXP, hPdim, hPcard⟩ := exists_gap_int_subset_dim_le_card_le X hκ hXX hXlower
-  exact exists_twoProperGAP_subset_dim_le_card_le_of_subset_gap
+  exact exists_tProperGAP_subset_dim_le_card_le_of_subset_gap ht
     (fun _ ↦ GAP.injOn_nsmul_of_isAddTorsionFree _) hXP hPdim hPcard (Nat.le_ceil _)
 
 private lemma exp_mul_le_exp_add_add_one_mul {z c x y : ℝ} (hx : 0 ≤ x)
@@ -220,20 +220,23 @@ private lemma exp_mul_le_exp_add_add_one_mul {z c x y : ℝ} (hx : 0 ≤ x)
   nlinarith [Real.add_one_le_exp (1 : ℝ),
     mul_nonneg (mul_nonneg (Real.exp_nonneg z) (Real.exp_nonneg c)) hx]
 
-/-- **Chang's theorem** for sets of integers. A finite nonempty set `X : Finset ℤ` with
-`#(X + X) ≤ κ * #X` is contained in a `2`-proper generalized arithmetic progression of dimension
-at most `containerExponent (2 * κ)` and of size at most `exp C * #X`, where `C` is
-`intExponent κ`. -/
-theorem exists_twoProperGAP_of_small_sumset {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
-    (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
-    ∃ P : GAP ℤ, (P + P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ containerExponent (2 * κ) ∧
-      #P.toFinset ≤ Real.exp (intExponent κ) * #X := by
+/-- **Chang's theorem** for sets of integers. Let `2 ≤ t` and write `c` for
+`containerExponent (2 * κ)`. A finite nonempty set `X : Finset ℤ` with `#(X + X) ≤ κ * #X` is
+contained in a `t`-proper generalized arithmetic progression of dimension at most `c` and of size at
+most `exp C * #X`, where `C` is `intExponent κ + tProperExponent t c`. -/
+theorem exists_tProperGAP_of_small_sumset {t : ℕ} {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
+    (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
+    ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ containerExponent (2 * κ) ∧
+      #P.toFinset ≤
+        Real.exp (intExponent κ + tProperExponent t (containerExponent (2 * κ))) * #X := by
   have hκ' : (2 : ℝ) ≤ 2 * κ := by linarith
   obtain ⟨X', hXX', hX'X', hX'lower, hX'upper⟩ :=
     exists_large_superset_of_card_add_le hX hXX (Real.one_le_exp (containerExponent_pos hκ').le)
   obtain ⟨P, hP, hX'P, hdim, hcard⟩ :=
-    exists_twoProperGAP_int_of_small_sumset X' hκ' hX'X' (mul_bohrGAPDim_le_of_exp_lt hκ' hX'lower)
-  exact ⟨P, hP, hXX'.trans hX'P, hdim,
-    hcard.trans (exp_mul_le_exp_add_add_one_mul (Nat.cast_nonneg _) hX'upper)⟩
+    exists_tProperGAP_int_of_small_sumset X' ht hκ' hX'X' (mul_bohrGAPDim_le_of_exp_lt hκ' hX'lower)
+  refine ⟨P, hP, hXX'.trans hX'P, hdim,
+    hcard.trans ((exp_mul_le_exp_add_add_one_mul (Nat.cast_nonneg _) hX'upper).trans_eq ?_)⟩
+  rw [intExponent]
+  ring_nf
 
 end ChangFreimanRuzsa

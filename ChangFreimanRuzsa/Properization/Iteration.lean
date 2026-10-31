@@ -14,22 +14,24 @@ import ChangFreimanRuzsa.Properization.ShortRelations
 # Iterated properization
 
 Let `P` be a GAP of dimension `d` in an abelian group in which the multiples `n • a` with `n < N`
-of every nonzero `a` are distinct, with `N` large compared with `#P.toFinset`. Each application of
-`GAP.proper_add_self_or_exists_gap_dim_lt` costs a factor `exp (2 * (d + 2) ^ 2 * log (d + 2))`
-and either finds that the progression is `2`-proper or lowers its dimension. Iterating proves that
-`P` lies in a `2`-proper GAP of dimension at most `d` and of size at most
-`exp (2 * (d + 2) ^ 3 * log (d + 2)) * #P.toFinset`.
+of every nonzero `a` are distinct, with `N` large compared with `#P.toFinset`, and let `2 ≤ t`. Each
+application of `GAP.proper_nsmul_or_exists_gap_dim_lt` costs a factor
+`exp (2 * (d + 2) ^ 2 * log (d + 2) + d * log (t / 2))` and either finds that the progression is
+`t`-proper or lowers its dimension. Iterating proves that `P` lies in a `t`-proper GAP of dimension
+at most `d` and of size at most
+`exp (2 * (d + 2) ^ 3 * log (d + 2) + (d + 2) ^ 2 * log (t / 2)) * #P.toFinset`.
 
 ## Main definitions
 
 * `properizationExponent`: the exponent `2 * (d + 2) ^ 3 * log (d + 2)` in the size bound of
-  properization.
+  properization for `t = 2`.
+* `tProperExponent`: the additional exponent `(d + 2) ^ 2 * log (t / 2)` for general `t`.
 
 ## Main statements
 
-* `exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul`: the iterated statement.
-* `exists_twoProperGAP_zmod_toFinset_subset_dim_le_card_le` and
-  `exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_isAddTorsionFree`: the statements in
+* `exists_tProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul`: the iterated statement.
+* `exists_tProperGAP_zmod_toFinset_subset_dim_le_card_le` and
+  `exists_tProperGAP_toFinset_subset_dim_le_card_le_of_isAddTorsionFree`: the statements in
   `ZMod q` for prime `q` and in torsion-free groups.
 -/
 
@@ -41,7 +43,7 @@ noncomputable section
 
 variable {G : Type*} [AddCommGroup G]
 
-/-- The exponent `2 * (d + 2) ^ 3 * log (d + 2)` in the size bound of properization. -/
+/-- The exponent `2 * (d + 2) ^ 3 * log (d + 2)` in the size bound of properization for `t = 2`. -/
 def properizationExponent (d : ℝ) : ℝ := 2 * (d + 2) ^ 3 * Real.log (d + 2)
 
 lemma properizationExponent_nonneg {d : ℝ} (hd : 0 ≤ d) : 0 ≤ properizationExponent d :=
@@ -60,74 +62,116 @@ lemma mul_sq_mul_log_le_properizationExponent {x : ℝ} (hx : 0 ≤ x) :
   nlinarith [two_mul_add_two_sq_mul_log_le hx,
     mul_nonneg (pow_nonneg (by linarith : 0 ≤ x + 2) 3) (log_add_two_pos hx).le]
 
-/-- If `exp (properizationExponent d) * #P.toFinset ≤ N`, then `P` satisfies the hypothesis
-`(2 * (2 * d) + 1) ^ d * #P.toFinset < N` of `GAP.proper_add_self_or_exists_gap_dim_lt`. -/
-lemma GAP.mul_card_lt_of_exp_mul_card_le [DecidableEq G] {N : ℕ} {P : GAP G}
-    (hcard : Real.exp (properizationExponent P.dim) * P.toFinset.card ≤ N) :
-    (2 * (2 * P.dim) + 1) ^ P.dim * P.toFinset.card < N := by
-  have hexp : Real.exp (((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2)) <
-      Real.exp (properizationExponent P.dim) := by
+/-- The exponent `(d + 2) ^ 2 * log (t / 2)` that `t`-properness adds to
+`properizationExponent d`. It vanishes for `t = 2`. -/
+def tProperExponent (t : ℕ) (d : ℝ) : ℝ := (d + 2) ^ 2 * Real.log ((t : ℝ) / 2)
+
+@[simp] lemma tProperExponent_two (d : ℝ) : tProperExponent 2 d = 0 := by
+  simp [tProperExponent]
+
+lemma tProperExponent_nonneg {t : ℕ} (ht : 2 ≤ t) (d : ℝ) : 0 ≤ tProperExponent t d :=
+  mul_nonneg (sq_nonneg _) (log_div_two_nonneg ht)
+
+lemma tProperExponent_mono {t : ℕ} (ht : 2 ≤ t) {d d' : ℝ} (hd : 0 ≤ d) (hdd' : d ≤ d') :
+    tProperExponent t d ≤ tProperExponent t d' :=
+  mul_le_mul_of_nonneg_right (pow_le_pow_left₀ (by linarith) (by linarith) 2)
+    (log_div_two_nonneg ht)
+
+/-- For `e < d`, `tProperExponent t e + d * log (t / 2) ≤ tProperExponent t d`. Indeed
+`(e + 2) ^ 2 ≤ (d + 1) ^ 2` and `(d + 1) ^ 2 + d ≤ (d + 2) ^ 2`. -/
+lemma tProperExponent_add_mul_log_le {t e d : ℕ} (ht : 2 ≤ t) (hed : e < d) :
+    tProperExponent t e + d * Real.log ((t : ℝ) / 2) ≤ tProperExponent t d := by
+  rw [tProperExponent, tProperExponent, ← add_mul]
+  refine mul_le_mul_of_nonneg_right ?_ (log_div_two_nonneg ht)
+  nlinarith [(Nat.cast_le (α := ℝ)).2 (Nat.succ_le_of_lt hed), Nat.cast_nonneg (α := ℝ) e,
+    Nat.cast_nonneg (α := ℝ) d, Nat.cast_succ (R := ℝ) e]
+
+/-- If `exp (properizationExponent d + tProperExponent t d) * #P.toFinset ≤ N`, then `P` satisfies
+the hypothesis `(2 * (t * d) + 1) ^ d * #P.toFinset < N` of
+`GAP.proper_nsmul_or_exists_gap_dim_lt`. -/
+lemma GAP.mul_card_lt_of_exp_mul_card_le [DecidableEq G] {N t : ℕ} {P : GAP G} (ht : 2 ≤ t)
+    (hcard : Real.exp (properizationExponent P.dim + tProperExponent t P.dim) * P.toFinset.card ≤
+      N) :
+    (2 * (t * P.dim) + 1) ^ P.dim * P.toFinset.card < N := by
+  have hd := Nat.cast_nonneg (α := ℝ) P.dim
+  have hexp : Real.exp (((P.dim : ℝ) + 2) ^ 2 * Real.log ((P.dim : ℝ) + 2) +
+      P.dim * Real.log ((t : ℝ) / 2)) <
+      Real.exp (properizationExponent P.dim + tProperExponent t P.dim) := by
     rw [Real.exp_lt_exp]
-    linarith [mul_sq_mul_log_le_properizationExponent (Nat.cast_nonneg (α := ℝ) P.dim),
-      mul_pos (pow_pos (by positivity : (0 : ℝ) < (P.dim : ℝ) + 2) 2)
-        (log_add_two_pos (Nat.cast_nonneg (α := ℝ) P.dim))]
-  exact_mod_cast ((mul_le_mul_of_nonneg_right (two_mul_two_mul_add_one_pow_le_exp P.dim)
+    have hlog : (P.dim : ℝ) * Real.log ((t : ℝ) / 2) ≤ tProperExponent t P.dim :=
+      mul_le_mul_of_nonneg_right (by nlinarith) (log_div_two_nonneg ht)
+    linarith [mul_sq_mul_log_le_properizationExponent hd,
+      mul_pos (pow_pos (by positivity : (0 : ℝ) < (P.dim : ℝ) + 2) 2) (log_add_two_pos hd)]
+  exact_mod_cast ((mul_le_mul_of_nonneg_right (two_mul_mul_add_one_pow_le_exp ht P.dim)
     (Nat.cast_nonneg _)).trans_lt (mul_lt_mul_of_pos_right hexp
       (mod_cast P.nonempty.card_pos))).trans_le hcard
 
-/-- For `e < d` and `0 ≤ x`, writing `E` for `properizationExponent`,
-`exp (E e) * (exp (2 * (d + 2) ^ 2 * log (d + 2)) * x) ≤ exp (E d) * x`. -/
-lemma exp_mul_exp_mul_le_of_lt {e d : ℕ} (hed : e < d) {x : ℝ} (hx : 0 ≤ x) :
-    Real.exp (properizationExponent e) *
-        (Real.exp (2 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2)) * x) ≤
-      Real.exp (properizationExponent d) * x := by
+/-- For `e < d` and `0 ≤ x`, writing `E` for `properizationExponent` and `T` for
+`tProperExponent t`,
+`exp (E e + T e) * (exp (2 * (d + 2) ^ 2 * log (d + 2) + d * log (t / 2)) * x)` is at most
+`exp (E d + T d) * x`. -/
+lemma exp_mul_exp_mul_le_of_lt {t e d : ℕ} (ht : 2 ≤ t) (hed : e < d) {x : ℝ} (hx : 0 ≤ x) :
+    Real.exp (properizationExponent e + tProperExponent t e) *
+        (Real.exp (2 * ((d : ℝ) + 2) ^ 2 * Real.log ((d : ℝ) + 2) +
+          d * Real.log ((t : ℝ) / 2)) * x) ≤
+      Real.exp (properizationExponent d + tProperExponent t d) * x := by
   rw [← mul_assoc, ← Real.exp_add]
-  gcongr
-  exact mul_pow_three_mul_log_add_le zero_le_two hed
+  refine mul_le_mul_of_nonneg_right (Real.exp_le_exp.2 ?_) hx
+  unfold properizationExponent
+  linarith [mul_pow_three_mul_log_add_le (A := 2) zero_le_two hed,
+    tProperExponent_add_mul_log_le ht hed]
 
 variable [DecidableEq G]
 
 /-- Let `P` be a GAP of dimension `d` in an abelian group in which the multiples `n • a` with
-`n < N` of every nonzero `a` are distinct. Write `E d = 2 * (d + 2) ^ 3 * log (d + 2)` for
-`properizationExponent d` and suppose `exp (E d) * #P.toFinset ≤ N`. Then `P` lies in a `2`-proper
-GAP of dimension at most `d` and of size at most `exp (E d) * #P.toFinset`. The proof iterates
-`GAP.proper_add_self_or_exists_gap_dim_lt`: each step costs a factor
-`exp (2 * (d + 2) ^ 2 * log (d + 2))` and either finds that the progression is `2`-proper or
-lowers the dimension. -/
-lemma exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul {N : ℕ} (P : GAP G)
-    (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
-    (hcard : Real.exp (properizationExponent P.dim) * P.toFinset.card ≤ N) :
-    ∃ Q : GAP G, (Q + Q).Proper ∧ P.toFinset ⊆ Q.toFinset ∧ Q.dim ≤ P.dim ∧
-      Q.toFinset.card ≤ Real.exp (properizationExponent P.dim) * P.toFinset.card := by
+`n < N` of every nonzero `a` are distinct, and let `2 ≤ t`. Write `E d` for
+`properizationExponent d + tProperExponent t d` and suppose `exp (E d) * #P.toFinset ≤ N`. Then `P`
+lies in a `t`-proper GAP of dimension at most `d` and of size at most `exp (E d) * #P.toFinset`.
+The proof iterates `GAP.proper_nsmul_or_exists_gap_dim_lt`: each step costs a factor
+`exp (2 * (d + 2) ^ 2 * log (d + 2) + d * log (t / 2))` and either finds that the progression is
+`t`-proper or lowers the dimension. -/
+lemma exists_tProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul {N t : ℕ} (P : GAP G)
+    (ht : 2 ≤ t) (hG : ∀ a : G, a ≠ 0 → Set.InjOn (fun n : ℕ ↦ n • a) (Set.Iio N))
+    (hcard : Real.exp (properizationExponent P.dim + tProperExponent t P.dim) * P.toFinset.card ≤
+      N) :
+    ∃ Q : GAP G, (t • Q).Proper ∧ P.toFinset ⊆ Q.toFinset ∧ Q.dim ≤ P.dim ∧
+      Q.toFinset.card ≤
+        Real.exp (properizationExponent P.dim + tProperExponent t P.dim) * P.toFinset.card := by
   induction hd : P.dim using Nat.strong_induction_on generalizing P with
   | h d ih =>
     subst hd
-    rcases GAP.proper_add_self_or_exists_gap_dim_lt hG
-      (GAP.mul_card_lt_of_exp_mul_card_le hcard) with hP | ⟨Q, hPQ, hdim, hQcard⟩
+    rcases GAP.proper_nsmul_or_exists_gap_dim_lt ht hG
+      (GAP.mul_card_lt_of_exp_mul_card_le ht hcard) with hP | ⟨Q, hPQ, hdim, hQcard⟩
     · refine ⟨P, hP, subset_rfl, le_rfl, le_mul_of_one_le_left (Nat.cast_nonneg _) ?_⟩
-      exact Real.one_le_exp (properizationExponent_nonneg (Nat.cast_nonneg _))
+      exact Real.one_le_exp (add_nonneg (properizationExponent_nonneg (Nat.cast_nonneg _))
+        (tProperExponent_nonneg ht _))
     · have hQbound := mul_le_mul_of_nonneg_left hQcard
-        (Real.exp_pos (properizationExponent Q.dim)).le
+        (Real.exp_pos (properizationExponent Q.dim + tProperExponent t Q.dim)).le
       obtain ⟨R, hR, hQR, hRdim, hRcard⟩ := ih Q.dim hdim Q
-        (hQbound.trans ((exp_mul_exp_mul_le_of_lt hdim (by positivity)).trans hcard)) rfl
+        (hQbound.trans ((exp_mul_exp_mul_le_of_lt ht hdim (by positivity)).trans hcard)) rfl
       exact ⟨R, hR, hPQ.trans hQR, hRdim.trans hdim.le,
-        hRcard.trans (hQbound.trans (exp_mul_exp_mul_le_of_lt hdim (by positivity)))⟩
+        hRcard.trans (hQbound.trans (exp_mul_exp_mul_le_of_lt ht hdim (by positivity)))⟩
 
-/-- Properization in `ZMod q` for a prime `q` with
-`exp (properizationExponent d) * #P.toFinset ≤ q`. -/
-lemma exists_twoProperGAP_zmod_toFinset_subset_dim_le_card_le {q : ℕ} (P : GAP (ZMod q))
-    (hq : Nat.Prime q) (hcard : Real.exp (properizationExponent P.dim) * P.toFinset.card ≤ q) :
-    ∃ Q : GAP (ZMod q), (Q + Q).Proper ∧ P.toFinset ⊆ Q.toFinset ∧ Q.dim ≤ P.dim ∧
-      Q.toFinset.card ≤ Real.exp (properizationExponent P.dim) * P.toFinset.card :=
-  exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul P
+/-- Properization in `ZMod q` for a prime `q` and `2 ≤ t`, with
+`exp (properizationExponent d + tProperExponent t d) * #P.toFinset ≤ q`. -/
+lemma exists_tProperGAP_zmod_toFinset_subset_dim_le_card_le {q t : ℕ} (P : GAP (ZMod q))
+    (hq : Nat.Prime q) (ht : 2 ≤ t)
+    (hcard : Real.exp (properizationExponent P.dim + tProperExponent t P.dim) * P.toFinset.card ≤
+      q) :
+    ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ P.toFinset ⊆ Q.toFinset ∧ Q.dim ≤ P.dim ∧
+      Q.toFinset.card ≤
+        Real.exp (properizationExponent P.dim + tProperExponent t P.dim) * P.toFinset.card :=
+  exists_tProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul P ht
     (fun _ ha ↦ GAP.injOn_nsmul_of_prime hq ha) hcard
 
-/-- Properization in a torsion-free group, such as `ℤ`, with no condition on `#P.toFinset`. -/
-lemma exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_isAddTorsionFree [IsAddTorsionFree G]
-    (P : GAP G) :
-    ∃ Q : GAP G, (Q + Q).Proper ∧ P.toFinset ⊆ Q.toFinset ∧ Q.dim ≤ P.dim ∧
-      Q.toFinset.card ≤ Real.exp (properizationExponent P.dim) * P.toFinset.card :=
-  exists_twoProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul P
+/-- Properization in a torsion-free group, such as `ℤ`, for `2 ≤ t`, with no condition on
+`#P.toFinset`. -/
+lemma exists_tProperGAP_toFinset_subset_dim_le_card_le_of_isAddTorsionFree [IsAddTorsionFree G]
+    {t : ℕ} (P : GAP G) (ht : 2 ≤ t) :
+    ∃ Q : GAP G, (t • Q).Proper ∧ P.toFinset ⊆ Q.toFinset ∧ Q.dim ≤ P.dim ∧
+      Q.toFinset.card ≤
+        Real.exp (properizationExponent P.dim + tProperExponent t P.dim) * P.toFinset.card :=
+  exists_tProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul P ht
     (fun _ ha ↦ GAP.injOn_nsmul_of_isAddTorsionFree _ ha) (Nat.le_ceil _)
 
 end
