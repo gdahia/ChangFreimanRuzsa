@@ -13,64 +13,78 @@ and Minkowski's second theorem from [Tau Ceti](https://github.com/TauCetiProject
 
 **Theorem 1** (`ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_freimanDim_card_le`). Let
 $t \ge 2$ be an integer, let $\kappa \ge 2$ and let $X$ be a finite nonempty set of integers. If
-$|X + X| \le \kappa |X|$, then $X$ is contained in a $t$-proper progression $P$ with
+$\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$, then $X$ is contained in a
+$t$-proper progression $P$ with
 
-$$\dim P \le \mathrm{dim}_\mathrm{F} X, \qquad |P| \le \exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) |X|$$
+$$\dim P \le \mathrm{dim}\_\mathrm{F} X, \qquad \left\lvert P\right\rvert \le
+\exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert$$
 
-where $\mathrm{dim}_\mathrm{F} X$ is the Freiman dimension of $X$.
+where $\mathrm{dim}\_\mathrm{F} X$ is the Freiman dimension of $X$.
 
-**Theorem 2** (`ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le`).
-Let $q$ be a prime, let $t \ge 2$ be an integer, let $\kappa \ge 2$, and let
-$X \subseteq \mathbb{Z}/q\mathbb{Z}$. If $|X + X| \le \kappa |X|$,
-$|X| \ge 7 \cdot 10^7 \kappa^2$ and $\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) |X| \le q$, then
-$X$ is contained in a $t$-proper progression $Q$ with
+**Theorem 2** (`ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le`). Let $q$
+be a prime, let $t \ge 2$ be an integer, let $\kappa \ge 2$, and let
+$X \subseteq \mathbb{Z}/q\mathbb{Z}$. If
+$\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$,
+$\left\lvert X\right\rvert \ge 7 \cdot 10^7 \kappa^2$ and
+$\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert \le q$, then $X$ is contained
+in a $t$-proper progression $Q$ with
 
-$$\dim Q \le \mathrm{dim}_\mathrm{F} X, \qquad |Q| \le \exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) |X|.$$
+$$\dim Q \le \mathrm{dim}\_\mathrm{F} X, \qquad \left\lvert Q\right\rvert \le
+\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
 
 **Theorem 3** (`ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_card_le`). Under the
 hypotheses of Theorem 1, $X$ is contained in a $t$-proper progression $P$ with
 
-$$\dim P \le 2\kappa - 1, \qquad |P| \le \exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) |X|.$$
+$$\dim P \le 2\kappa - 1, \qquad \left\lvert P\right\rvert \le
+\exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
 
 **Theorem 4** (`ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_card_le`). Under the
 hypotheses of Theorem 2, $X$ is contained in a $t$-proper progression $Q$ with
 
-$$\dim Q \le 2\kappa - 1, \qquad |Q| \le \exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) |X|.$$
+$$\dim Q \le 2\kappa - 1, \qquad \left\lvert Q\right\rvert \le
+\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
 
-**Theorem 5** (`ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_floor_card_le`). Let
-$t \ge 2$ be an integer, let $\kappa \ge 2$, let $\varepsilon$ be a real number and let $X$ be a
-finite set of integers. If $|X + X| \le \kappa |X|$ and
-$\kappa (2\kappa - 1) \le \varepsilon |X|$, then $X$ is contained in a $t$-proper progression $P$
-with
+**Theorem 5** (`ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_floor_card_le`). Let $t \ge 2$ be
+an integer, let $\kappa \ge 2$, let $\varepsilon$ be a real number and let $X$ be a finite set of
+integers. If $\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$ and
+$\kappa (2\kappa - 1) \le \varepsilon \left\lvert X\right\rvert$, then $X$ is contained in a
+$t$-proper progression $P$ with
 
-$$\dim P \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad |P| \le \exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) |X|.$$
+$$\dim P \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad \left\lvert P\right\rvert \le
+\exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
 
-**Theorem 6** (`ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_floor_card_le`). Under
-the hypotheses of Theorem 2, if moreover $\kappa (2\kappa - 1) \le \varepsilon |X|$, then $X$ is
-contained in a $t$-proper progression $Q$ with
+**Theorem 6** (`ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_floor_card_le`). Under the
+hypotheses of Theorem 2, if moreover
+$\kappa (2\kappa - 1) \le \varepsilon \left\lvert X\right\rvert$, then $X$ is contained in a
+$t$-proper progression $Q$ with
 
-$$\dim Q \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad |Q| \le \exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) |X|.$$
+$$\dim Q \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad \left\lvert Q\right\rvert \le
+\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
 
 Theorems 3 to 6 follow from Theorems 1 and 2, since the Freiman dimension of a nonempty set $X$
-with $|X + X| \le \kappa |X|$ is at most $2\kappa - 1$
+with $\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$ is at most $2\kappa - 1$
 (`SumOfSetsInSeveralDimensions.freimanDim_le_two_mul_sub_one_of_card_add_le`) and at most
-$\kappa - 1 + \kappa (2\kappa - 1) / |X|$
+$\kappa - 1 + \kappa (2\kappa - 1) / \left\lvert X\right\rvert$
 (`SumOfSetsInSeveralDimensions.freimanDim_le_sub_one_add_mul_div_card_of_card_add_le`).
 
 Chang's theorem, as stated by Green and Tao, gives a progression with at most
-$\exp(C \kappa^2 \log^3 \kappa) |X|$ points and dimension at most the Freiman dimension of $X$,
-hence at most $\lfloor \kappa - 1 + \varepsilon \rfloor$ when $|X| \ge C \kappa^2 / \varepsilon$.
-Theorems 1, 2, 5 and 6 have the same bounds on the dimension, and a bound on the size that is
-linear in $|X|$ too, with a larger exponent.
+$\exp(C \kappa^2 \log^3 \kappa) \left\lvert X\right\rvert$ points and dimension at most the Freiman
+dimension of $X$, hence at most $\lfloor \kappa - 1 + \varepsilon \rfloor$ when
+$\left\lvert X\right\rvert \ge C \kappa^2 / \varepsilon$. Theorems 1, 2, 5 and 6 have the same
+bounds on the dimension, and a bound on the size that is linear in $\left\lvert X\right\rvert$ too,
+with a larger exponent.
 
 The first step of the proof is the Bogolyubov–Ruzsa lemma, a large proper progression inside
 $2X - 2X$.
 
 **Theorem 7** (`ChangFreimanRuzsa.exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le`). Let
-$\kappa \ge 2$ and let $X$ be a finite set of integers. If $|X + X| \le \kappa |X|$ and
-$|X| \ge 7 \cdot 10^7 \kappa^2$, then $2X - 2X$ contains a proper progression $Q$ with
+$\kappa \ge 2$ and let $X$ be a finite set of integers. If
+$\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$ and
+$\left\lvert X\right\rvert \ge 7 \cdot 10^7 \kappa^2$, then $2X - 2X$ contains a proper progression
+$Q$ with
 
-$$\dim Q \le 3 \cdot 10^5 \kappa^2, \qquad |X| \le \exp(2 \cdot 10^7 \kappa^2) |Q|.$$
+$$\dim Q \le 3 \cdot 10^5 \kappa^2, \qquad \left\lvert X\right\rvert \le
+\exp(2 \cdot 10^7 \kappa^2) \left\lvert Q\right\rvert.$$
 
 **Theorem 8** (`ChangFreimanRuzsa.exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le`).
 The same holds for $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $q$ prime.
