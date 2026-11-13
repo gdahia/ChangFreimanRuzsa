@@ -9,8 +9,6 @@ public import ChangFreimanRuzsa.GAP.Basic
 public import Mathlib.Analysis.SpecialFunctions.Log.Basic
 public import SumOfSetsInSeveralDimensions.FreimanDimension
 import ChangFreimanRuzsa.ExponentBounds
-import ChangFreimanRuzsa.FreimanDim
-import ChangFreimanRuzsa.Properization.ExponentialBounds
 import SumOfSetsInSeveralDimensions.FreimanDimensionSumsetBounds
 
 /-!
@@ -18,13 +16,14 @@ import SumOfSetsInSeveralDimensions.FreimanDimensionSumsetBounds
 
 Chang's theorem for finite sets of integers and for subsets of `ZMod q` with `q` prime, with the
 exponents in `exists_tProperGAP_int_dim_le_freimanDim` and
-`exists_tProperGAP_zmod_dim_le_freimanDim` replaced by the polynomial bounds of
-`ChangFreimanRuzsa.ExponentBounds` and `ChangFreimanRuzsa.FreimanDim`. For `2 ≤ κ` and `2 ≤ t`, a
-set `X` with `#(X + X) ≤ κ * #X` lies in a `t`-proper progression of dimension at most
-`freimanDim X` with at most `exp (C * κ ^ 7 + 7 * κ ^ 2 * log t) * #X` points, for an absolute
-constant `C`. The Freiman dimension of `X` is at most `2 * κ - 1`, so the progression has dimension
-at most `2 * κ - 1`. It is also at most `κ - 1 + κ * (2 * κ - 1) / #X`, so the progression has
-dimension at most `⌊κ - 1 + ε⌋₊` when `κ * (2 * κ - 1) ≤ ε * #X`, as in Green and Tao.
+`exists_tProperGAP_zmod_dim_le_freimanDim` replaced by the bounds of
+`ChangFreimanRuzsa.ExponentBounds`. For `2 ≤ κ` and `2 ≤ t`, a set `X` with `#(X + X) ≤ κ * #X`
+lies in a `t`-proper progression of dimension at most `freimanDim X` with at most
+`exp (C * κ ^ 2 * (1 + log κ) ^ 3 + 2 * κ * log t) * #X` points, for an absolute constant `C`. This
+is the bound of Chang. The Freiman dimension of `X` is at most `2 * κ - 1`, so the progression has
+dimension at most `2 * κ - 1`. It is also at most `κ - 1 + κ * (2 * κ - 1) / #X`, so the
+progression has dimension at most `⌊κ - 1 + ε⌋₊` when `κ * (2 * κ - 1) ≤ ε * #X`, as in Green and
+Tao.
 
 The file also gives the Bogolyubov–Ruzsa lemma with explicit bounds, the first step of the proof:
 if moreover `7 * 10 ^ 7 * κ ^ 2 ≤ #X`, then `2 • X - 2 • X` contains a proper progression of
@@ -84,46 +83,55 @@ theorem exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le {q : ℕ} {
   refine ⟨Q, hQ, by rwa [two_nsmul], by linarith [mul_bohrGAPDim_le hκ], hcard.trans ?_⟩
   grw [mul_bohrLoss_bohrGAPDim_le hκ]
 
-/-- If `#(X + X) ≤ κ * #X` for a nonempty `X`, where `2 ≤ κ`, and `2 ≤ t`, then
-`tProperExponent t (freimanDim X) ≤ 7 * κ ^ 2 * log t`. Indeed `freimanDim X + 2 ≤ 2 * κ + 1`,
-whose square is at most `7 * κ ^ 2`. -/
-private lemma tProperExponent_freimanDim_le {G : Type*} [DecidableEq G] [AddCancelCommMonoid G]
-    {t : ℕ} {κ : ℝ} {X : Finset G} (hX : X.Nonempty) (ht : 2 ≤ t) (hκ : 2 ≤ κ)
-    (hXX : #(X + X) ≤ κ * #X) : tProperExponent t (freimanDim X) ≤ 7 * κ ^ 2 * Real.log t := by
-  have hF := freimanDim_le_two_mul_sub_one_of_card_add_le hX hXX
-  have ht' : (0 : ℝ) < t := mod_cast (by grind : 0 < t)
-  exact mul_le_mul (by nlinarith [Nat.cast_nonneg (α := ℝ) (freimanDim X)])
-    (Real.log_le_log (by positivity) (by linarith)) (log_div_two_nonneg ht) (by positivity)
+/-- If `#(X + X) ≤ κ * #X` for a nonempty `X`, where `2 ≤ κ`, and
+`E ≤ D * κ ^ 2 * (1 + log κ) ^ 3` with `D + 20 ≤ C`, then
+`E + tProperExponent t (freimanDim X) ≤ C * κ ^ 2 * (1 + log κ) ^ 3 + 2 * κ * log t`. Indeed
+`freimanDim X + 1 ≤ 2 * κ`, so `tProperExponent_le` applies. -/
+private lemma add_tProperExponent_freimanDim_le {G : Type*} [DecidableEq G] [AddCancelCommMonoid G]
+    {t : ℕ} {κ C D E : ℝ} {X : Finset G} (hX : X.Nonempty) (ht : 2 ≤ t) (hκ : 2 ≤ κ)
+    (hXX : #(X + X) ≤ κ * #X) (hE : E ≤ D * κ ^ 2 * (1 + Real.log κ) ^ 3) (hDC : D + 20 ≤ C) :
+    E + tProperExponent t (freimanDim X) ≤
+      C * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t := by
+  have hL : (1 : ℝ) ≤ 1 + Real.log κ := by linarith [Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
+  have hT := tProperExponent_le (R := freimanDim X) (by grind : 1 ≤ t) hκ
+    (by linarith [freimanDim_le_two_mul_sub_one_of_card_add_le hX hXX])
+  have hK : (0 : ℝ) ≤ κ ^ 2 * (1 + Real.log κ) ^ 3 := by positivity
+  nlinarith [mul_le_mul_of_nonneg_left (le_self_pow₀ hL (by norm_num : 3 ≠ 0))
+    (by positivity : (0 : ℝ) ≤ κ ^ 2), mul_nonneg (by linarith : 0 ≤ C - D - 20) hK]
 
 /-- **Chang's theorem** for sets of integers, with the dimension bounded by the Freiman dimension.
 Let `2 ≤ t`. A finite nonempty set `X` of integers with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, is
 contained in a `t`-proper generalized arithmetic progression of dimension at most `freimanDim X`
-with at most `Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+with at most `Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X`
+points. -/
 theorem exists_tProperGAP_subset_dim_le_freimanDim_card_le {t : ℕ} {κ : ℝ} (X : Finset ℤ)
     (hX : X.Nonempty) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
     ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ freimanDim X ∧
-      #P.toFinset ≤ Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X := by
+      #P.toFinset ≤
+        Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨P, hP, hXP, hdim, hcard⟩ := exists_tProperGAP_int_dim_le_freimanDim X hX ht hκ hXX
   refine ⟨P, hP, hXP, hdim, hcard.trans ?_⟩
-  grw [intFreimanDimExponent_le hκ, tProperExponent_freimanDim_le hX ht hκ hXX]
+  grw [add_tProperExponent_freimanDim_le (C := 2 * 10 ^ 11) hX ht hκ hXX
+    (intFreimanDimExponent_le hκ) (by norm_num)]
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`, with the dimension bounded by the Freiman
 dimension. Let `2 ≤ t`. A set `X` with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, with at least
 `7 * 10 ^ 7 * κ ^ 2` elements and with
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q`, is contained in a `t`-proper
-generalized arithmetic progression of dimension at most `freimanDim X` with at most
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q`, is contained in a
+`t`-proper generalized arithmetic progression of dimension at most `freimanDim X` with at most
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le {q t : ℕ} {κ : ℝ}
     (X : Finset (ZMod q)) (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
-    (hXupper : Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q) :
+    (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
-      #Q.toFinset ≤ Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X := by
+      #Q.toFinset ≤
+        Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   have hXd := (mul_bohrGAPDim_le hκ).trans hXlower
   have he : Real.exp (freimanDimExponent κ + tProperExponent t (freimanDim X)) * #X ≤
-      Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X := by
-    grw [freimanDimExponent_le hκ,
-      tProperExponent_freimanDim_le (nonempty_of_mul_bohrGAPDim_le hXd) ht hκ hXX]
+      Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
+    grw [add_tProperExponent_freimanDim_le (C := 10 ^ 10) (nonempty_of_mul_bohrGAPDim_le hXd) ht
+      hκ hXX (freimanDimExponent_le hκ) (by norm_num)]
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ := exists_tProperGAP_zmod_dim_le_freimanDim X hq ht hκ hXX hXd
     (he.trans hXupper)
   exact ⟨Q, hQ, hXQ, hdim, hcard.trans he⟩
@@ -131,12 +139,13 @@ theorem exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le {q t : ℕ} {κ 
 /-- **Chang's theorem** for sets of integers. Let `2 ≤ t`. A finite nonempty set `X` of integers
 with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, is contained in a `t`-proper generalized arithmetic
 progression of dimension at most `2 * κ - 1` with at most
-`Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. The Freiman dimension of `X` is
-at most `2 * κ - 1`. -/
+`Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. The
+Freiman dimension of `X` is at most `2 * κ - 1`. -/
 theorem exists_tProperGAP_subset_dim_le_card_le {t : ℕ} {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
     ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ 2 * κ - 1 ∧
-      #P.toFinset ≤ Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X := by
+      #P.toFinset ≤
+        Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨P, hP, hXP, hdim, hcard⟩ :=
     exists_tProperGAP_subset_dim_le_freimanDim_card_le X hX ht hκ hXX
   exact ⟨P, hP, hXP,
@@ -144,16 +153,17 @@ theorem exists_tProperGAP_subset_dim_le_card_le {t : ℕ} {κ : ℝ} (X : Finset
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`. Let `2 ≤ t`. A set `X` with
 `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, with at least `7 * 10 ^ 7 * κ ^ 2` elements and with
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q`, is contained in a `t`-proper
-generalized arithmetic progression of dimension at most `2 * κ - 1` with at most
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. The Freiman dimension of `X` is
-at most `2 * κ - 1`. -/
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q`, is contained in a
+`t`-proper generalized arithmetic progression of dimension at most `2 * κ - 1` with at most
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. The Freiman
+dimension of `X` is at most `2 * κ - 1`. -/
 theorem exists_tProperGAP_zmod_subset_dim_le_card_le {q t : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
-    (hXupper : Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q) :
+    (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ 2 * κ - 1 ∧
-      #Q.toFinset ≤ Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X := by
+      #Q.toFinset ≤
+        Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ :=
     exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le X hq ht hκ hXX hXlower hXupper
   exact ⟨Q, hQ, hXQ, (Nat.cast_le.2 hdim).trans (freimanDim_le_two_mul_sub_one_of_card_add_le
@@ -173,11 +183,12 @@ lemma freimanDim_le_floor_sub_one_add_of_card_add_le {G : Type*} [DecidableEq G]
 `2 ≤ t`. A finite set `X` of integers with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and with
 `κ * (2 * κ - 1) ≤ ε * #X` is contained in a `t`-proper generalized arithmetic progression of
 dimension at most `⌊κ - 1 + ε⌋₊` with at most
-`Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+`Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_subset_dim_le_floor_card_le {t : ℕ} {κ ε : ℝ} (X : Finset ℤ) (ht : 2 ≤ t)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
     ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
-      #P.toFinset ≤ Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X := by
+      #P.toFinset ≤
+        Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain rfl | hX := X.eq_empty_or_nonempty
   · simp at hXε
     nlinarith
@@ -188,17 +199,18 @@ theorem exists_tProperGAP_subset_dim_le_floor_card_le {t : ℕ} {κ ε : ℝ} (X
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`, with the dimension bound of Green and Tao. Let
 `2 ≤ t`. A set `X` with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, with at least `7 * 10 ^ 7 * κ ^ 2`
-elements, with `Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q` and with
-`κ * (2 * κ - 1) ≤ ε * #X` is contained in a `t`-proper generalized arithmetic progression of
-dimension at most `⌊κ - 1 + ε⌋₊` with at most
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+elements, with `Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q`
+and with `κ * (2 * κ - 1) ≤ ε * #X` is contained in a `t`-proper generalized arithmetic progression
+of dimension at most `⌊κ - 1 + ε⌋₊` with at most
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_zmod_subset_dim_le_floor_card_le {q t : ℕ} {κ ε : ℝ}
     (X : Finset (ZMod q)) (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
-    (hXupper : Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q)
+    (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q)
     (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
     ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
-      #Q.toFinset ≤ Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X := by
+      #Q.toFinset ≤
+        Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ :=
     exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le X hq ht hκ hXX hXlower hXupper
   exact ⟨Q, hQ, hXQ, hdim.trans (freimanDim_le_floor_sub_one_add_of_card_add_le

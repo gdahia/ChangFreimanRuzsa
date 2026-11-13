@@ -7,7 +7,6 @@ module
 
 public import ChangFreimanRuzsa.GAP.Basic
 import Mathlib.Algebra.Order.Group.Abs
-import Mathlib.Algebra.Order.Group.Int
 import Mathlib.Tactic.Abel
 
 /-!
@@ -119,6 +118,15 @@ lemma stepsHom_mem_symmetricGAP [DecidableEq G] {n : Fin d → ℤ} (hn : ∀ i,
   rw [gapMap_symmetricGAP]
   congr with i
   grind [abs_le, hn i]
+
+/-- The multiple `t • symmetricGAP x L` is the symmetric progression with the same steps and the
+half-lengths `t * L i`. -/
+lemma nsmul_symmetricGAP (t : ℕ) : t • symmetricGAP x L = symmetricGAP x (t • L) := by
+  refine GAP.ext ?_ ?_
+  · rw [GAP.origin_nsmul, symmetricGAP, GAP.ofSteps, symmetricGAP, GAP.ofSteps, ← map_nsmul]
+    congr with i
+    simp
+  · simp [symmetricGAP, GAP.ofSteps, Finset.smul_sum, Finsupp.smul_single, mul_left_comm]
 
 lemma card_symmetricGAP_le [DecidableEq G] :
     (symmetricGAP x L).toFinset.card ≤ ∏ i, (2 * L i + 1) :=

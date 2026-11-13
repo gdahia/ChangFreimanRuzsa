@@ -92,50 +92,54 @@ theorem exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le' {q : ℕ} 
 /-- **Chang's theorem** for sets of integers. Let `2 ≤ t`. A finite nonempty set `X` of integers
 with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, is contained in a `t`-proper generalized arithmetic
 progression of dimension at most `2 * κ - 1` with at most
-`Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+`Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_subset_dim_le_card_le' {t : ℕ} {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
     ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ 2 * κ - 1 ∧
-      #P.toFinset ≤ Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X :=
+      #P.toFinset ≤
+        Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X :=
   sorry
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`. Let `2 ≤ t`. A set `X` with
 `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, with at least `7 * 10 ^ 7 * κ ^ 2` elements and with
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q`, is contained in a `t`-proper
-generalized arithmetic progression of dimension at most `2 * κ - 1` with at most
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q`, is contained in a
+`t`-proper generalized arithmetic progression of dimension at most `2 * κ - 1` with at most
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_zmod_subset_dim_le_card_le' {q t : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
-    (hXupper : Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q) :
+    (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q) :
     ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ 2 * κ - 1 ∧
-      #Q.toFinset ≤ Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X :=
+      #Q.toFinset ≤
+        Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X :=
   sorry
 
 /-- **Chang's theorem** for sets of integers, with the dimension bound of Green and Tao. Let
 `2 ≤ t`. A finite set `X` of integers with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and with
 `κ * (2 * κ - 1) ≤ ε * #X` is contained in a `t`-proper generalized arithmetic progression of
 dimension at most `⌊κ - 1 + ε⌋₊` with at most
-`Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+`Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_subset_dim_le_floor_card_le' {t : ℕ} {κ ε : ℝ} (X : Finset ℤ) (ht : 2 ≤ t)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
     ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P.toFinset ∧ P.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
-      #P.toFinset ≤ Real.exp (10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X :=
+      #P.toFinset ≤
+        Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X :=
   sorry
 
 /-- **Chang's theorem** in `ZMod q` for a prime `q`, with the dimension bound of Green and Tao. Let
 `2 ≤ t`. A set `X` with `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, with at least `7 * 10 ^ 7 * κ ^ 2`
-elements, with `Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q` and with
-`κ * (2 * κ - 1) ≤ ε * #X` is contained in a `t`-proper generalized arithmetic progression of
-dimension at most `⌊κ - 1 + ε⌋₊` with at most
-`Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X` points. -/
+elements, with `Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q`
+and with `κ * (2 * κ - 1) ≤ ε * #X` is contained in a `t`-proper generalized arithmetic progression
+of dimension at most `⌊κ - 1 + ε⌋₊` with at most
+`Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_zmod_subset_dim_le_floor_card_le' {q t : ℕ} {κ ε : ℝ}
     (X : Finset (ZMod q)) (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
-    (hXupper : Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X ≤ q)
+    (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q)
     (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
     ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
-      #Q.toFinset ≤ Real.exp (10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * Real.log t) * #X :=
+      #Q.toFinset ≤
+        Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X :=
   sorry
 
 end ChangFreimanRuzsa

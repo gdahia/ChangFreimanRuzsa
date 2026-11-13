@@ -5,82 +5,68 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GeometryOfNumbers.IntegerLattice
+public import ChangFreimanRuzsa.GeometryOfNumbers.SymmetricBody
 
 /-!
-# The real box of a box of integer points
+# Real boxes
 
-The lattice box step of properization uses the shortest lattice vectors of
-`ChangFreimanRuzsa.GeometryOfNumbers.Gauge`, which are defined for a discrete subgroup of a real
-normed space and a symmetric convex body. This file passes from a subgroup `Λ` of `ℤ ^ d` and the
-box of half-widths `L` to these objects, along the coordinatewise inclusion `intVectorToReal` of
-`ℤ ^ d` into `ℝ ^ d`.
+The real box `realBox L` of half-widths `L : Fin d → ℕ` is the set of `x : Fin d → ℝ` with
+`|x i| ≤ L i` for all `i`. When every `L i` is positive it is a full symmetric body, of volume
+`∏ i, 2 * L i`.
 
-* `realBox L` is the set of `x ∈ ℝ ^ d` with `|x i| ≤ L i` for all `i`. The lemmas
-  `convex_realBox`, `isClosed_realBox`, `isBounded_realBox`, `neg_mem_realBox` and
-  `realBox_mem_nhds` show that it is a symmetric convex body.
-* `discreteTopology_map` shows that the image of a subgroup of `ℤ ^ d` is a discrete subgroup of
-  `ℝ ^ d`.
+## Main definitions
+
+* `realBox L`: the real box of half-widths `L`.
+
+## Main statements
+
+* `isFullSymmetricBody_realBox`: the box is a full symmetric body when every `L i` is positive.
+* `volume_real_realBox`: its volume is `∏ i, 2 * L i`.
 -/
 
 @[expose] public section
 
 namespace ChangFreimanRuzsa
 
-namespace BoxLattice
-
-open scoped Pointwise Topology
-
-open Metric Module
+open MeasureTheory Set
 
 noncomputable section
 
 variable {d : ℕ}
 
-/-! ## The real box is a symmetric convex body -/
-
 /-- The real box `{x : Fin d → ℝ | ∀ i, |x i| ≤ L i}` of half-widths `L`. -/
 def realBox (L : Fin d → ℕ) : Set (Fin d → ℝ) :=
-  Set.univ.pi fun i ↦ Set.Icc (-(L i : ℝ)) (L i)
+  univ.pi fun i ↦ Icc (-(L i : ℝ)) (L i)
 
-lemma mem_realBox {L : Fin d → ℕ} {x : Fin d → ℝ} :
-    x ∈ realBox L ↔ ∀ i, |x i| ≤ L i := by
+lemma mem_realBox {L : Fin d → ℕ} {x : Fin d → ℝ} : x ∈ realBox L ↔ ∀ i, |x i| ≤ L i := by
   simp [realBox, abs_le, Pi.le_def, forall_and]
 
-lemma convex_realBox (L : Fin d → ℕ) : Convex ℝ (realBox L) :=
-  convex_pi fun _ _ ↦ convex_Icc _ _
+/-- A real box with positive half-widths is a full symmetric body: its integer points contain the
+standard basis. -/
+lemma isFullSymmetricBody_realBox {L : Fin d → ℕ} (hL : ∀ i, 0 < L i) :
+    IsFullSymmetricBody (realBox L) where
+  convex := convex_pi fun _ _ ↦ convex_Icc _ _
+  isCompact := isCompact_univ_pi fun _ ↦ isCompact_Icc
+  neg_mem x hx := by simpa [mem_realBox] using hx
+  nonempty := ⟨0, by simp [mem_realBox]⟩
+  span_latticePoints := by
+    refine eq_top_mono (Submodule.span_mono ?_) (Pi.basisFun ℝ (Fin d)).span_eq
+    rintro _ ⟨i, rfl⟩
+    refine ⟨Pi.single i 1, ?_, ?_⟩
+    · rw [mem_latticePoints, mem_realBox]
+      intro j
+      rcases eq_or_ne j i with rfl | hji
+      · simpa using Nat.one_le_iff_ne_zero.2 (hL j).ne'
+      · simp [hji]
+    · ext j
+      simp [Pi.single_apply]
 
-lemma neg_mem_realBox {L : Fin d → ℕ} {x : Fin d → ℝ} (hx : x ∈ realBox L) :
-    -x ∈ realBox L := by
-  simpa [mem_realBox] using hx
-
-lemma isClosed_realBox (L : Fin d → ℕ) : IsClosed (realBox L) :=
-  isClosed_set_pi fun _ _ ↦ isClosed_Icc
-
-lemma isBounded_realBox (L : Fin d → ℕ) : Bornology.IsBounded (realBox L) :=
-  Bornology.IsBounded.pi fun _ ↦ Metric.isBounded_Icc _ _
-
-lemma isCompact_realBox (L : Fin d → ℕ) : IsCompact (realBox L) :=
-  isCompact_univ_pi fun _ ↦ isCompact_Icc
-
-lemma realBox_mem_nhds {L : Fin d → ℕ} (hL : ∀ i, 0 < L i) :
-    realBox L ∈ 𝓝 (0 : Fin d → ℝ) := by
-  apply set_pi_mem_nhds Set.finite_univ
-  intro i _
-  apply Icc_mem_nhds <;> simpa using hL i
-
-/-! ## The image of a subgroup of `ℤ ^ d` is discrete -/
-
-/-- The image in `ℝ ^ d` of a subgroup of `ℤ ^ d` is discrete, because it lies in the
-discrete subgroup `standardIntegerLattice d`. -/
-lemma discreteTopology_map (Λ : AddSubgroup (Fin d → ℤ)) :
-    DiscreteTopology (Λ.map intVectorToReal) := by
-  refine DiscreteTopology.of_subset (standardIntegerLattice_discrete d) ?_
-  rintro _ ⟨v, -, rfl⟩
-  exact intVectorToReal_mem_standardIntegerLattice v
+lemma volume_real_realBox (L : Fin d → ℕ) : volume.real (realBox L) = ∏ i, 2 * (L i : ℝ) := by
+  rw [measureReal_def, realBox, volume_pi_pi, ENNReal.toReal_prod]
+  congr with i
+  rw [Real.volume_Icc, ENNReal.toReal_ofReal (by linarith [Nat.cast_nonneg (α := ℝ) (L i)])]
+  ring
 
 end
-
-end BoxLattice
 
 end ChangFreimanRuzsa

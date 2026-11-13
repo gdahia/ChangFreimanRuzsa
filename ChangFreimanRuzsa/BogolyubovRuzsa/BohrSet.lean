@@ -6,7 +6,6 @@ Authors: Gabriel Dahia
 module
 
 public import ChangFreimanRuzsa.GAP.Symmetric
-public import ChangFreimanRuzsa.GeometryOfNumbers.Box
 public import Mathlib.Analysis.SpecialFunctions.Trigonometric.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 import ChangFreimanRuzsa.BogolyubovRuzsa.Fourier
@@ -85,6 +84,10 @@ def freqBox (q D : ℕ) : Fin (k + 1) → ℕ := Fin.cases q fun _ ↦ D
 @[simp] lemma freqBox_zero (q D : ℕ) : freqBox (k := k) q D 0 = q := rfl
 
 @[simp] lemma freqBox_succ (q D : ℕ) (j : Fin k) : freqBox q D j.succ = D := rfl
+
+/-- `IsShort L t v` says that `|v i| ≤ t * L i` for every `i`, that is, `v` lies in the `t`-dilate
+of the box of half-widths `L`. -/
+def IsShort {d : ℕ} (L : Fin d → ℕ) (t : ℝ) (v : Fin d → ℤ) : Prop := ∀ i, |(v i : ℝ)| ≤ t * L i
 
 /-- The matrix whose columns `Fin.cons 1 fun j ↦ (r j).val` and `Pi.single j.succ q` span the
 frequency lattice. -/

@@ -6,26 +6,26 @@ Authors: Gabriel Dahia
 module
 
 public import ChangFreimanRuzsa.Int
+public import ChangFreimanRuzsa.ZMod
 import Mathlib.Analysis.Complex.ExponentialBounds
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-!
-# Polynomial bounds for the exponents in Chang's theorem
+# Explicit bounds for the exponents in Chang's theorem
 
 For `2 ≤ κ`, the exponents defined in `ChangFreimanRuzsa.Covering.Container`,
-`ChangFreimanRuzsa.ZMod` and `ChangFreimanRuzsa.Int` satisfy the following bounds.
+`ChangFreimanRuzsa.Properization.ProperProgression`, `ChangFreimanRuzsa.ZMod` and
+`ChangFreimanRuzsa.Int` satisfy the following bounds.
 
 * `containerExponent κ` is at most `13 * 10 ^ 7 * κ ^ 2 * (1 + log κ) ^ 2`, hence at most
-  `2 * 10 ^ 8 * κ ^ 3`.
-* `containerExponent (2 * κ)` is at most `16 * 10 ^ 8 * κ ^ 3`.
+  `2 * 10 ^ 8 * κ ^ 3`, and `log (containerExponent κ + 2) ≤ 19 * (1 + log κ)`.
 * `256 * bohrGAPDim κ` is at most `7 * 10 ^ 7 * κ ^ 2`.
 * `8 * bohrLoss (bohrGAPDim κ)` is at most `exp (2 * 10 ^ 7 * κ ^ 2)`.
-* `(c + 2) ^ 3 * log (c + 2)`, where `c` is `containerExponent κ`, is at most
-  `88 * 10 ^ 27 * κ ^ 7`. This bounds the cost of properization.
-* `zmodExponent κ` is at most `3 * 10 ^ 29 * κ ^ 7`.
-* `intExponent κ` is at least `κ ^ 2` and at most `4 * 10 ^ 31 * κ ^ 7`.
+* `freimanDimExponent κ` is at most `8 * 10 ^ 9 * κ ^ 2 * (1 + log κ) ^ 3`.
+* `intFreimanDimExponent κ` is at most `16 * 10 ^ 10 * κ ^ 2 * (1 + log κ) ^ 3`.
+* `tProperExponent t R` is at most `2 * κ * log t + 20 * κ ^ 2 * (1 + log κ)` for `R + 1 ≤ 2 * κ`.
 
-The logarithms are removed by `(1 + log κ) ^ n ≤ n ^ n * exp (1 - n) * κ`.
+The bound `(1 + log κ) ^ 2 ≤ 3 / 2 * κ` comes from `(1 + log κ) ^ n ≤ n ^ n * exp (1 - n) * κ`.
 -/
 
 public section
@@ -55,16 +55,6 @@ lemma one_add_log_sq_le (hκ : 1 ≤ κ) : (1 + Real.log κ) ^ 2 ≤ 3 / 2 * κ 
   norm_num at h
   nlinarith [Real.exp_neg_one_lt_d9]
 
-/-- `(1 + log κ) ^ 7 ≤ 2050 * κ` for `1 ≤ κ`. -/
-lemma one_add_log_pow_seven_le (hκ : 1 ≤ κ) : (1 + Real.log κ) ^ 7 ≤ 2050 * κ := by
-  have h := one_add_log_pow_le hκ (n := 7) (by norm_num)
-  have he : Real.exp (-6) ≤ 0.002479 := by
-    rw [(by rw [← Real.exp_nat_mul]; norm_num : Real.exp (-6) = Real.exp (-1) ^ 6)]
-    refine (pow_le_pow_left₀ (Real.exp_pos _).le Real.exp_neg_one_lt_d9.le 6).trans ?_
-    norm_num
-  norm_num at h
-  nlinarith
-
 /-! ## The lower bound -/
 
 /-- `containerExponent κ` is at least `κ ^ 2`. -/
@@ -77,18 +67,6 @@ lemma sq_le_containerExponent (hκ : 0 ≤ κ) : κ ^ 2 ≤ containerExponent κ
   unfold containerExponent
   nlinarith [mul_le_mul ht (add_le_add_right hI 1) (by linarith) (by positivity),
     Nat.cast_nonneg (α := ℝ) (bohrGAPDim κ)]
-
-/-- `zmodExponent κ` is nonnegative. -/
-lemma zmodExponent_nonneg (hκ : 0 ≤ κ) : 0 ≤ zmodExponent κ := by
-  have hc := (sq_nonneg κ).trans (sq_le_containerExponent hκ)
-  unfold zmodExponent
-  linarith [properizationExponent_nonneg hc]
-
-/-- `intExponent κ` is at least `κ ^ 2`. -/
-lemma sq_le_intExponent (hκ : 2 ≤ κ) : κ ^ 2 ≤ intExponent κ := by
-  unfold intExponent
-  nlinarith [sq_le_containerExponent (by linarith : 0 ≤ 2 * κ),
-    zmodExponent_nonneg (by linarith : 0 ≤ 2 * κ)]
 
 /-! ## The upper bounds -/
 
@@ -180,56 +158,110 @@ lemma containerExponent_le (hκ : 2 ≤ κ) : containerExponent κ ≤ 2 * 10 ^ 
   nlinarith [containerExponent_le_log hκ, one_add_log_sq_le (by linarith : (1 : ℝ) ≤ κ),
     pow_pos (by linarith : (0 : ℝ) < κ) 2]
 
-/-- `containerExponent (2 * κ)` is at most `16 * 10 ^ 8 * κ ^ 3`. This bounds the dimension in
-`exists_tProperGAP_of_small_sumset`. -/
-lemma containerExponent_two_mul_le (hκ : 2 ≤ κ) :
-    containerExponent (2 * κ) ≤ 16 * 10 ^ 8 * κ ^ 3 := by
-  have h := containerExponent_le (κ := 2 * κ) (by linarith)
-  rw [mul_pow] at h
-  linarith
-
-/-- Write `c` for `containerExponent κ`. Then `(c + 2) ^ 3 * log (c + 2) ≤ 88 * 10 ^ 27 * κ ^ 7`. -/
-lemma containerExponent_add_two_pow_mul_log_le (hκ : 2 ≤ κ) :
-    (containerExponent κ + 2) ^ 3 * Real.log (containerExponent κ + 2) ≤ 88 * 10 ^ 27 * κ ^ 7 := by
+/-- `log (containerExponent κ + 2) ≤ 19 * (1 + log κ)`. -/
+private lemma log_containerExponent_add_two_le (hκ : 2 ≤ κ) :
+    Real.log (containerExponent κ + 2) ≤ 19 * (1 + Real.log κ) := by
   have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
   have hc := (sq_nonneg κ).trans (sq_le_containerExponent (by linarith))
-  have hκℓ : 4 ≤ κ ^ 2 * (1 + Real.log κ) ^ 2 := by
-    nlinarith [one_le_pow₀ (n := 2) (by linarith : (1 : ℝ) ≤ 1 + Real.log κ)]
-  have hM : containerExponent κ + 2 ≤ 131 * 10 ^ 6 * (κ ^ 2 * (1 + Real.log κ) ^ 2) := by
-    linarith [containerExponent_le_log hκ]
-  have hlog : Real.log (containerExponent κ + 2) ≤ 19 * (1 + Real.log κ) := by
-    refine (Real.log_le_log (by linarith)
-      (hM.trans (by gcongr; norm_num : _ ≤ (2 : ℝ) ^ 27 * (κ ^ 2 * (1 + Real.log κ) ^ 2)))).trans ?_
-    rw [Real.log_mul (by positivity) (by positivity), Real.log_mul (by positivity) (by positivity),
-      Real.log_pow, Real.log_pow, Real.log_pow]
-    push_cast
-    linarith [Real.log_two_lt_d9, Real.log_le_sub_one_of_pos (by linarith : 0 < 1 + Real.log κ)]
-  calc (containerExponent κ + 2) ^ 3 * Real.log (containerExponent κ + 2)
-      ≤ (131 * 10 ^ 6 * (κ ^ 2 * (1 + Real.log κ) ^ 2)) ^ 3 * (19 * (1 + Real.log κ)) :=
-        mul_le_mul (pow_le_pow_left₀ (by linarith) hM 3) hlog (Real.log_nonneg (by linarith))
-          (by positivity)
-    _ = (131 * 10 ^ 6) ^ 3 * 19 * κ ^ 6 * (1 + Real.log κ) ^ 7 := by ring
-    _ ≤ (131 * 10 ^ 6) ^ 3 * 19 * κ ^ 6 * (2050 * κ) := by
-        gcongr
-        exact one_add_log_pow_seven_le (by linarith)
-    _ = (131 * 10 ^ 6) ^ 3 * 19 * 2050 * κ ^ 7 := by ring
-    _ ≤ 88 * 10 ^ 27 * κ ^ 7 := mul_le_mul_of_nonneg_right (by norm_num) (by positivity)
+  have hM : containerExponent κ + 2 ≤ 2 ^ 27 * (κ ^ 2 * (1 + Real.log κ) ^ 2) := by
+    nlinarith [containerExponent_le_log hκ,
+      one_le_pow₀ (n := 2) (by linarith : (1 : ℝ) ≤ 1 + Real.log κ),
+      mul_le_mul_of_nonneg_right (by nlinarith : (4 : ℝ) ≤ κ ^ 2)
+        (by positivity : (0 : ℝ) ≤ (1 + Real.log κ) ^ 2)]
+  grw [Real.log_le_log (by linarith) hM]
+  rw [Real.log_mul (by positivity) (by positivity), Real.log_mul (by positivity) (by positivity),
+    Real.log_pow, Real.log_pow, Real.log_pow]
+  push_cast
+  linarith [Real.log_two_lt_d9, Real.log_le_sub_one_of_pos (by linarith : 0 < 1 + Real.log κ)]
 
-/-- `zmodExponent κ` is at most `3 * 10 ^ 29 * κ ^ 7`. -/
-lemma zmodExponent_le (hκ : 2 ≤ κ) : zmodExponent κ ≤ 3 * 10 ^ 29 * κ ^ 7 := by
-  have h := containerExponent_add_two_pow_mul_log_le hκ
-  unfold zmodExponent properizationExponent
-  rw [mul_assoc]
-  linarith [containerExponent_le hκ, one_le_pow₀ (n := 7) (by linarith : (1 : ℝ) ≤ κ),
-    pow_le_pow_right₀ (by linarith : (1 : ℝ) ≤ κ) (by norm_num : 3 ≤ 7)]
+/-- If `log (c + 2) ≤ 19 * ℓ` with `0 ≤ c` and `1 ≤ ℓ`, then `log (8 * (c + 2) ^ 3) ≤ 60 * ℓ`. -/
+private lemma log_eight_mul_add_two_pow_le {c ℓ : ℝ} (hc : 0 ≤ c) (hℓ : 1 ≤ ℓ)
+    (h : Real.log (c + 2) ≤ 19 * ℓ) : Real.log (8 * (c + 2) ^ 3) ≤ 60 * ℓ := by
+  rw [Real.log_mul (by norm_num) (by positivity), Real.log_pow, (by norm_num : (8 : ℝ) = 2 ^ 3),
+    Real.log_pow]
+  push_cast
+  linarith [Real.log_two_lt_d9]
 
-/-- `intExponent κ` is at most `4 * 10 ^ 31 * κ ^ 7`. -/
-lemma intExponent_le (hκ : 2 ≤ κ) : intExponent κ ≤ 4 * 10 ^ 31 * κ ^ 7 := by
-  have h := zmodExponent_le (κ := 2 * κ) (by linarith)
-  rw [mul_pow] at h
-  unfold intExponent
-  linarith [containerExponent_two_mul_le hκ,
-    pow_le_pow_right₀ (by linarith : (1 : ℝ) ≤ κ) (by norm_num : 3 ≤ 7),
-    one_le_pow₀ (n := 7) (by linarith : (1 : ℝ) ≤ κ)]
+private lemma log_eight_mul_add_two_pow_nonneg {c : ℝ} (hc : 0 ≤ c) :
+    0 ≤ Real.log (8 * (c + 2) ^ 3) :=
+  Real.log_nonneg (one_le_mul_of_one_le_of_one_le (by norm_num) (one_le_pow₀ (by linarith)))
+
+/-- `κ ^ 2 * (1 + log κ) ^ 2 ≤ κ ^ 2 * (1 + log κ) ^ 3` and `1 ≤ κ ^ 2 * (1 + log κ) ^ 3`. -/
+private lemma sq_mul_one_add_log_sq_le (hκ : 2 ≤ κ) :
+    κ ^ 2 * (1 + Real.log κ) ^ 2 ≤ κ ^ 2 * (1 + Real.log κ) ^ 3 ∧
+      1 ≤ κ ^ 2 * (1 + Real.log κ) ^ 3 := by
+  have hL : (1 : ℝ) ≤ 1 + Real.log κ := by linarith [Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
+  exact ⟨mul_le_mul_of_nonneg_left (pow_le_pow_right₀ hL (by norm_num)) (by positivity),
+    one_le_mul_of_one_le_of_one_le (by nlinarith) (one_le_pow₀ hL)⟩
+
+/-- `freimanDimExponent κ` is at most `8 * 10 ^ 9 * κ ^ 2 * (1 + log κ) ^ 3`. -/
+lemma freimanDimExponent_le (hκ : 2 ≤ κ) :
+    freimanDimExponent κ ≤ 8 * 10 ^ 9 * κ ^ 2 * (1 + Real.log κ) ^ 3 := by
+  have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
+  have hc := (sq_nonneg κ).trans (sq_le_containerExponent (by linarith))
+  obtain ⟨h₂, h₃⟩ := sq_mul_one_add_log_sq_le hκ
+  unfold freimanDimExponent
+  nlinarith [mul_le_mul (containerExponent_le_log hκ) (log_eight_mul_add_two_pow_le hc
+    (by linarith) (log_containerExponent_add_two_le hκ)) (log_eight_mul_add_two_pow_nonneg hc)
+    (by positivity), containerExponent_le_log hκ]
+
+/-- `intFreimanDimExponent κ` is at most `16 * 10 ^ 10 * κ ^ 2 * (1 + log κ) ^ 3`. -/
+lemma intFreimanDimExponent_le (hκ : 2 ≤ κ) :
+    intFreimanDimExponent κ ≤ 16 * 10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 := by
+  have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
+  have hκ' : (2 : ℝ) ≤ 2 * κ := by linarith
+  have hc := (sq_nonneg (2 * κ)).trans (sq_le_containerExponent (by linarith))
+  have h₁ : 1 + Real.log (2 * κ) ≤ 1.7 * (1 + Real.log κ) := by
+    rw [Real.log_mul (by norm_num) (by linarith)]
+    linarith [Real.log_two_lt_d9]
+  have hcl : containerExponent (2 * κ) ≤ 151 * 10 ^ 7 * κ ^ 2 * (1 + Real.log κ) ^ 2 := by
+    have := Real.log_nonneg (by linarith : (1 : ℝ) ≤ 2 * κ)
+    grw [containerExponent_le_log hκ', h₁]
+    nlinarith [(by positivity : (0 : ℝ) ≤ κ ^ 2 * (1 + Real.log κ) ^ 2)]
+  obtain ⟨h₂, h₃⟩ := sq_mul_one_add_log_sq_le hκ
+  unfold intFreimanDimExponent
+  nlinarith [mul_le_mul hcl (log_eight_mul_add_two_pow_le (ℓ := 1.7 * (1 + Real.log κ)) hc
+    (by linarith) ((log_containerExponent_add_two_le hκ').trans (by linarith)))
+    (log_eight_mul_add_two_pow_nonneg hc) (by positivity)]
+
+/-- `tProperExponent t R ≤ 2 * κ * log t + 20 * κ ^ 2 * (1 + log κ)` for `1 ≤ t`, `2 ≤ κ` and
+`R + 1 ≤ 2 * κ`. The factorials are bounded by `R ! ≤ R ^ R ≤ (2 * κ) ^ R`. -/
+lemma tProperExponent_le {t R : ℕ} (ht : 1 ≤ t) (hκ : 2 ≤ κ) (hR : (R : ℝ) + 1 ≤ 2 * κ) :
+    tProperExponent t R ≤ 2 * κ * Real.log t + 20 * κ ^ 2 * (1 + Real.log κ) := by
+  have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
+  have hR0 := Nat.cast_nonneg (α := ℝ) R
+  have hR2 : (R : ℝ) ≤ 2 * κ := by linarith
+  have h2κ : Real.log (2 * κ) ≤ 0.7 + Real.log κ := by
+    rw [Real.log_mul (by norm_num) (by linarith)]
+    linarith [Real.log_two_lt_d9]
+  have h3κ : Real.log (R + 2) ≤ 1.1 + Real.log κ := by
+    grw [Real.log_le_log (by positivity) (by linarith : (R : ℝ) + 2 ≤ 3 * κ),
+      Real.log_mul (by norm_num) (by linarith)]
+    linarith [Real.log_three_lt_d9]
+  have hfac : Real.log R.factorial ≤ R * (0.7 + Real.log κ) := by
+    grw [← h2κ, ← Real.log_pow]
+    refine Real.log_le_log (by positivity) ?_
+    calc (R.factorial : ℝ) ≤ (R : ℝ) ^ R := by exact_mod_cast Nat.factorial_le_pow R
+      _ ≤ (2 * κ) ^ R := by gcongr
+  have hf : (0 : ℝ) < R.factorial := by exact_mod_cast Nat.factorial_pos R
+  have hR1 : Real.log (R + 1) ≤ 0.7 + Real.log κ :=
+    (Real.log_le_log (by positivity) hR).trans h2κ
+  unfold tProperExponent
+  push_cast
+  rw [Real.log_mul (by positivity) (by positivity), Real.log_mul (by positivity) (by positivity),
+    Real.log_pow, Real.log_pow, Real.log_mul (by positivity) (by positivity),
+    Real.log_mul (by positivity) (by positivity), Real.log_mul (by positivity) (by positivity),
+    Real.log_mul (by positivity) (by positivity), Real.log_mul (by positivity) (by positivity),
+    Real.log_pow, Real.log_pow]
+  push_cast
+  have hc : 0 ≤ 0.7 + Real.log κ := by linarith
+  nlinarith [mul_le_mul_of_nonneg_right hR2
+      (Real.log_nonneg (Nat.one_le_cast.2 ht) : (0 : ℝ) ≤ Real.log t),
+    mul_le_mul_of_nonneg_left hfac hR0, mul_le_mul_of_nonneg_left hR1 hR0,
+    mul_le_mul_of_nonneg_left h3κ hR0, mul_le_mul_of_nonneg_right hR2 hc,
+    mul_le_mul_of_nonneg_right (mul_le_mul hR2 hR2 hR0 (by linarith)) hc,
+    mul_le_mul_of_nonneg_right (by nlinarith : κ ≤ κ ^ 2 / 2) hL,
+    mul_le_mul_of_nonneg_right hR2 (by norm_num : (0 : ℝ) ≤ 1.8),
+    Real.log_two_lt_d9, Real.log_three_lt_d9]
 
 end ChangFreimanRuzsa

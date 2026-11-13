@@ -58,9 +58,6 @@ variable {d : ℕ} (S : Finset (Fin d → ℤ))
 span. -/
 abbrev integerGeneratedRank : ℕ := Module.finrank ℝ (integerGeneratedSubspace S)
 
-lemma integerGeneratedRank_le : integerGeneratedRank S ≤ d := by
-  simpa using Submodule.finrank_le (integerGeneratedSubspace S)
-
 lemma integerGeneratedRank_le_card : integerGeneratedRank S ≤ #S := by
   rw [integerGeneratedRank, integerGeneratedSubspace, ← coe_image]
   exact (finrank_span_finset_le_card _).trans card_image_le

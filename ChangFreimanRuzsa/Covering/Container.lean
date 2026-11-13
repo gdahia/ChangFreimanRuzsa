@@ -44,9 +44,9 @@ bounds the dimension of the progression containing `X` and the logarithm of its 
 
 ## Main statements
 
-* `exists_gap_subset_dim_le_card_le_of_subset_add_sub_add`: steps 5 to 7, in an arbitrary abelian
+* `exists_gap_subset_dim_le_size_le_of_subset_add_sub_add`: steps 5 to 7, in an arbitrary abelian
   group.
-* `exists_gap_zmod_subset_dim_le_card_le`: the progression containing `X` in `ZMod q`.
+* `exists_gap_zmod_subset_dim_le_size_le`: the progression containing `X` in `ZMod q`.
 -/
 
 @[expose] public section
@@ -294,7 +294,7 @@ subset `X₁ ⊆ X` with `#X ≤ 8 * #X₁` and a proper progression `Q₁` in `
 bounds of `exists_proper_gap_zmod_subset_add_sub_add_card_le`, the set `X` lies in a progression
 of dimension at most `E` and of size at most `exp E * #X`, where `E` is `containerExponent κ`. The
 group may be infinite. -/
-lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
+lemma exists_gap_subset_dim_le_size_le_of_subset_add_sub_add
     {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
     (hXX : (X + X).card ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
     (hQ₁proper : Q₁.Proper) (hQ₁dimle : (Q₁.dim : ℝ) ≤ bohrGAPDim κ)
@@ -302,7 +302,7 @@ lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
     (hQlow : X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.toFinset.card) :
     ∃ P : GAP G,
       X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
-        P.toFinset.card ≤ Real.exp (containerExponent κ) * X.card := by
+        P.size ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨l, F, hl, hlen, hQ₁X, hF, hcover⟩ := exists_length_le_iterationBound_subset_add_sub
     hXne (by linarith) hXX hX₁X Q₁.nonempty hQ₁subX hQlow
   obtain ⟨W, hW, hXW⟩ := exists_card_le_subset_sub_sub_add (by linarith) hXX
@@ -323,7 +323,7 @@ lemma exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
   · refine (Nat.cast_le.2 (GAP.dim_packingContainer_le _ _ _)).trans ?_
     push_cast
     linarith [mul_add_bohrGAPDim_add_le_containerExponent hκ]
-  · refine (Nat.cast_le.2 ((GAP.card_le_size _).trans (Q₁.size_packingContainer_le _ W))).trans ?_
+  · refine (Nat.cast_le.2 (Q₁.size_packingContainer_le _ W)).trans ?_
     rw [← GAP.card_eq_size hQ₁proper]
     push_cast
     exact two_pow_mul_le_exp_containerExponent_mul hκ hW hQ₁dimle hlength (by positivity) hQ₁X
@@ -335,18 +335,19 @@ end Packing
 of size at most `exp E * #X`, where `E` is `containerExponent κ`.
 
 No upper bound on `#X` in terms of `q` is needed, because the Fourier-analytic steps take place in
-`ZMod m` with `m ≤ κ ^ 16 * #X`. The lemma `exists_tProperGAP_dim_le_freimanDim` then bounds the
-dimension by the Freiman dimension of `X`. -/
-lemma exists_gap_zmod_subset_dim_le_card_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
+`ZMod m` with `m ≤ κ ^ 16 * #X`. The lemma
+`exists_tProperGAP_subset_dim_le_freimanDim_of_subset_gap` then replaces the progression by a
+`t`-proper one of dimension at most the Freiman dimension of `X`. -/
+lemma exists_gap_zmod_subset_dim_le_size_le {q : ℕ} {κ : ℝ} (X : Finset (ZMod q))
     (hq : Nat.Prime q) (hκ : 2 ≤ κ)
     (hXX : (X + X).card ≤ κ * X.card)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ P : GAP (ZMod q),
       X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
-        P.toFinset.card ≤ Real.exp (containerExponent κ) * X.card := by
+        P.size ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
     exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX hXlower
-  exact exists_gap_subset_dim_le_card_le_of_subset_add_sub_add
+  exact exists_gap_subset_dim_le_size_le_of_subset_add_sub_add
     (nonempty_of_mul_bohrGAPDim_le hXlower) hκ hXX hX₁X hX₁card
     hQ₁proper hQ₁dimle hQ₁subX hQlow
 

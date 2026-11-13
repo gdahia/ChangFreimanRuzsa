@@ -7,12 +7,13 @@ project:
     Formalization of Chang's version of Freiman's theorem, with a t-proper progression P for
     every integer t >= 2: a finite set X of integers with |X + X| <= kappa |X| is contained in a
     t-proper generalized arithmetic progression of dimension at most the Freiman dimension of X,
-    hence at most 2 kappa - 1, with at most exp(10^32 kappa^7 + 7 kappa^2 log t) |X| points. If
-    kappa (2 kappa - 1) <= epsilon |X|, the dimension is at most floor(kappa - 1 + epsilon), as in
-    Green and Tao. There is also a statement for subsets of ZMod q with q prime, where the
-    progression has at most exp(10^30 kappa^7 + 7 kappa^2 log t) |X| points. The bound on the size
-    is weaker than that of Chang. The first
-    step of the proof, the Bogolyubov-Ruzsa lemma, is stated too: if moreover
+    hence at most 2 kappa - 1, with at most
+    exp(2 * 10^11 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| points. This is Chang's bound
+    with an explicit constant. If kappa (2 kappa - 1) <= epsilon |X|, the dimension is at most
+    floor(kappa - 1 + epsilon), as in Green and Tao. There is also a statement for subsets of
+    ZMod q with q prime, where the progression has at most
+    exp(10^10 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| points. The first step of the
+    proof, the Bogolyubov-Ruzsa lemma, is stated too: if moreover
     |X| >= 7 * 10^7 kappa^2, then 2X - 2X contains a proper progression of dimension at most
     3 * 10^5 kappa^2 with at least exp(-2 * 10^7 kappa^2) |X| points.
   authors:
@@ -54,11 +55,14 @@ sources:
       Ruzsa's covering lemma then covers X by at most 8 kappa translates. Sets too small for
       the Bohr step are first replaced by their sum with a long arithmetic progression. Section
       4, the passage to a proper progression of dimension at most [alpha - 1] through the
-      convex bodies of Bilu, is replaced by two other arguments: a properization that divides
-      the coefficient lattice by the saturated span of the short relations, through a Smith
-      normal form, until the progression is t-proper, and the reduction to the Freiman
-      dimension of Appendix A of Campos, Dahia and Marciano. The bounds proved are weaker; see
-      fidelity.divergences.
+      convex bodies of Bilu, follows Green's notes Progressions and convex geometry. The
+      progression becomes a box of integer points and a homomorphism to the group. The body is
+      divided by short relations, as in (4.11), until the homomorphism is injective on its
+      dilate by 2. A central section by the span of a Freiman model of X, in place of the
+      bound (4.15), reduces the dimension to the Freiman dimension of X. A second division
+      makes the homomorphism injective on a larger dilate, as in (4.21), and the successive
+      minima and Minkowski's second theorem give the t-proper progression, as in (4.23). The
+      constants are explicit; see fidelity.divergences.
     license: "unknown"
     author_endorsement: "not-contacted"
   - title: "Compressions, convex geometry and the Freiman-Bilu theorem"
@@ -71,8 +75,22 @@ sources:
     relationship: "background"
     note: >-
       Proposition 1.3 states Chang's theorem with a t-proper progression. The statements
-      here hold for every integer t >= 2, with a (slightly) weaker notion of t-proper and weaker
-      bounds. A progression that is 2t-proper here is t-proper in their sense.
+      here hold for every integer t >= 2, with a (slightly) weaker notion of t-proper. A
+      progression that is 2t-proper here is t-proper in their sense.
+    license: "unknown"
+    author_endorsement: "not-contacted"
+  - title: "Progressions and convex geometry"
+    authors:
+      - "Ben Green"
+    id: "https://www.math.cmu.edu/~ploh/j/sources/Ben%20Green/Progressions%20and%20convex%20geometry.pdf"
+    type: "other"
+    location: "Lemmas 1.5 and 2.2"
+    relationship: "adapts"
+    note: >-
+      Lecture notes on Section 4 of Chang's paper, after Bilu. The t-proper progression of a
+      symmetric convex body follows Lemma 1.5, with a Mahler basis from the successive minima
+      and the volume of cross-polytopes. The division of a body by a short relation follows
+      Lemma 2.2, with the factor (m + 1)^2 in place of m + 1 in the volume of the projection.
     license: "unknown"
     author_endorsement: "not-contacted"
   - title: "On the independence number of sparser random Cayley graphs"
@@ -85,9 +103,9 @@ sources:
     location: "https://arxiv.org/abs/2406.09361"
     relationship: "adapts"
     note: >-
-      J. London Math. Soc. 110 (2024). The reduction of the dimension of a 2-proper
-      progression to the Freiman dimension of the set it contains follows Appendix A. The
-      resulting progression is then made t-proper.
+      J. London Math. Soc. 110 (2024). The Freiman model of a set of integer points and the
+      lattice of integer points of its span, which reduce the dimension of the convex body to
+      the Freiman dimension of the set, follow Appendix A.
     license: "unknown"
     author_endorsement: "participated"
 
@@ -97,7 +115,8 @@ related_formalizations:
     note: >-
       The statements use pointwise sums of finite sets and ZMod q from Mathlib. The proofs
       use its Freiman isomorphisms, the Plünnecke-Ruzsa inequality, Ruzsa's covering lemma,
-      the Fourier transform on finite abelian groups, Z-lattices and Smith normal form.
+      the Fourier transform on finite abelian groups, Z-lattices, Smith normal form, the
+      Lebesgue measure and Fubini's theorem.
       Mathlib has no generalized arithmetic progressions and no form of Chang's theorem.
   - id: "https://github.com/gdahia/SumOfSetsInSeveralDimensions"
     relationship: "builds-on"
@@ -115,14 +134,16 @@ related_formalizations:
     relationship: "builds-on"
     note: >-
       A Lake dependency and the source of Minkowski's second theorem for positive definite
-      integral lattices.
+      integral lattices, used in the Bohr step, and of the successive minima of a convex body,
+      the basis of lattice vectors they give, Minkowski's second theorem for convex bodies and
+      the volume of cross-polytopes, used for the t-proper progression of a convex body.
 
 status:
   scope: >-
     Chang's theorem with a t-proper progression for every integer t >= 2, for subsets of ZMod q
     with q prime and for finite sets of integers, with the bounds in fidelity.divergences.
-    Chang's lemma on large
-    spectra is the one of APAP and Minkowski's second theorem the one of Tau Ceti. The main
+    Chang's lemma on large spectra is the one of APAP and Minkowski's second theorem the one of
+    Tau Ceti. The main
     statements give a progression of dimension at most the Freiman dimension of the set.
     Mathlib has no Freiman dimension, so Challenge.lean states instead their corollaries with
     dimension at most 2 kappa - 1, and with dimension at most floor(kappa - 1 + epsilon) when
@@ -174,7 +195,10 @@ automation:
         deduce the bound on the dimension in the form of Green and Tao for sets that are large
         in terms of the doubling. Later, one instruction to generalize the results from
         2-proper to t-proper progressions, including in Challenge.lean and Solution.lean, and to
-        rename the theorems to refer to t-properness.
+        rename the theorems to refer to t-properness. The last task came in two instructions:
+        the first asked the agent to replace the argument of Section 4 by its version of
+        Green's argument, to obtain Chang's bound, and the second to bump Tau Ceti to use its
+        latest developments for that argument.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -215,7 +239,14 @@ automation:
     t-properness for every t >= 2 in the properization and in the main statements, at the cost of
     an additional exponent (d + 2)^2 log (t / 2), where d is the dimension to which properization
     applies. In Challenge.lean the multiple replaces the sum of progressions, and the theorems
-    exists_twoProperGAP_* are now exists_tProperGAP_*. Every proof is checked by Lean.
+    exists_twoProperGAP_* are now exists_tProperGAP_*. In the last task, the agent first bumped
+    Lean, Mathlib, APAP and Tau Ceti. It then replaced the properization through short relations
+    and the reduction to the Freiman dimension by the convex-body argument of Green's notes. It
+    proved the comparison of integer points with volume, the volume of a projection of a
+    symmetric convex body, the division of a body by short relations, the central section by
+    the span of a Freiman model, and the t-proper progression of a body from the successive
+    minima of Tau Ceti. The exponent of the size bound went from a multiple of kappa^7 to
+    C kappa^2 (1 + log kappa)^3 + 2 kappa log t. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -228,21 +259,24 @@ fidelity:
     |P| <= exp(C K^2 log^3 K) |A|, where K = |A + A| / |A|. The statements here take the form
     of Green and Tao for every integer t >= 2: the progression is t-proper in a sense weaker than
     theirs that still implies proper, the dimension is bounded by freimanDim X or by 2 kappa - 1
-    in place of [alpha - 1], the constants are explicit and the exponent of the size bound is
-    the sum of a multiple of kappa^7 and of 7 kappa^2 log t.
+    in place of [alpha - 1], and the constants are explicit: the exponent of the size bound is
+    C kappa^2 (1 + log kappa)^3 + 2 kappa log t, where the factor t^(2 kappa) replaces the
+    factor t^K of Green and Tao.
 
     Here freimanDim X is the largest d <= |X| such that X is Freiman isomorphic of order 2
     to a subset of Q^d whose affine span over the reals has dimension d.
 
     Integers. exists_tProperGAP_subset_dim_le_freimanDim_card_le takes t >= 2 and kappa >= 2 with
-    |X + X| <= kappa |X| and gives |P| <= exp(10^32 kappa^7 + 7 kappa^2 log t) |X| and dimension
-    at most freimanDim X.
+    |X + X| <= kappa |X| and gives
+    |P| <= exp(2 * 10^11 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| and dimension at most
+    freimanDim X.
 
     ZMod q. exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le is for q prime and t >= 2 and
-    needs 7 * 10^7 kappa^2 <= |X| and exp(10^30 kappa^7 + 7 kappa^2 log t) |X| <= q. It gives a
-    t-proper progression of dimension at most freimanDim X with at most
-    exp(10^30 kappa^7 + 7 kappa^2 log t) |X| points. Chang works in Z only, so these statements
-    have no counterpart in her paper.
+    needs 7 * 10^7 kappa^2 <= |X| and
+    exp(10^10 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| <= q. It gives a t-proper
+    progression of dimension at most freimanDim X with at most
+    exp(10^10 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| points. Chang works in Z only, so
+    these statements have no counterpart in her paper.
 
     Dimension at most 2 kappa - 1. exists_tProperGAP_subset_dim_le_card_le and
     exists_tProperGAP_zmod_subset_dim_le_card_le are the same with dimension at most
@@ -311,38 +345,39 @@ alignment:
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
-        For t >= 2, with at most exp(10^32 kappa^7 + 7 kappa^2 log t) |X| points and dimension
-        at most 2 kappa - 1.
+        For t >= 2, with at most exp(2 * 10^11 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X|
+        points and dimension at most 2 kappa - 1.
     - source: "Chang, Theorem 2, in ZMod q with a t-proper progression"
       lean: "ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
         For q prime, t >= 2, 7 * 10^7 kappa^2 <= |X| and
-        exp(10^30 kappa^7 + 7 kappa^2 log t) |X| <= q, with dimension at most 2 kappa - 1.
+        exp(10^10 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| <= q, with dimension at most
+        2 kappa - 1.
     - source: "Green and Tao, Proposition 1.3 with dimension floor(K - 1 + epsilon)"
       lean: "ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_floor_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
         For t >= 2 and kappa (2 kappa - 1) <= epsilon |X|, with at most
-        exp(10^32 kappa^7 + 7 kappa^2 log t) |X| points and dimension at most
-        floor(kappa - 1 + epsilon).
+        exp(2 * 10^11 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| points and dimension at
+        most floor(kappa - 1 + epsilon).
     - source: "Green and Tao, Proposition 1.3 with dimension floor(K - 1 + epsilon), in ZMod q"
       lean: "ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_floor_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
         For q prime, t >= 2, 7 * 10^7 kappa^2 <= |X|,
-        exp(10^30 kappa^7 + 7 kappa^2 log t) |X| <= q and kappa (2 kappa - 1) <= epsilon |X|, with
-        dimension at most floor(kappa - 1 + epsilon).
+        exp(10^10 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| <= q and
+        kappa (2 kappa - 1) <= epsilon |X|, with dimension at most floor(kappa - 1 + epsilon).
     - source: "Green and Tao, Proposition 1.3, for sets of integers"
       lean: "ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_freimanDim_card_le"
       module: "ChangFreimanRuzsa.Explicit"
       status: "proved"
       note: >-
-        For t >= 2, with at most exp(10^32 kappa^7 + 7 kappa^2 log t) |X| points. Not in
-        Challenge.lean, since Mathlib has no Freiman dimension.
+        For t >= 2, with at most exp(2 * 10^11 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X|
+        points. Not in Challenge.lean, since Mathlib has no Freiman dimension.
     - source: "Green and Tao, Proposition 1.3, in ZMod q"
       lean: "ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le"
       module: "ChangFreimanRuzsa.Explicit"
@@ -350,50 +385,31 @@ alignment:
       note: >-
         With the hypotheses of the statement for ZMod q in Challenge.lean. Not in
         Challenge.lean, since Mathlib has no Freiman dimension.
-    - source: "Chang's theorem for sets of integers, library form"
-      lean: "ChangFreimanRuzsa.exists_tProperGAP_of_small_sumset"
-      module: "ChangFreimanRuzsa.Int"
-      status: "proved"
-      note: >-
-        For t >= 2, with the exponents intExponent kappa + tProperExponent t c for the size,
-        where intExponent kappa <= 4 * 10^31 kappa^7, and c = containerExponent (2 kappa) for
-        the dimension.
-    - source: "Chang's theorem for sets of integers that are not too small, library form"
-      lean: "ChangFreimanRuzsa.exists_tProperGAP_int_of_small_sumset"
-      module: "ChangFreimanRuzsa.Int"
-      status: "proved"
-      note: >-
-        For t >= 2 and 256 * bohrGAPDim kappa <= |X|, with the exponents of the statement for
-        ZMod q. Not in Challenge.lean.
-    - source: "Chang's theorem in ZMod q, library form"
-      lean: "ChangFreimanRuzsa.exists_tProperGAP_zmod_of_small_sumset"
+    - source: "Chang's theorem in ZMod q with dimension at most the Freiman dimension, library form"
+      lean: "ChangFreimanRuzsa.exists_tProperGAP_zmod_dim_le_freimanDim"
       module: "ChangFreimanRuzsa.ZMod"
       status: "proved"
       note: >-
-        For t >= 2, with the exponents c = containerExponent kappa and
-        zmodExponent kappa + tProperExponent t c.
-    - source: "Chang's theorem in ZMod q with dimension at most the Freiman dimension, library form"
-      lean: "ChangFreimanRuzsa.exists_tProperGAP_zmod_dim_le_freimanDim"
-      module: "ChangFreimanRuzsa.FreimanDim"
-      status: "proved"
-      note: >-
-        For t >= 2, with the exponent freimanDimExponent kappa + tProperExponent t (freimanDim X).
-        Not in Challenge.lean.
+        For t >= 2, with the exponent freimanDimExponent kappa + tProperExponent t (freimanDim X),
+        where freimanDimExponent kappa <= 8 * 10^9 kappa^2 (1 + log kappa)^3. Not in
+        Challenge.lean.
     - source: "Chang's theorem for sets of integers with dimension at most the Freiman dimension, library form"
       lean: "ChangFreimanRuzsa.exists_tProperGAP_int_dim_le_freimanDim"
-      module: "ChangFreimanRuzsa.FreimanDim"
-      status: "proved"
-      note: >-
-        For t >= 2, with the exponent intFreimanDimExponent kappa + tProperExponent t (freimanDim X),
-        where intFreimanDimExponent kappa <= 10^32 kappa^7. Not in Challenge.lean.
-    - source: "Chang, Theorem 1"
-      lean: "ChangFreimanRuzsa.exists_gap_int_subset_dim_le_card_le"
       module: "ChangFreimanRuzsa.Int"
       status: "proved"
       note: >-
-        For 256 * bohrGAPDim kappa <= |X|. The dimension and log (|P| / |X|) are at most
+        For t >= 2, with the exponent intFreimanDimExponent kappa + tProperExponent t (freimanDim X),
+        where intFreimanDimExponent kappa <= 1.6 * 10^11 kappa^2 (1 + log kappa)^3. Not in
+        Challenge.lean.
+    - source: "Chang, Theorem 1"
+      lean: "ChangFreimanRuzsa.exists_gap_int_subset_dim_le_size_le"
+      module: "ChangFreimanRuzsa.Int"
+      status: "proved"
+      note: >-
+        For 256 * bohrGAPDim kappa <= |X|. The dimension and log (P.size / |X|) are at most
         containerExponent kappa <= 1.3 * 10^8 kappa^2 (1 + log kappa)^2, which has the form
-        C alpha^2 (log alpha)^2 of Theorem 1. Not in Challenge.lean.
+        C alpha^2 (log alpha)^2 of Theorem 1. Here P.size is the product of the lengths, which
+        bounds |P|. Not in Challenge.lean.
     - source: "Chang, Proposition 2.1, in ZMod q"
       lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_add_sub_add_card_le"
       module: "ChangFreimanRuzsa.BogolyubovRuzsa.ZMod"
@@ -402,7 +418,7 @@ alignment:
         For q prime and 256 * bohrGAPDim kappa <= |X|. The dimension is at most
         bohrGAPDim kappa, of order kappa log kappa as in (2.1), and
         |X| <= 8 (8 d)^(3 d) |Q| in place of (2.2). The version for integers is
-        exists_proper_gap_int_subset_add_sub_add_card_le of Integers.lean.
+        exists_proper_gap_int_subset_add_sub_add_card_le of Int.lean.
     - source: "Chang, Section 1, Step 1 (Ruzsa's model)"
       lean: "ChangFreimanRuzsa.exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le"
       module: "ChangFreimanRuzsa.BogolyubovRuzsa.RuzsaModel"
@@ -444,21 +460,35 @@ alignment:
         2B - 2B to 2A - 2A along a Freiman 8-isomorphism, is
         exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso.
     - source: "Chang, Section 2"
-      lean: "ChangFreimanRuzsa.exists_gap_subset_dim_le_card_le_of_subset_add_sub_add"
+      lean: "ChangFreimanRuzsa.exists_gap_subset_dim_le_size_le_of_subset_add_sub_add"
       module: "ChangFreimanRuzsa.Covering.Container"
       status: "proved"
       note: >-
         In an arbitrary abelian group, with sets of ceil(3 kappa) translates and a final
         application of Ruzsa's covering lemma.
     - source: "Chang, Section 4"
-      lean: "ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_card_le_of_subset_gap"
-      module: "ChangFreimanRuzsa.ZMod"
+      lean: "ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_freimanDim_of_subset_gap"
+      module: "ChangFreimanRuzsa.Properization.ProperProgression"
       status: "proved"
       note: >-
-        A different argument: properization through the short relations of the progression,
-        followed by the reduction to the Freiman dimension,
-        exists_tProperGAP_dim_le_freimanDim_of_isAddTorsionFree in
-        ChangFreimanRuzsa.FreimanDimension.CoordinateReduction.
+        In an abelian group whose nonzero elements have order at least N, through convex bodies
+        as in Green's notes. The dimension is at most the Freiman dimension, in place of
+        [alpha - 1], and the size of the progression containing X grows by the factor
+        exp (tProperExponent t (freimanDim X)) (8 (d + 2)^3)^d, where d is the dimension of the
+        progression from Section 2.
+    - source: "Green, Progressions and convex geometry, Lemma 1.5"
+      lean: "ChangFreimanRuzsa.exists_tProperGAP_image_latticePoints_subset_of_injOn"
+      module: "ChangFreimanRuzsa.Properization.BodyProgression"
+      status: "proved"
+      note: >-
+        A t-proper progression of dimension r with at most (3 r!^2)^r r! vol K points,
+        containing the image of the integer points of a full symmetric body K, when the
+        homomorphism is injective on the integer points of (2 t r r!^2) K.
+    - source: "Green, Progressions and convex geometry, Lemma 2.2"
+      lean: "ChangFreimanRuzsa.exists_quotient_of_not_injOn"
+      module: "ChangFreimanRuzsa.Properization.RelationQuotient"
+      status: "proved"
+      note: "With the factor (m + 1)^2 in place of m + 1 in the volume bound."
     - source: "Chang, Section 1, definition of a proper progression"
       lean: "ChangFreimanRuzsa.GAP.proper_iff_card_eq_prod_length"
       module: "ChangFreimanRuzsa.GAP.Basic"

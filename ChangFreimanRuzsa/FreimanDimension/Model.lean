@@ -5,36 +5,34 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GAP.Coeff
 public import ChangFreimanRuzsa.GeometryOfNumbers.LatticeCoordinates
 public import SumOfSetsInSeveralDimensions.FreimanDimension
 
 /-!
-# A Freiman model of a subset of a `2`-proper progression
+# A Freiman model in the lattice spanned by a set of integer vectors
 
-Let `P` be a `2`-proper generalized arithmetic progression in an abelian group `G`, let
-`X ⊆ P.toFinset` be finite and let `x₀ ∈ X`. Translate the coefficient vectors in `P` of the
-elements of `X` so that the vector of `x₀` is the origin, and let `r` be the dimension of the real
-span of the translated vectors. The map that sends `x ∈ X` to the coordinates of its translated
-vector in a basis of the lattice of integer points of that span is a Freiman isomorphism of order
-`2` from `X` onto a subset of `ℤ ^ r ⊆ ℚ ^ r` that contains the origin and spans `ℝ ^ r`. Hence
-`r` is at most the Freiman dimension `freimanDim X`.
+Let `f : G → (Fin d → ℤ)` be a Freiman isomorphism of order `2` from a finite set `X` onto its
+image, and let `x₀ ∈ X`. Translate the vectors `f x` with `x ∈ X` so that `f x₀` is the origin,
+and let `r` be the dimension of the real span of the translated vectors. The map that sends
+`x ∈ X` to the coordinates of its translated vector in a basis of the lattice of integer points of
+that span is a Freiman isomorphism of order `2` from `X` onto a subset of `ℤ ^ r ⊆ ℚ ^ r` that
+contains the origin and spans `ℝ ^ r`. Hence `r` is at most the Freiman dimension `freimanDim X`.
 
 This is the model of Appendix A of Marcelo Campos, Gabriel Dahia and João Pedro Marciano, *On the
 independence number of sparser random Cayley graphs*, J. London Math. Soc. 110 (2024).
 
 ## Main definitions
 
-* `translatedCoords P X x₀`: the translated coefficient vectors of the elements of `X`.
-* `modelDim P X x₀`: the dimension `r` of their real span.
-* `modelFn P X x₀`: the map `G → ℚ ^ r`.
+* `translatedCoords f X x₀`: the translated vectors `f x - f x₀` with `x ∈ X`.
+* `modelDim f X x₀`: the dimension `r` of their real span.
+* `modelFn f X x₀`: the map `G → ℚ ^ r`.
 
 ## Main statements
 
-* `modelFn_isAddFreimanIso`: `modelFn P X x₀` is a Freiman isomorphism of order `2` from `X` onto
+* `modelFn_isAddFreimanIso`: `modelFn f X x₀` is a Freiman isomorphism of order `2` from `X` onto
   its image.
 * `finrank_direction_affineSpan_modelFn`: the image of `X` has affine dimension `r`.
-* `modelDim_le_freimanDim`: `modelDim P X x₀ ≤ freimanDim X`.
+* `modelDim_le_freimanDim`: `modelDim f X x₀ ≤ freimanDim X`.
 -/
 
 @[expose] public section
@@ -45,36 +43,33 @@ namespace ChangFreimanRuzsa
 
 noncomputable section
 
-variable {G : Type*} [DecidableEq G] [AddCommGroup G] (P : GAP G) (X : Finset G) (x₀ : G)
+variable {G : Type*} {d : ℕ} (f : G → (Fin d → ℤ)) (X : Finset G) (x₀ : G)
 
-/-- The coefficient vectors in `P` of the elements of `X`, translated by the coefficient vector of
-`x₀`. -/
-def translatedCoords : Finset (Fin P.dim → ℤ) :=
-  X.image fun x ↦ P.coordinateMap x - P.coordinateMap x₀
+/-- The vectors `f x - f x₀` with `x ∈ X`. -/
+def translatedCoords : Finset (Fin d → ℤ) :=
+  X.image fun x ↦ f x - f x₀
 
-/-- The dimension of the real span of `translatedCoords P X x₀`. -/
-abbrev modelDim : ℕ := integerGeneratedRank (translatedCoords P X x₀)
+/-- The dimension of the real span of `translatedCoords f X x₀`. -/
+abbrev modelDim : ℕ := integerGeneratedRank (translatedCoords f X x₀)
 
-/-- The map `G → ℚ ^ r` that sends `x` to the coordinates of its translated coefficient vector in
-the basis `integerGeneratedLatticeBasis (translatedCoords P X x₀)`. -/
-def modelFn (x : G) : Fin (modelDim P X x₀) → ℚ :=
-  fun i ↦ latticeCoordinates (translatedCoords P X x₀) (P.coordinateMap x - P.coordinateMap x₀) i
+/-- The map `G → ℚ ^ r` that sends `x` to the coordinates of `f x - f x₀` in the basis
+`integerGeneratedLatticeBasis (translatedCoords f X x₀)`. -/
+def modelFn (x : G) : Fin (modelDim f X x₀) → ℚ :=
+  fun i ↦ latticeCoordinates (translatedCoords f X x₀) (f x - f x₀) i
 
 variable {X}
 
-lemma sub_coordinateMap_mem_translatedCoords {x : G} (hx : x ∈ X) :
-    P.coordinateMap x - P.coordinateMap x₀ ∈ translatedCoords P X x₀ :=
+lemma sub_mem_translatedCoords {x : G} (hx : x ∈ X) : f x - f x₀ ∈ translatedCoords f X x₀ :=
   mem_image_of_mem _ hx
 
-lemma sub_coordinateMap_mem_saturatedSpan {x : G} (hx : x ∈ X) :
-    P.coordinateMap x - P.coordinateMap x₀ ∈ saturatedSpan (translatedCoords P X x₀) :=
-  subset_saturatedSpan _ (sub_coordinateMap_mem_translatedCoords P x₀ hx)
+lemma sub_mem_saturatedSpan {x : G} (hx : x ∈ X) :
+    f x - f x₀ ∈ saturatedSpan (translatedCoords f X x₀) :=
+  subset_saturatedSpan _ (sub_mem_translatedCoords f x₀ hx)
 
-variable {P x₀}
+variable {f x₀}
 
 lemma coe_translatedCoords :
-    (translatedCoords P X x₀ : Set (Fin P.dim → ℤ)) =
-      (fun x ↦ P.coordinateMap x - P.coordinateMap x₀) '' X :=
+    (translatedCoords f X x₀ : Set (Fin d → ℤ)) = (fun x ↦ f x - f x₀) '' X :=
   coe_image
 
 private lemma intCast_add_intCast_eq_iff {r : ℕ} {a b c e : Fin r → ℤ} :
@@ -84,34 +79,33 @@ private lemma intCast_add_intCast_eq_iff {r : ℕ} {a b c e : Fin r → ℤ} :
   norm_cast
 
 /-- The model map is a Freiman isomorphism of order `2` from `X` onto its image. -/
-lemma modelFn_isAddFreimanIso (hP : (P + P).Proper) (hXP : X ⊆ P.toFinset) :
+lemma modelFn_isAddFreimanIso [AddCommGroup G] (hf : IsAddFreimanIso 2 (X : Set G) (f '' X) f) :
     IsAddFreimanIso 2 (X : Set G)
-      ((X.image (modelFn P X x₀) : Finset (Fin (modelDim P X x₀) → ℚ)) :
-        Set (Fin (modelDim P X x₀) → ℚ)) (modelFn P X x₀) := by
+      ((X.image (modelFn f X x₀) : Finset (Fin (modelDim f X x₀) → ℚ)) :
+        Set (Fin (modelDim f X x₀) → ℚ)) (modelFn f X x₀) := by
   rw [coe_image]
+  obtain ⟨hbij, hadd⟩ := isAddFreimanIso_two.1 hf
   refine isAddFreimanIso_two.2 ⟨Set.InjOn.bijOn_image ?_, ?_⟩
   · intro a ha b hb hab
-    apply P.coordinateMap_injOn (hXP ha) (hXP hb)
-    apply sub_left_injective (b := P.coordinateMap x₀)
-    apply latticeCoordinates_injOn _ (sub_coordinateMap_mem_saturatedSpan P x₀ ha)
-      (sub_coordinateMap_mem_saturatedSpan P x₀ hb)
+    apply hbij.injOn ha hb
+    apply sub_left_injective (b := f x₀)
+    apply latticeCoordinates_injOn _ (sub_mem_saturatedSpan f x₀ ha) (sub_mem_saturatedSpan f x₀ hb)
     ext i
     exact Int.cast_injective (α := ℚ) (congr_fun hab i)
   · intro a ha b hb c hc e he
     refine intCast_add_intCast_eq_iff.trans ?_
-    rw [latticeCoordinates_add_eq_add_iff (sub_coordinateMap_mem_saturatedSpan P x₀ ha)
-      (sub_coordinateMap_mem_saturatedSpan P x₀ hb) (sub_coordinateMap_mem_saturatedSpan P x₀ hc)
-      (sub_coordinateMap_mem_saturatedSpan P x₀ he), sub_add_sub_comm, sub_add_sub_comm,
-      sub_left_inj]
-    exact P.coordinateMap_add_eq_iff hP (hXP ha) (hXP hb) (hXP hc) (hXP he)
+    rw [latticeCoordinates_add_eq_add_iff (sub_mem_saturatedSpan f x₀ ha)
+      (sub_mem_saturatedSpan f x₀ hb) (sub_mem_saturatedSpan f x₀ hc)
+      (sub_mem_saturatedSpan f x₀ he), sub_add_sub_comm, sub_add_sub_comm, sub_left_inj]
+    exact hadd a ha b hb c hc e he
 
 /-- The image of `X` under the model map, viewed in `ℝ ^ r`, is the set of the real casts of the
-lattice coordinates of the translated coefficient vectors. -/
+lattice coordinates of the translated vectors. -/
 private lemma coe_image_rationalVectorToReal_modelFn :
-    (((X.image (modelFn P X x₀)).image rationalVectorToReal : Finset _) :
-        Set (Fin (modelDim P X x₀) → ℝ)) =
-      intVectorToReal '' (latticeCoordinates (translatedCoords P X x₀) ''
-        (translatedCoords P X x₀ : Set (Fin P.dim → ℤ))) := by
+    (((X.image (modelFn f X x₀)).image rationalVectorToReal : Finset _) :
+        Set (Fin (modelDim f X x₀) → ℝ)) =
+      intVectorToReal '' (latticeCoordinates (translatedCoords f X x₀) ''
+        (translatedCoords f X x₀ : Set (Fin d → ℤ))) := by
   rw [coe_image, coe_image, coe_translatedCoords, Set.image_image, Set.image_image,
     Set.image_image]
   apply Set.image_congr
@@ -129,18 +123,18 @@ private lemma finrank_direction_affineSpan_of_span_eq_top {V : Type*} [AddCommGr
 /-- The image of `X` under the model map, viewed in `ℝ ^ r`, has affine dimension `r`. -/
 lemma finrank_direction_affineSpan_modelFn (hx₀ : x₀ ∈ X) :
     Module.finrank ℝ (affineSpan ℝ
-      (((X.image (modelFn P X x₀)).image rationalVectorToReal : Finset _) :
-        Set (Fin (modelDim P X x₀) → ℝ))).direction = modelDim P X x₀ := by
+      (((X.image (modelFn f X x₀)).image rationalVectorToReal : Finset _) :
+        Set (Fin (modelDim f X x₀) → ℝ))).direction = modelDim f X x₀ := by
   rw [coe_image_rationalVectorToReal_modelFn, finrank_direction_affineSpan_of_span_eq_top ?_
     (span_image_intVectorToReal_latticeCoordinates _), Module.finrank_fin_fun]
-  exact ⟨_, ⟨_, sub_coordinateMap_mem_translatedCoords P x₀ hx₀, rfl⟩,
-    by simp [latticeCoordinates_zero]⟩
+  exact ⟨_, ⟨_, sub_mem_translatedCoords f x₀ hx₀, rfl⟩, by simp [latticeCoordinates_zero]⟩
 
 /-- The dimension of the model is at most the Freiman dimension of `X`. -/
-lemma modelDim_le_freimanDim (hP : (P + P).Proper) (hXP : X ⊆ P.toFinset) (hx₀ : x₀ ∈ X) :
-    modelDim P X x₀ ≤ freimanDim X :=
+lemma modelDim_le_freimanDim [DecidableEq G] [AddCommGroup G]
+    (hf : IsAddFreimanIso 2 (X : Set G) (f '' X) f) (hx₀ : x₀ ∈ X) :
+    modelDim f X x₀ ≤ freimanDim X :=
   le_freimanDim_of_model ((integerGeneratedRank_le_card _).trans card_image_le)
-    ⟨modelFn P X x₀, modelFn_isAddFreimanIso hP hXP, finrank_direction_affineSpan_modelFn hx₀⟩
+    ⟨modelFn f X x₀, modelFn_isAddFreimanIso hf, finrank_direction_affineSpan_modelFn hx₀⟩
 
 end
 

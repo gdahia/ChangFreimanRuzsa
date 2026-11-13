@@ -99,6 +99,12 @@ lemma proper_nsmul_iff (t : ℕ) (P : GAP G) :
   rw [proper_nsmul_iff_injective, injective_gapMap_iff]
   simp [relations, stepHom, h, Int.lt_add_one_iff]
 
+/-- A translate of a progression is `t`-proper if and only if the progression is. -/
+lemma proper_nsmul_shift_iff (t : ℕ) (P : GAP G) (c : G) :
+    (t • P.shift c).Proper ↔ (t • P).Proper := by
+  rw [proper_nsmul_iff, proper_nsmul_iff]
+  rfl
+
 /-- A `t`-proper progression is `s`-proper for `s ≤ t`. -/
 lemma Proper.of_nsmul_of_le {s t : ℕ} {P : GAP G} (hst : s ≤ t) (h : (t • P).Proper) :
     (s • P).Proper := by

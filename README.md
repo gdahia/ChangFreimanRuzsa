@@ -5,9 +5,13 @@ in Freiman's theorem*](https://doi.org/10.1215/S0012-7094-02-11331-3), Duke
 Math. J. 113 (2002). Her result complements Freiman's qualitative statement that a
 set with small doubling lies in a generalized arithmetic progression of comparable
 size by ensuring that the progression $P$ is $t$-proper in the sense that $t P$
-is proper. The bounds proved here are weaker than Chang's. The proof uses
-Chang's lemma on large spectra from [APAP](https://github.com/YaelDillies/apap)
-and Minkowski's second theorem from [Tau Ceti](https://github.com/TauCetiProject/TauCeti).
+is proper. The bound on the size proved here has the form
+$\exp(C \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t)$ of Chang's bound, with an explicit
+constant $C$. The proof uses Chang's lemma on large spectra from
+[APAP](https://github.com/YaelDillies/apap), and Minkowski's second theorem and the volume of
+cross-polytopes from [Tau Ceti](https://github.com/TauCetiProject/TauCeti). The passage to a
+$t$-proper progression follows the convex-body argument of Bilu, in the form of Green's notes
+[*Progressions and convex geometry*](https://www.math.cmu.edu/~ploh/j/sources/Ben%20Green/Progressions%20and%20convex%20geometry.pdf).
 
 ## Results
 
@@ -17,7 +21,7 @@ $\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$, then $X$ i
 $t$-proper progression $P$ with
 
 $$\dim P \le \mathrm{dim}\_\mathrm{F} X, \qquad \left\lvert P\right\rvert \le
-\exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert$$
+\exp(2 \cdot 10^{11} \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t) \left\lvert X\right\rvert$$
 
 where $\mathrm{dim}\_\mathrm{F} X$ is the Freiman dimension of $X$.
 
@@ -26,23 +30,23 @@ be a prime, let $t \ge 2$ be an integer, let $\kappa \ge 2$, and let
 $X \subseteq \mathbb{Z}/q\mathbb{Z}$. If
 $\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$,
 $\left\lvert X\right\rvert \ge 7 \cdot 10^7 \kappa^2$ and
-$\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert \le q$, then $X$ is contained
-in a $t$-proper progression $Q$ with
+$\exp(10^{10} \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t) \left\lvert X\right\rvert \le q$,
+then $X$ is contained in a $t$-proper progression $Q$ with
 
 $$\dim Q \le \mathrm{dim}\_\mathrm{F} X, \qquad \left\lvert Q\right\rvert \le
-\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
+\exp(10^{10} \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t) \left\lvert X\right\rvert.$$
 
 **Theorem 3** (`ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_card_le`). Under the
 hypotheses of Theorem 1, $X$ is contained in a $t$-proper progression $P$ with
 
 $$\dim P \le 2\kappa - 1, \qquad \left\lvert P\right\rvert \le
-\exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
+\exp(2 \cdot 10^{11} \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t) \left\lvert X\right\rvert.$$
 
 **Theorem 4** (`ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_card_le`). Under the
 hypotheses of Theorem 2, $X$ is contained in a $t$-proper progression $Q$ with
 
 $$\dim Q \le 2\kappa - 1, \qquad \left\lvert Q\right\rvert \le
-\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
+\exp(10^{10} \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t) \left\lvert X\right\rvert.$$
 
 **Theorem 5** (`ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_floor_card_le`). Let $t \ge 2$ be
 an integer, let $\kappa \ge 2$, let $\varepsilon$ be a real number and let $X$ be a finite set of
@@ -51,7 +55,7 @@ $\kappa (2\kappa - 1) \le \varepsilon \left\lvert X\right\rvert$, then $X$ is co
 $t$-proper progression $P$ with
 
 $$\dim P \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad \left\lvert P\right\rvert \le
-\exp(10^{32} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
+\exp(2 \cdot 10^{11} \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t) \left\lvert X\right\rvert.$$
 
 **Theorem 6** (`ChangFreimanRuzsa.exists_tProperGAP_zmod_subset_dim_le_floor_card_le`). Under the
 hypotheses of Theorem 2, if moreover
@@ -59,7 +63,7 @@ $\kappa (2\kappa - 1) \le \varepsilon \left\lvert X\right\rvert$, then $X$ is co
 $t$-proper progression $Q$ with
 
 $$\dim Q \le \lfloor \kappa - 1 + \varepsilon \rfloor, \qquad \left\lvert Q\right\rvert \le
-\exp(10^{30} \kappa^7 + 7 \kappa^2 \log t) \left\lvert X\right\rvert.$$
+\exp(10^{10} \kappa^2 (1 + \log \kappa)^3 + 2 \kappa \log t) \left\lvert X\right\rvert.$$
 
 Theorems 3 to 6 follow from Theorems 1 and 2, since the Freiman dimension of a nonempty set $X$
 with $\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$ is at most $2\kappa - 1$
@@ -68,11 +72,10 @@ $\kappa - 1 + \kappa (2\kappa - 1) / \left\lvert X\right\rvert$
 (`SumOfSetsInSeveralDimensions.freimanDim_le_sub_one_add_mul_div_card_of_card_add_le`).
 
 Chang's theorem, as stated by Green and Tao, gives a progression with at most
-$\exp(C \kappa^2 \log^3 \kappa) \left\lvert X\right\rvert$ points and dimension at most the Freiman
-dimension of $X$, hence at most $\lfloor \kappa - 1 + \varepsilon \rfloor$ when
+$t^{K} \exp(C \kappa^2 \log^3 \kappa) \left\lvert X\right\rvert$ points and dimension at most the
+Freiman dimension of $X$, hence at most $\lfloor \kappa - 1 + \varepsilon \rfloor$ when
 $\left\lvert X\right\rvert \ge C \kappa^2 / \varepsilon$. Theorems 1, 2, 5 and 6 have the same
-bounds on the dimension, and a bound on the size that is linear in $\left\lvert X\right\rvert$ too,
-with a larger exponent.
+bounds on the dimension and a bound on the size of the same form.
 
 The first step of the proof is the Bogolyubov–Ruzsa lemma, a large proper progression inside
 $2X - 2X$.
@@ -102,8 +105,8 @@ The library also states the theorems with named exponents, which the explicit bo
 
 | Theorem | Named bound | Bound for `κ ≥ 2` |
 | --- | --- | --- |
-| `exists_tProperGAP_int_dim_le_freimanDim`, exponent of the size | `intFreimanDimExponent κ + tProperExponent t (freimanDim X)` | at most `10 ^ 32 * κ ^ 7 + 7 * κ ^ 2 * log t` |
-| `exists_tProperGAP_zmod_dim_le_freimanDim`, exponent of the size | `freimanDimExponent κ + tProperExponent t (freimanDim X)` | at most `10 ^ 30 * κ ^ 7 + 7 * κ ^ 2 * log t` |
+| `exists_tProperGAP_int_dim_le_freimanDim`, exponent of the size | `intFreimanDimExponent κ + tProperExponent t (freimanDim X)` | at most `2 * 10 ^ 11 * κ ^ 2 * (1 + log κ) ^ 3 + 2 * κ * log t` |
+| `exists_tProperGAP_zmod_dim_le_freimanDim`, exponent of the size | `freimanDimExponent κ + tProperExponent t (freimanDim X)` | at most `10 ^ 10 * κ ^ 2 * (1 + log κ) ^ 3 + 2 * κ * log t` |
 | `exists_tProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
 | `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, dimension | `bohrGAPDim κ` | at most `3 * 10 ^ 5 * κ ^ 2` |
 | `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, loss in the size | `8 * bohrLoss (bohrGAPDim κ)` | at most `exp (2 * 10 ^ 7 * κ ^ 2)` |
@@ -112,21 +115,20 @@ The library also states the theorems with named exponents, which the explicit bo
 
 | Files in `ChangFreimanRuzsa/` | Contents |
 | --- | --- |
-| `GAP/Basic.lean`, `GAP/Coeff.lean` | Progressions, proper and `t`-proper progressions, coefficients and the Freiman isomorphism onto the coefficient box |
-| `GAP/Relations.lean`, `GAP/ScaleLengths.lean`, `GAP/Symmetric.lean`, `GAP/Constructions.lean` | Relations among the steps and `t`-properness in terms of them, enlarged lengths, symmetric progressions, progressions containing subset sums and differences |
+| `GAP/Basic.lean` | Progressions, proper and `t`-proper progressions |
+| `GAP/Relations.lean`, `GAP/Symmetric.lean`, `GAP/Constructions.lean` | Relations among the steps and `t`-properness in terms of them, symmetric progressions, progressions containing subset sums and differences |
 | `GAP/FreimanHom.lean` | Images of progressions under Freiman isomorphisms |
-| `GeometryOfNumbers/Box.lean`, `GeometryOfNumbers/RealBox.lean` | Integer and real boxes, the packing bound, short lattice vectors |
-| `GeometryOfNumbers/IntegerLattice.lean`, `GeometryOfNumbers/SaturatedSpan.lean`, `GeometryOfNumbers/LatticeCoordinates.lean` | Integer lattices in subspaces, saturated spans, coordinates in a basis of the lattice of integer points of a span |
-| `GeometryOfNumbers/Gauge.lean`, `GeometryOfNumbers/ConvexDilate.lean`, `GeometryOfNumbers/GaugeBox.lean`, `GeometryOfNumbers/GaugeInduction.lean` | Shortest lattice vectors for a convex body, and a proper progression covering its lattice points |
+| `GeometryOfNumbers/IntegerLattice.lean`, `GeometryOfNumbers/LatticeCoordinates.lean` | Integer lattices in subspaces, saturated spans, coordinates in a basis of the lattice of integer points of a span |
+| `GeometryOfNumbers/LatticePointCount.lean`, `GeometryOfNumbers/SymmetricBody.lean` | Integer points and volume, the theorem of van der Corput, symmetric convex bodies whose integer points span |
+| `GeometryOfNumbers/ProjectionVolume.lean`, `GeometryOfNumbers/RealBox.lean` | The volume of a projection of a symmetric convex body, real boxes |
 | `GeometryOfNumbers/MinkowskiSecond.lean` | Minkowski's second theorem for a weighted sum of squares |
 | `BogolyubovRuzsa/` | Ruzsa's model lemma, Chang's lemma and Bohr sets, a proper progression in a Bohr set, and the Bogolyubov–Ruzsa lemma in `ZMod q` |
 | `Covering/` | Chang's packing argument and the progression containing `X`, with the exponent `containerExponent` |
-| `Properization/` | Smith normal form quotients, short relations and the passage to a `t`-proper progression |
-| `FreimanDimension/` | The Freiman model of a subset of a `2`-proper progression, and a `t`-proper progression of dimension at most `freimanDim X` containing `X` |
-| `ZMod.lean` | Chang's theorem in `ZMod q` with named exponents |
-| `Int.lean` | Chang's theorem for sets of integers with named exponents |
-| `FreimanDim.lean` | Chang's theorem in `ZMod q` and for sets of integers with dimension at most `freimanDim X`, with named exponents |
-| `ExponentBounds.lean` | Polynomial bounds for the exponents of `Covering/Container.lean`, `ZMod.lean` and `Int.lean` |
+| `FreimanDimension/` | The Freiman model of a set of integer points, and the central section of a symmetric body by the span of the model |
+| `Properization/` | Quotients of a symmetric body by short relations, a `t`-proper progression from a symmetric body, and the passage from a progression to a `t`-proper progression of dimension at most `freimanDim X` |
+| `ZMod.lean` | Chang's theorem in `ZMod q` with dimension at most `freimanDim X` and named exponents |
+| `Int.lean` | Chang's theorem for sets of integers with dimension at most `freimanDim X` and named exponents |
+| `ExponentBounds.lean` | Bounds for the exponents of `Covering/Container.lean`, `Properization/ProperProgression.lean`, `ZMod.lean` and `Int.lean` |
 | `Explicit.lean` | Theorems 1 to 8 |
 
 [formalization.yaml](formalization.yaml) records the sources, the differences from them, the
