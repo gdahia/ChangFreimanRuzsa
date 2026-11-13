@@ -138,7 +138,7 @@ lemma exists_tProperGAP_toFinset_subset_dim_le_card_le_of_injOn_nsmul {N t : ℕ
       Q.toFinset.card ≤
         Real.exp (properizationExponent P.dim + tProperExponent t P.dim) * P.toFinset.card := by
   induction hd : P.dim using Nat.strong_induction_on generalizing P with
-  | h d ih =>
+  | ind d ih =>
     subst hd
     rcases GAP.proper_nsmul_or_exists_gap_dim_lt ht hG
       (GAP.mul_card_lt_of_exp_mul_card_le ht hcard) with hP | ⟨Q, hPQ, hdim, hQcard⟩

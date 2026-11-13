@@ -13,13 +13,13 @@ maxSynthPendingDepth = 3
 [[require]]
 name = "APAP"
 git = "https://github.com/YaelDillies/apap.git"
-rev = "cfce977a6d11d6175c450547e7593773e37ba36e"
+rev = "5b8cc8c5483512ee077ffa5a8bafc0a1a4c09f86"
 
 # Source of Minkowski's second theorem.
 [[require]]
 name = "TauCeti"
 git = "https://github.com/TauCetiProject/TauCeti.git"
-rev = "v4.35.0"
+rev = "460c26356a432282c231dafc96ee0c25f5a9e083"
 
 # Source of the affine dimension of a finite set, of Ruzsa's lower bound for sumsets and of the
 # Freiman dimension.
@@ -29,11 +29,11 @@ git = "https://github.com/gdahia/SumOfSetsInSeveralDimensions"
 rev = "9a655a95e167081b5a01ad5505b13c59933457e4"
 
 # Last, so that its pins of the shared dependencies take precedence on `lake update`. Pinned to
-# the commit TauCeti v4.35.0 pins, since Palomar requires TauCeti's exact manifest closure.
+# the commit TauCeti pins, since Palomar requires TauCeti's exact manifest closure.
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
-rev = "074063781836922cb02701cd12943c9f51731afa"
+rev = "2ddf59c8f14245864e6c0ed227a2dab76b9efea2"
 
 # The proof development; `Solution.lean` imports it.
 [[lean_lib]]
