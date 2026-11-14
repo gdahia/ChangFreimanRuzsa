@@ -19,9 +19,6 @@ The relations of a GAP with steps `step : Fin d → G` are the integer vectors `
   `|v i| < length i` for all `i`.
 * `GAP.proper_nsmul_iff`: a progression is `t`-proper if and only if no nonzero relation has
   `|v i| ≤ t * (P.length i - 1)` for all `i`.
-* `GAP.Proper.of_nsmul_of_le`: a `t`-proper progression is `s`-proper for `s ≤ t`.
-* `GAP.injective_gapMap_mul_length_of_proper_two_mul_nsmul`: if `(2 * t) • P` is proper, then `P` is
-  `t`-proper in the sense of Green and Tao.
 * `GAP.mem_toFinset_iff_exists_intCoeffs`: membership in a progression through integer
   coefficients.
 -/
@@ -86,9 +83,6 @@ namespace GAP
 /-- The lattice of relations among the steps of a GAP. -/
 noncomputable def relations (P : GAP G) : AddSubgroup (Fin P.dim → ℤ) := (stepHom P).ker
 
-lemma mem_relations {P : GAP G} {v : Fin P.dim → ℤ} :
-    v ∈ P.relations ↔ ∑ i, v i • P.step i = 0 := Iff.rfl
-
 /-- A progression is `t`-proper if and only if no nonzero relation `v` has
 `|v i| ≤ t * (P.length i - 1)` for all `i`. -/
 lemma proper_nsmul_iff (t : ℕ) (P : GAP G) :
@@ -104,32 +98,6 @@ lemma proper_nsmul_shift_iff (t : ℕ) (P : GAP G) (c : G) :
     (t • P.shift c).Proper ↔ (t • P).Proper := by
   rw [proper_nsmul_iff, proper_nsmul_iff]
   rfl
-
-/-- A `t`-proper progression is `s`-proper for `s ≤ t`. -/
-lemma Proper.of_nsmul_of_le {s t : ℕ} {P : GAP G} (hst : s ≤ t) (h : (t • P).Proper) :
-    (s • P).Proper := by
-  rw [proper_nsmul_iff] at h ⊢
-  intro v hv hle
-  refine h v hv ?_
-  intro i
-  exact (hle i).trans (Int.mul_le_mul_of_nonneg_right (mod_cast hst) (by grind [P.length_pos i]))
-
-/-- If `(2 * t) • P` is proper, then `P` is `t`-proper in the sense of Green and Tao: the points
-`x + ∑ i, w i • P.step i` with `w i < t * P.length i` are distinct. Indeed
-`t * P.length i - 1 ≤ 2 * t * (P.length i - 1)`, as `2 ≤ P.length i`. -/
-lemma injective_gapMap_mul_length_of_proper_two_mul_nsmul {t : ℕ} {P : GAP G} (x : G)
-    (h : ((2 * t) • P).Proper) :
-    Function.Injective (gapMap x P.step fun i ↦ t * P.length i) := by
-  rw [injective_gapMap_iff]
-  intro v hv hlt
-  refine (proper_nsmul_iff _ _).1 h v hv ?_
-  intro i
-  have hlt' : |v i| < t * (P.length i : ℤ) := mod_cast hlt i
-  have hmul := Int.mul_le_mul_of_nonneg_left
-    (by grind [P.one_lt_length i] : (P.length i : ℤ) ≤ 2 * ((P.length i : ℤ) - 1))
-    (Int.natCast_nonneg t)
-  push_cast
-  grind
 
 /-- Membership in a progression, in terms of integer coefficients in the coefficient box. -/
 lemma mem_toFinset_iff_exists_intCoeffs [DecidableEq G] (P : GAP G) {x : G} :

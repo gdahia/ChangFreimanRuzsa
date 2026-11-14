@@ -31,8 +31,8 @@ A progression `P` is `t`-proper when `t • P` is proper. For `t = 2` this says 
 proper, as in Bilu's condition `F₂` and in Tao and Vu. Green and Tao call a progression with
 numbered steps `s i` and lengths `ℓ i` `t`-proper when the points `t • origin + ∑ i, w i • s i` with
 `w i < t * ℓ i` are distinct. The points of `t • P` are those with `w i ≤ t * (ℓ i - 1)`, so the
-condition of Green and Tao is stronger. It follows from `(2 * t) • P` being proper, by
-`GAP.injective_gapMap_mul_length_of_proper_two_mul_nsmul`. The progression `{0, 1}` in `ZMod 3` is
+condition of Green and Tao is stronger. It follows from `(2 * t) • P` being proper, since
+`t * ℓ i - 1 ≤ 2 * t * (ℓ i - 1)` when `2 ≤ ℓ i`. The progression `{0, 1}` in `ZMod 3` is
 `2`-proper but not `2`-proper in the sense of Green and Tao.
 
 ## Main definitions
@@ -45,18 +45,14 @@ condition of Green and Tao is stronger. It follows from `(2 * t) • P` being pr
 * `GAP.ofSteps`: the GAP with prescribed origin, numbered steps and lengths.
 * `GAP.step` and `GAP.length`: the numbered steps and lengths of a GAP.
 * `GAP.size`: the number `∏ v ∈ P.bound.support, (P.bound v + 1)` of coefficient vectors.
-* `GAP.map` and `GAP.shift`: images of a GAP under additive homomorphisms and translations.
-* `stepsHom`, `stepHom` and `symBox`: the homomorphism from `ℤ ^ d` to `G` given by the steps,
-  and the symmetric box of differences of coefficient vectors.
+* `GAP.shift`: the translate of a GAP.
+* `stepsHom` and `stepHom`: the homomorphism from `ℤ ^ d` to `G` given by the steps.
 
 ## Main statements
 
 * `GAP.toFinset_add`: the points of `P + Q` are the sums of a point of `P` and a point of `Q`.
-* `GAP.toFinset_nsmul`: the points of `t • P` are the sums of `t` points of `P`.
 * `GAP.proper_iff_card_eq_size`: a GAP `P` is proper if and only if it has `P.size` elements.
-* `GAP.proper_iff_injective`, `GAP.proper_nsmul_iff_injective` and
-  `GAP.proper_add_self_iff_injective`: properness, `t`-properness and `2`-properness in terms of the
-  numbered steps and lengths.
+* `GAP.proper_nsmul_iff_injective`: `t`-properness in terms of the numbered steps and lengths.
 -/
 
 @[expose] public section
@@ -158,22 +154,6 @@ lemma le_sum_single_iff {d : ℕ} {s : Fin d → ι} {n : Fin d → ℕ} {c : ι
 
 end Decomposition
 
-/-- The points `gapMap origin step length w` are the points `origin + ∑ i, c i • step i` with
-natural numbers `c i < length i`. -/
-lemma mem_image_gapMap_iff {G : Type*} [DecidableEq G] [AddCommMonoid G] {d : ℕ} {origin : G}
-    {step : Fin d → G} {length : Fin d → ℕ} {x : G} :
-    x ∈ Finset.univ.image (gapMap origin step length) ↔
-      ∃ c : Fin d → ℕ, (∀ i, c i < length i) ∧ origin + ∑ i, c i • step i = x := by
-  rw [Finset.mem_image]
-  constructor
-  · rintro ⟨w, -, rfl⟩
-    exact ⟨fun i ↦ w i, fun i ↦ (w i).isLt, rfl⟩
-  · rintro ⟨c, hc, rfl⟩
-    exact ⟨fun i ↦ ⟨c i, hc i⟩, Finset.mem_univ _, rfl⟩
-
-instance {G : Type*} [DecidableEq G] [AddCommMonoid G] : CoeOut (GAP G) (Finset G) where
-  coe P := P.toFinset
-
 namespace GAP
 
 variable {G : Type*} [AddCommMonoid G]
@@ -192,13 +172,6 @@ lemma ext {P Q : GAP G} (horigin : P.origin = Q.origin) (hbound : P.bound = Q.bo
 @[simp] lemma origin_nsmul (t : ℕ) (P : GAP G) : (t • P).origin = t • P.origin := rfl
 
 @[simp] lemma bound_nsmul (t : ℕ) (P : GAP G) : (t • P).bound = t • P.bound := rfl
-
-/-- The multiple `2 • P` is the sum `P + P`. -/
-lemma two_nsmul (P : GAP G) : 2 • P = P + P :=
-  ext (_root_.two_nsmul _) (_root_.two_nsmul _)
-
-lemma succ_nsmul (t : ℕ) (P : GAP G) : (t + 1) • P = t • P + P :=
-  ext (_root_.succ_nsmul _ _) (_root_.succ_nsmul _ _)
 
 lemma eval_eq_linearCombination (P : GAP G) (c : G →₀ ℕ) :
     P.eval c = P.origin + Finsupp.linearCombination ℕ id c := by
@@ -243,14 +216,6 @@ lemma toFinset_add (P Q : GAP G) : (P + Q).toFinset = P.toFinset + Q.toFinset :=
     exact ⟨_, ⟨c₁, hc₁, rfl⟩, _, ⟨c₂, hc₂, rfl⟩, (eval_add P Q c₁ c₂).symm⟩
   · rintro ⟨_, ⟨c₁, hc₁, rfl⟩, _, ⟨c₂, hc₂, rfl⟩, rfl⟩
     exact ⟨c₁ + c₂, add_le_add hc₁ hc₂, eval_add P Q c₁ c₂⟩
-
-/-- The points of `t • P` are the sums of `t` points of `P`. -/
-lemma toFinset_nsmul (t : ℕ) (P : GAP G) : (t • P).toFinset = t • P.toFinset := by
-  induction t with
-  | zero =>
-    ext x
-    simp [mem_toFinset, eq_comm]
-  | succ t ih => rw [succ_nsmul, toFinset_add, ih, _root_.succ_nsmul]
 
 end Carrier
 
@@ -319,26 +284,6 @@ lemma dim_ofSteps_le : (ofSteps origin step length).dim ≤ d := by
   exact Finset.mem_image.2 ⟨i, Finset.mem_univ _, (Finset.mem_singleton.1
     (Finsupp.support_single_subset hi)).symm⟩
 
-/-- A GAP with `d` distinct numbered steps, all of length at least `2`, has dimension `d`. -/
-lemma dim_ofSteps (hs : Function.Injective step) (hl : ∀ i, 1 < length i) :
-    (ofSteps origin step length).dim = d := by
-  classical
-  refine (congrArg Finset.card ?_).trans ((Finset.card_image_of_injective _ hs).trans
-    (Finset.card_fin d))
-  ext v
-  simp only [ofSteps, Finsupp.mem_support_iff, Finsupp.finsetSum_apply, Finsupp.single_apply,
-    Finset.mem_image, Finset.mem_univ, true_and]
-  constructor
-  · intro h
-    by_contra! hv
-    apply h
-    apply Finset.sum_eq_zero
-    intro i _
-    simp [hv i]
-  · rintro ⟨j, rfl⟩
-    simp only [hs.eq_iff, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
-    grind [hl j]
-
 lemma card_toFinset_ofSteps_le [DecidableEq G] (hl : ∀ i, 0 < length i) :
     (ofSteps origin step length).toFinset.card ≤ ∏ i, length i := by
   rw [toFinset_ofSteps hl]
@@ -380,21 +325,6 @@ lemma toFinset_eq [DecidableEq G] (P : GAP G) :
   conv_lhs => rw [← P.ofSteps_step_length]
   exact toFinset_ofSteps P.length_pos
 
-/-- A GAP is proper if and only if its points `P.origin + ∑ i, w i • P.step i` with
-`w i < P.length i` are distinct. -/
-lemma proper_iff_injective (P : GAP G) :
-    P.Proper ↔ Function.Injective (gapMap P.origin P.step P.length) := by
-  conv_lhs => rw [← P.ofSteps_step_length]
-  exact proper_ofSteps_iff P.step_injective P.length_pos
-
-/-- An element `x` lies in a GAP `P` if and only if `x = P.origin + ∑ i, c i • P.step i` for some
-natural numbers `c i < P.length i`. -/
-lemma mem_toFinset_iff [DecidableEq G] (P : GAP G) {x : G} :
-    x ∈ P.toFinset ↔ ∃ c : Fin P.dim → ℕ, (∀ i, c i < P.length i) ∧
-      P.origin + ∑ i, c i • P.step i = x := by
-  rw [P.toFinset_eq]
-  exact mem_image_gapMap_iff
-
 /-! ## The size of a progression -/
 
 /-- The number `∏ v ∈ P.bound.support, (P.bound v + 1)` of coefficient vectors `c ≤ P.bound` of a
@@ -432,9 +362,6 @@ lemma proper_iff_card_eq_prod_length (P : GAP G) :
 
 lemma card_eq_prod_length (P : GAP G) (h : P.Proper) : P.toFinset.card = ∏ i, P.length i :=
   P.proper_iff_card_eq_prod_length.1 h
-
-lemma card_le_prod_length (P : GAP G) : P.toFinset.card ≤ ∏ i, P.length i :=
-  P.size_eq_prod_length ▸ P.card_le_size
 
 end Size
 
@@ -475,49 +402,7 @@ lemma proper_nsmul_iff_injective (t : ℕ) (P : GAP G) : (t • P).Proper ↔
   rw [nsmul_eq_ofSteps]
   exact proper_ofSteps_iff P.step_injective fun i ↦ Nat.succ_pos _
 
-/-- The sum of a GAP `P` and a GAP with the same bound is the GAP with the steps of `P` and the
-lengths `2 * P.length i - 1`. -/
-lemma add_eq_ofSteps {P Q : GAP G} (h : Q.bound = P.bound) :
-    P + Q = ofSteps (P.origin + Q.origin) P.step fun i ↦ 2 * P.length i - 1 := by
-  refine ext rfl ?_
-  rw [bound_add, h, ← P.bound_ofSteps_step_length 0]
-  simp only [ofSteps, ← Finset.sum_add_distrib, ← Finsupp.single_add]
-  congr with i
-  grind [P.length_pos i]
-
-/-- A GAP is `2`-proper if and only if the points `2 • P.origin + ∑ i, w i • P.step i` with
-`w i < 2 * P.length i - 1` are distinct. -/
-lemma proper_add_self_iff_injective (P : GAP G) : (P + P).Proper ↔
-    Function.Injective (gapMap (P.origin + P.origin) P.step fun i ↦ 2 * P.length i - 1) := by
-  rw [add_eq_ofSteps rfl]
-  exact proper_ofSteps_iff P.step_injective fun i ↦ by grind [P.length_pos i]
-
-lemma Proper.of_add_self {P : GAP G} (h : (P + P).Proper) : P.Proper := by
-  intro c hc c' hc' he
-  refine h (le_add_right (Set.mem_Iic.1 hc)) (le_add_right (Set.mem_Iic.1 hc')) ?_
-  rw [← add_zero c, ← add_zero c', eval_add, eval_add, he]
-
-/-! ## Images and translates -/
-
-/-- The image of a GAP under an additive homomorphism `f`: the GAP with origin `f P.origin`, steps
-`f (P.step i)` and the same lengths. -/
-def map {H : Type*} [AddCommMonoid H] (f : G →+ H) (P : GAP G) : GAP H :=
-  ofSteps (f P.origin) (fun i ↦ f (P.step i)) P.length
-
-lemma toFinset_map [DecidableEq G] {H : Type*} [DecidableEq H] [AddCommMonoid H] (f : G →+ H)
-    (P : GAP G) : (P.map f).toFinset = P.toFinset.image f := by
-  rw [map, toFinset_ofSteps P.length_pos, P.toFinset_eq, Finset.image_image]
-  congr with w
-  simp [gapMap, map_sum]
-
-lemma dim_map_le {H : Type*} [AddCommMonoid H] (f : G →+ H) (P : GAP G) :
-    (P.map f).dim ≤ P.dim :=
-  dim_ofSteps_le
-
-lemma card_map_le [DecidableEq G] {H : Type*} [DecidableEq H] [AddCommMonoid H] (f : G →+ H)
-    (P : GAP G) : (P.map f).toFinset.card ≤ P.toFinset.card := by
-  rw [toFinset_map]
-  exact Finset.card_image_le
+/-! ## Translates -/
 
 /-- Translate a GAP by a constant. -/
 def shift (P : GAP G) (c : G) : GAP G := ⟨P.origin + c, P.bound⟩
@@ -529,13 +414,11 @@ lemma toFinset_shift [DecidableEq G] (P : GAP G) (c : G) :
   funext x
   simp [shift, eval, add_right_comm]
 
-@[simp] lemma dim_shift (P : GAP G) (c : G) : (P.shift c).dim = P.dim := rfl
-
 end GAP
 
-/-! ## The step homomorphism and the symmetric coefficient box
+/-! ## The step homomorphism
 
-Both are defined for a GAP in an abelian group, where coefficients may be taken in `ℤ`.
+It is defined for a GAP in an abelian group, where coefficients may be taken in `ℤ`.
 -/
 
 section Steps
@@ -562,17 +445,6 @@ variable {G : Type*} [AddCommGroup G]
 
 /-- The homomorphism `(Fin P.dim → ℤ) →+ G` given by the steps of a GAP. -/
 def stepHom (P : GAP G) : (Fin P.dim → ℤ) →+ G := stepsHom P.step
-
-/-- The symmetric box of differences of coefficient vectors of a GAP. -/
-def symBox (P : GAP G) : Finset (Fin P.dim → ℤ) :=
-  Finset.Icc (fun i ↦ -((P.length i : ℤ) - 1)) fun i ↦ (P.length i : ℤ) - 1
-
-lemma mem_symBox {P : GAP G} {v : Fin P.dim → ℤ} :
-    v ∈ symBox P ↔ ∀ i, |v i| < P.length i := by
-  simp only [symBox, Finset.mem_Icc, Pi.le_def, abs_lt, ← forall_and]
-  apply forall_congr'
-  intro i
-  grind
 
 end
 

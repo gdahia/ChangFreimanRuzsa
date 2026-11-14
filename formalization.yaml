@@ -195,10 +195,11 @@ automation:
         deduce the bound on the dimension in the form of Green and Tao for sets that are large
         in terms of the doubling. Later, one instruction to generalize the results from
         2-proper to t-proper progressions, including in Challenge.lean and Solution.lean, and to
-        rename the theorems to refer to t-properness. The last task came in two instructions:
+        rename the theorems to refer to t-properness. The next task came in two instructions:
         the first asked the agent to replace the argument of Section 4 by its version of
         Green's argument, to obtain Chang's bound, and the second to bump Tau Ceti to use its
-        latest developments for that argument.
+        latest developments for that argument. Later, one instruction to remove the unused
+        declarations and to correct this file.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -239,14 +240,17 @@ automation:
     t-properness for every t >= 2 in the properization and in the main statements, at the time at
     the cost of an additional exponent (d + 2)^2 log (t / 2), where d was the dimension to which
     that properization applied. In Challenge.lean the multiple replaces the sum of progressions, and the theorems
-    exists_twoProperGAP_* are now exists_tProperGAP_*. In the last task, the agent first bumped
+    exists_twoProperGAP_* are now exists_tProperGAP_*. In the next task, the agent first bumped
     Lean, Mathlib, APAP and Tau Ceti. It then replaced the properization through short relations
     and the reduction to the Freiman dimension by the convex-body argument of Green's notes. It
     proved the comparison of integer points with volume, the volume of a projection of a
     symmetric convex body, the division of a body by short relations, the central section by
     the span of a Freiman model, and the t-proper progression of a body from the successive
     minima of Tau Ceti. The exponent of the size bound went from a multiple of kappa^7 to
-    C kappa^2 (1 + log kappa)^3 + 2 kappa log t. Every proof is checked by Lean.
+    C kappa^2 (1 + log kappa)^3 + 2 kappa log t. Later, the agent removed the declarations that no
+    main statement uses any more, among them the image of a progression under a homomorphism, the
+    symmetric coefficient box, the lemmas on sums of a progression with itself and the comparison
+    with t-properness in the sense of Green and Tao. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -309,9 +313,9 @@ fidelity:
     and Vu. The t-proper progression of Green and Tao, Definition 1.1, asks the same for
     0 <= w_i <= t l_i - 1, which is stronger: {0, 1} in ZMod 3 is 2-proper here but not in their
     sense. The statements here are therefore weaker than Proposition 1.3 of Green and Tao in this
-    respect. A progression that is 2t-proper here is t-proper in their sense, by
-    GAP.injective_gapMap_mul_length_of_proper_two_mul_nsmul, so the statements with 2t in place
-    of t give their condition.
+    respect. A progression that is 2t-proper here is t-proper in their sense, since
+    t l_i - 1 <= 2 t (l_i - 1) when l_i >= 2, so the statements with 2t in place of t give their
+    condition. This implication is not formalized.
 
 review:
   status: "self-assessed"

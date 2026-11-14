@@ -17,8 +17,8 @@ For `2 ≤ κ`, the exponents defined in `ChangFreimanRuzsa.Covering.Container`,
 `ChangFreimanRuzsa.Properization.ProperProgression`, `ChangFreimanRuzsa.ZMod` and
 `ChangFreimanRuzsa.Int` satisfy the following bounds.
 
-* `containerExponent κ` is at most `13 * 10 ^ 7 * κ ^ 2 * (1 + log κ) ^ 2`, hence at most
-  `2 * 10 ^ 8 * κ ^ 3`, and `log (containerExponent κ + 2) ≤ 19 * (1 + log κ)`.
+* `containerExponent κ` is at most `13 * 10 ^ 7 * κ ^ 2 * (1 + log κ) ^ 2`, and
+  `log (containerExponent κ + 2) ≤ 19 * (1 + log κ)`.
 * `256 * bohrGAPDim κ` is at most `7 * 10 ^ 7 * κ ^ 2`.
 * `8 * bohrLoss (bohrGAPDim κ)` is at most `exp (2 * 10 ^ 7 * κ ^ 2)`.
 * `freimanDimExponent κ` is at most `8 * 10 ^ 9 * κ ^ 2 * (1 + log κ) ^ 3`.
@@ -152,11 +152,6 @@ lemma containerExponent_le_log (hκ : 2 ≤ κ) :
   nlinarith [bohrGAPDim_le hκ, mul_le_mul_of_nonneg_left hℓ (by positivity : (0 : ℝ) ≤ κ ^ 2),
     mul_le_mul_of_nonneg_right (by nlinarith : (1 : ℝ) + Real.log κ ≤ (1 + Real.log κ) ^ 2)
       (by positivity : (0 : ℝ) ≤ κ)]
-
-/-- `containerExponent κ` is at most `2 * 10 ^ 8 * κ ^ 3`. -/
-lemma containerExponent_le (hκ : 2 ≤ κ) : containerExponent κ ≤ 2 * 10 ^ 8 * κ ^ 3 := by
-  nlinarith [containerExponent_le_log hκ, one_add_log_sq_le (by linarith : (1 : ℝ) ≤ κ),
-    pow_pos (by linarith : (0 : ℝ) < κ) 2]
 
 /-- `log (containerExponent κ + 2) ≤ 19 * (1 + log κ)`. -/
 private lemma log_containerExponent_add_two_le (hκ : 2 ≤ κ) :

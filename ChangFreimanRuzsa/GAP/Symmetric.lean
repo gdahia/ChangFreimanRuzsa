@@ -25,7 +25,7 @@ soon as the steps admit no nonzero relation with `|n i| ≤ 2 * L i`.
 
 * `exists_coeff_of_mem_symmetricGAP` and `stepsHom_mem_symmetricGAP`: the elements of the
   progression are the combinations of its steps with coefficients `|n i| ≤ L i`.
-* `proper_symmetricGAP` and `proper_symmetricGAP_of_injective`: conditions for properness.
+* `proper_symmetricGAP`: a condition for properness.
 * `card_symmetricGAP` and `card_symmetricGAP_le`: the number of elements.
 -/
 
@@ -102,12 +102,6 @@ lemma card_symmetricGAP [DecidableEq G]
     (symmetricGAP x L).toFinset.card = ∏ i, (2 * L i + 1) := by
   rw [toFinset_symmetricGAP, Finset.card_image_of_injective _ (injective_gapMap_symmetricGAP h)]
   simp
-
-
-/-- The symmetric progression is proper when its step homomorphism is injective. -/
-lemma proper_symmetricGAP_of_injective (hx : Function.Injective (stepsHom x)) :
-    (symmetricGAP x L).Proper :=
-  proper_symmetricGAP fun n _ hn i ↦ by simp [hx (hn.trans (map_zero _).symm)]
 
 /-- The symmetric progression contains every combination of its steps with coefficients `n i`
 satisfying `|n i| ≤ L i`. -/

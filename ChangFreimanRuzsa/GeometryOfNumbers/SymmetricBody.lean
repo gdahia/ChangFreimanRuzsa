@@ -114,8 +114,6 @@ include hK
 
 lemma isBounded : Bornology.IsBounded K := hK.isCompact.isBounded
 
-lemma measurableSet : MeasurableSet K := hK.isCompact.isClosed.measurableSet
-
 lemma volume_ne_top : volume K ≠ ⊤ := hK.isCompact.measure_lt_top.ne
 
 lemma finite_latticePoints : (latticePoints K).Finite :=
