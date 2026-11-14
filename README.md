@@ -11,7 +11,7 @@ constant $C$. The proof uses Chang's lemma on large spectra from
 [APAP](https://github.com/YaelDillies/apap), and Minkowski's second theorem and the volume of
 cross-polytopes from [Tau Ceti](https://github.com/TauCetiProject/TauCeti). The passage to a
 $t$-proper progression follows the convex-body argument of Bilu, in the form of Green's notes
-[*Progressions and convex geometry*](https://www.math.cmu.edu/~ploh/j/sources/Ben%20Green/Progressions%20and%20convex%20geometry.pdf).
+[*Progressions and convex geometry*](https://people.maths.ox.ac.uk/greenbj/papers/convexnotes.pdf).
 
 ## Results
 

@@ -82,7 +82,7 @@ sources:
   - title: "Progressions and convex geometry"
     authors:
       - "Ben Green"
-    id: "https://www.math.cmu.edu/~ploh/j/sources/Ben%20Green/Progressions%20and%20convex%20geometry.pdf"
+    id: "https://people.maths.ox.ac.uk/greenbj/papers/convexnotes.pdf"
     type: "other"
     location: "Lemmas 1.5 and 2.2"
     relationship: "adapts"
