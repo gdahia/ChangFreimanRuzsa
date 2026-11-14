@@ -20,12 +20,11 @@ For `2 ≤ κ`, the exponents defined in `ChangFreimanRuzsa.Covering.Container`,
 * `containerExponent κ` is at most `13 * 10 ^ 7 * κ ^ 2 * (1 + log κ) ^ 2`, and
   `log (containerExponent κ + 2) ≤ 19 * (1 + log κ)`.
 * `256 * bohrGAPDim κ` is at most `7 * 10 ^ 7 * κ ^ 2`.
-* `8 * bohrLoss (bohrGAPDim κ)` is at most `exp (2 * 10 ^ 7 * κ ^ 2)`.
+* `bohrGAPDim κ` is at most `260000 * κ * (1 + log κ)`.
+* `8 * bohrLoss (bohrGAPDim κ)` is at most `exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2)`.
 * `freimanDimExponent κ` is at most `8 * 10 ^ 9 * κ ^ 2 * (1 + log κ) ^ 3`.
 * `intFreimanDimExponent κ` is at most `16 * 10 ^ 10 * κ ^ 2 * (1 + log κ) ^ 3`.
 * `tProperExponent t R` is at most `2 * κ * log t + 20 * κ ^ 2 * (1 + log κ)` for `R + 1 ≤ 2 * κ`.
-
-The bound `(1 + log κ) ^ 2 ≤ 3 / 2 * κ` comes from `(1 + log κ) ^ n ≤ n ^ n * exp (1 - n) * κ`.
 -/
 
 public section
@@ -33,27 +32,6 @@ public section
 namespace ChangFreimanRuzsa
 
 variable {κ : ℝ}
-
-/-! ## Powers of the logarithm -/
-
-/-- For `1 ≤ κ` and `1 ≤ n`, `(1 + log κ) ^ n ≤ n ^ n * exp (1 - n) * κ`. -/
-lemma one_add_log_pow_le (hκ : 1 ≤ κ) {n : ℕ} (hn : 1 ≤ n) :
-    (1 + Real.log κ) ^ n ≤ n ^ n * Real.exp (1 - n) * κ := by
-  have hn' : (0 : ℝ) < n := by exact_mod_cast hn
-  have h : (1 + Real.log κ) / n ≤ Real.exp ((1 + Real.log κ) / n - 1) := by
-    linarith [Real.add_one_le_exp ((1 + Real.log κ) / n - 1)]
-  have hpow := pow_le_pow_left₀ (div_nonneg (by linarith [Real.log_nonneg hκ]) hn'.le) h n
-  rw [← Real.exp_nat_mul, div_pow, div_le_iff₀ (by positivity)] at hpow
-  refine hpow.trans_eq ?_
-  rw [(by field_simp; ring : (n : ℝ) * ((1 + Real.log κ) / n - 1) = (1 - n) + Real.log κ),
-    Real.exp_add, Real.exp_log (by linarith)]
-  ring
-
-/-- `(1 + log κ) ^ 2 ≤ 3 / 2 * κ` for `1 ≤ κ`. -/
-lemma one_add_log_sq_le (hκ : 1 ≤ κ) : (1 + Real.log κ) ^ 2 ≤ 3 / 2 * κ := by
-  have h := one_add_log_pow_le hκ one_le_two
-  norm_num at h
-  nlinarith [Real.exp_neg_one_lt_d9]
 
 /-! ## The lower bound -/
 
@@ -95,7 +73,8 @@ lemma deltaBound_le (hκ : 2 ≤ κ) : deltaBound κ ≤ 250000 * κ * (1 + Real
     (⌈1 + Real.log (8 * κ ^ 16)⌉₊ : ℝ) * (8 * (8 * κ))) (by positivity),
     Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
 
-private lemma bohrGAPDim_le (hκ : 2 ≤ κ) : bohrGAPDim κ ≤ 260000 * κ * (1 + Real.log κ) := by
+/-- `bohrGAPDim κ` is at most `260000 * κ * (1 + log κ)`. -/
+lemma bohrGAPDim_le (hκ : 2 ≤ κ) : bohrGAPDim κ ≤ 260000 * κ * (1 + Real.log κ) := by
   unfold bohrGAPDim
   push_cast
   nlinarith [deltaBound_le hκ, Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
@@ -116,17 +95,18 @@ private lemma log_eight_mul_bohrGAPDim_le (hκ : 2 ≤ κ) :
   push_cast
   linarith [Real.log_two_lt_d9, Real.log_le_sub_one_of_pos (by linarith : 0 < 1 + Real.log κ)]
 
-/-- `8 * bohrLoss d ≤ exp (2 * 10 ^ 7 * κ ^ 2)`, where `d` is `bohrGAPDim κ`. This bounds the loss
-in the Bogolyubov–Ruzsa lemma. -/
+/-- `8 * bohrLoss d ≤ exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2)`, where `d` is `bohrGAPDim κ`. This
+bounds the loss in the Bogolyubov–Ruzsa lemma. -/
 lemma mul_bohrLoss_bohrGAPDim_le (hκ : 2 ≤ κ) :
-    8 * bohrLoss (bohrGAPDim κ) ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) := by
+    8 * bohrLoss (bohrGAPDim κ) ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) := by
   have hloss := bohrLoss_pos (one_le_bohrGAPDim κ)
+  have hL : (1 : ℝ) ≤ 1 + Real.log κ := by linarith [Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)]
   rw [← Real.exp_log (by positivity : 0 < 8 * bohrLoss (bohrGAPDim κ)), Real.exp_le_exp,
     Real.log_mul (by norm_num) hloss.ne', log_bohrLoss]
   nlinarith [mul_le_mul (bohrGAPDim_le hκ) (log_eight_mul_bohrGAPDim_le hκ)
     (log_eight_mul_bohrGAPDim_nonneg κ) ((Nat.cast_nonneg _).trans (bohrGAPDim_le hκ)),
-    mul_le_mul_of_nonneg_left (one_add_log_sq_le (by linarith : (1 : ℝ) ≤ κ))
-      (by linarith : (0 : ℝ) ≤ κ), Real.log_le_sub_one_of_pos (by norm_num : (0 : ℝ) < 8)]
+    mul_le_mul hκ (one_le_pow₀ hL : (1 : ℝ) ≤ (1 + Real.log κ) ^ 2) zero_le_one (by linarith),
+    Real.log_le_sub_one_of_pos (by norm_num : (0 : ℝ) < 8)]
 
 private lemma translateCount_le (hκ : 2 ≤ κ) : translateCount κ ≤ 7 / 2 * κ := by
   unfold translateCount

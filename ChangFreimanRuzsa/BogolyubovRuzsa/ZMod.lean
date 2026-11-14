@@ -78,6 +78,12 @@ def bohrLoss (d : ℕ) : ℝ := (8 * d) ^ (3 * d)
 lemma bohrLoss_pos {d : ℕ} (hd : 1 ≤ d) : 0 < bohrLoss d :=
   pow_pos (by linarith [(Nat.one_le_cast.2 hd : (1 : ℝ) ≤ d)]) _
 
+/-- `32 * d ≤ bohrLoss d` for `1 ≤ d`, since `bohrLoss d ≥ (8 * d) ^ 3`. -/
+lemma thirty_two_mul_le_bohrLoss {d : ℕ} (hd : 1 ≤ d) : 32 * (d : ℝ) ≤ bohrLoss d := by
+  have h1 : (1 : ℝ) ≤ d := mod_cast hd
+  have h : (8 * (d : ℝ)) ^ 3 ≤ bohrLoss d := pow_le_pow_right₀ (by linarith) (by omega)
+  nlinarith [mul_le_mul h1 h1 zero_le_one (by linarith)]
+
 lemma log_bohrLoss (d : ℕ) : Real.log (bohrLoss d) = 3 * d * Real.log (8 * d) := by
   rw [bohrLoss, Real.log_pow]
   push_cast

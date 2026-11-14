@@ -81,13 +81,15 @@ The first step of the proof is the Bogolyubov–Ruzsa lemma, a large proper prog
 $2X - 2X$.
 
 **Theorem 7** (`ChangFreimanRuzsa.exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le`). Let
-$\kappa \ge 2$ and let $X$ be a finite set of integers. If
-$\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$ and
-$\left\lvert X\right\rvert \ge 7 \cdot 10^7 \kappa^2$, then $2X - 2X$ contains a proper progression
-$Q$ with
+$\kappa \ge 2$ and let $X$ be a finite nonempty set of integers. If
+$\left\lvert X + X\right\rvert \le \kappa \left\lvert X\right\rvert$, then $2X - 2X$ contains
+a proper progression $Q$ with
 
-$$\dim Q \le 3 \cdot 10^5 \kappa^2, \qquad \left\lvert X\right\rvert \le
-\exp(2 \cdot 10^7 \kappa^2) \left\lvert Q\right\rvert.$$
+$$\dim Q \le 3 \cdot 10^5 \kappa (1 + \log \kappa), \qquad \left\lvert X\right\rvert \le
+\exp(2 \cdot 10^7 \kappa (1 + \log \kappa)^2) \left\lvert Q\right\rvert.$$
+
+These are the bounds of Chang's Proposition 2.1, a dimension of order $\kappa \log \kappa$ and a
+loss of $\exp(O(\kappa \log^2 \kappa))$, with explicit constants.
 
 **Theorem 8** (`ChangFreimanRuzsa.exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le`).
 The same holds for $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $q$ prime.
@@ -108,8 +110,8 @@ The library also states the theorems with named exponents, which the explicit bo
 | `exists_tProperGAP_int_dim_le_freimanDim`, exponent of the size | `intFreimanDimExponent κ + tProperExponent t (freimanDim X)` | at most `2 * 10 ^ 11 * κ ^ 2 * (1 + log κ) ^ 3 + 2 * κ * log t` |
 | `exists_tProperGAP_zmod_dim_le_freimanDim`, exponent of the size | `freimanDimExponent κ + tProperExponent t (freimanDim X)` | at most `10 ^ 10 * κ ^ 2 * (1 + log κ) ^ 3 + 2 * κ * log t` |
 | `exists_tProperGAP_zmod_dim_le_freimanDim`, lower bound on `\|X\|` | `256 * bohrGAPDim κ` | at most `7 * 10 ^ 7 * κ ^ 2` |
-| `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, dimension | `bohrGAPDim κ` | at most `3 * 10 ^ 5 * κ ^ 2` |
-| `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, loss in the size | `8 * bohrLoss (bohrGAPDim κ)` | at most `exp (2 * 10 ^ 7 * κ ^ 2)` |
+| `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, dimension | `bohrGAPDim κ` | at most `260000 * κ * (1 + log κ)` |
+| `exists_proper_gap_int_subset_add_sub_add_card_le`, `exists_proper_gap_zmod_subset_add_sub_add_card_le`, loss in the size | `8 * bohrLoss (bohrGAPDim κ)` | at most `exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2)` |
 
 ## Files
 

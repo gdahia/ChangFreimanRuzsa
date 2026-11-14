@@ -68,25 +68,28 @@ end GAP
 
 end
 
-/-- **Bogolyubov–Ruzsa lemma** for sets of integers. If a finite set `X` of integers satisfies
-`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
-`2 • X - 2 • X` contains a proper generalized arithmetic progression `Q` of dimension at most
-`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset`. -/
-theorem exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le' {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
-    (hXX : #(X + X) ≤ κ * #X) (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
-    ∃ Q : GAP ℤ, Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
-      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset :=
+/-- **Bogolyubov–Ruzsa lemma** for sets of integers, with the bounds of Chang. If a finite nonempty
+set `X` of integers satisfies `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, then `2 • X - 2 • X` contains a
+proper generalized arithmetic progression `Q` of dimension at most
+`3 * 10 ^ 5 * κ * (1 + Real.log κ)` with
+`#X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset`. -/
+theorem exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le' {κ : ℝ} (X : Finset ℤ)
+    (hX : X.Nonempty) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
+    ∃ Q : GAP ℤ, Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
+      Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset :=
   sorry
 
-/-- **Bogolyubov–Ruzsa lemma** in `ZMod q` for a prime `q`. If a set `X` satisfies
-`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
-`2 • X - 2 • X` contains a proper generalized arithmetic progression `Q` of dimension at most
-`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset`. -/
+/-- **Bogolyubov–Ruzsa lemma** in `ZMod q` for a prime `q`, with the bounds of Chang. If a nonempty
+set `X` satisfies `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, then `2 • X - 2 • X` contains a proper
+generalized arithmetic progression `Q` of dimension at most `3 * 10 ^ 5 * κ * (1 + Real.log κ)`
+with `#X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset`. -/
 theorem exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le' {q : ℕ} {κ : ℝ}
-    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
-    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
-    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
-      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset :=
+    (X : Finset (ZMod q)) (hq : q.Prime) (hX : X.Nonempty) (hκ : 2 ≤ κ)
+    (hXX : #(X + X) ≤ κ * #X) :
+    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
+      Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset :=
   sorry
 
 /-- **Chang's theorem** for sets of integers. Let `2 ≤ t`. A finite nonempty set `X` of integers

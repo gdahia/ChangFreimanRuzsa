@@ -25,9 +25,10 @@ dimension at most `2 * κ - 1`. It is also at most `κ - 1 + κ * (2 * κ - 1) /
 progression has dimension at most `⌊κ - 1 + ε⌋₊` when `κ * (2 * κ - 1) ≤ ε * #X`, as in Green and
 Tao.
 
-The file also gives the Bogolyubov–Ruzsa lemma with explicit bounds, the first step of the proof:
-if moreover `7 * 10 ^ 7 * κ ^ 2 ≤ #X`, then `2 • X - 2 • X` contains a proper progression of
-dimension at most `3 * 10 ^ 5 * κ ^ 2` with at least `#X / exp (2 * 10 ^ 7 * κ ^ 2)` points.
+The file also gives the Bogolyubov–Ruzsa lemma with explicit bounds of the form of Chang's
+Proposition 2.1, the first step of the proof: for a nonempty `X`, the set `2 • X - 2 • X` contains a
+proper progression of dimension at most `3 * 10 ^ 5 * κ * (1 + log κ)` with at least
+`#X / exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2)` points.
 
 ## Main statements
 
@@ -56,32 +57,68 @@ open scoped Pointwise
 
 namespace ChangFreimanRuzsa
 
-/-- **Bogolyubov–Ruzsa lemma** for sets of integers. If a finite set `X` of integers satisfies
-`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
-`2 • X - 2 • X` contains a proper generalized arithmetic progression `Q` of dimension at most
-`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset`. -/
-theorem exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
-    (hXX : #(X + X) ≤ κ * #X) (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
-    ∃ Q : GAP ℤ, Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
-      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset := by
-  obtain ⟨-, Q, -, -, hQ, hdim, hsub, hcard⟩ := exists_proper_gap_int_subset_add_sub_add_card_le X
-    hκ hXX ((mul_bohrGAPDim_le hκ).trans hXlower)
-  refine ⟨Q, hQ, by rwa [two_nsmul], by linarith [mul_bohrGAPDim_le hκ], hcard.trans ?_⟩
-  grw [mul_bohrLoss_bohrGAPDim_le hκ]
+/-- The progression `{0}` of dimension `0` is proper and lies in `2 • X - 2 • X` for a nonempty
+`X`. -/
+private lemma exists_proper_gap_subset_nsmul_sub_nsmul_dim_eq_zero {G : Type*} [AddCommGroup G]
+    [DecidableEq G] {X : Finset G} (hX : X.Nonempty) :
+    ∃ Q : GAP G, Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧ Q.dim = 0 ∧ #Q.toFinset = 1 := by
+  have hQ : (⟨0, 0⟩ : GAP G).toFinset = {0} := by
+    ext x
+    simp [GAP.mem_toFinset, nonpos_iff_eq_zero, GAP.eval, eq_comm]
+  refine ⟨⟨0, 0⟩, ?_, ?_, by simp [GAP.dim], by simp [hQ]⟩
+  · intro c hc c' hc' _
+    rw [nonpos_iff_eq_zero.1 (Set.mem_Iic.1 hc), nonpos_iff_eq_zero.1 (Set.mem_Iic.1 hc')]
+  · rw [hQ, singleton_subset_iff]
+    exact hX.nsmul.zero_mem_sub
 
-/-- **Bogolyubov–Ruzsa lemma** in `ZMod q` for a prime `q`. If a set `X` satisfies
-`#(X + X) ≤ κ * #X`, where `2 ≤ κ`, and has at least `7 * 10 ^ 7 * κ ^ 2` elements, then
-`2 • X - 2 • X` contains a proper generalized arithmetic progression `Q` of dimension at most
-`3 * 10 ^ 5 * κ ^ 2` with `#X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset`. -/
+/-- The Bogolyubov–Ruzsa lemma with the bounds of Chang for a nonempty `X` satisfying the
+conclusion of `exists_proper_gap_int_subset_add_sub_add_card_le` whenever
+`256 * bohrGAPDim κ ≤ #X`. Smaller sets take the progression `{0}`. -/
+private lemma exists_proper_gap_subset_nsmul_sub_nsmul_of_bohr {G : Type*} [AddCommGroup G]
+    [DecidableEq G] {κ : ℝ} {X : Finset G} (hX : X.Nonempty) (hκ : 2 ≤ κ)
+    (h : 256 * (bohrGAPDim κ : ℝ) ≤ #X → ∃ (X₁ : Finset G) (Q : GAP G), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧
+      Q.Proper ∧ (Q.dim : ℝ) ≤ bohrGAPDim κ ∧ Q.toFinset ⊆ X + X - (X + X) ∧
+        #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q.toFinset) :
+    ∃ Q : GAP G, Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
+      Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset := by
+  have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
+  by_cases hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X
+  · obtain ⟨-, Q, -, -, hQ, hdim, hsub, hcard⟩ := h hXlower
+    refine ⟨Q, hQ, by rwa [two_nsmul], ?_, hcard.trans ?_⟩
+    · nlinarith [bohrGAPDim_le hκ]
+    · grw [mul_bohrLoss_bohrGAPDim_le hκ]
+  · obtain ⟨Q, hQ, hsub, hdim, hcard⟩ := exists_proper_gap_subset_nsmul_sub_nsmul_dim_eq_zero hX
+    refine ⟨Q, hQ, hsub, ?_, ?_⟩
+    · rw [hdim, Nat.cast_zero]
+      positivity
+    · rw [hcard, Nat.cast_one, mul_one]
+      linarith [thirty_two_mul_le_bohrLoss (one_le_bohrGAPDim κ), mul_bohrLoss_bohrGAPDim_le hκ]
+
+/-- **Bogolyubov–Ruzsa lemma** for sets of integers, with the bounds of Chang. If a finite nonempty
+set `X` of integers satisfies `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, then `2 • X - 2 • X` contains a
+proper generalized arithmetic progression `Q` of dimension at most
+`3 * 10 ^ 5 * κ * (1 + log κ)` with `#X ≤ exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2) * #Q.toFinset`. -/
+theorem exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le {κ : ℝ} (X : Finset ℤ)
+    (hX : X.Nonempty) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
+    ∃ Q : GAP ℤ, Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
+      Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset :=
+  exists_proper_gap_subset_nsmul_sub_nsmul_of_bohr hX hκ
+    (exists_proper_gap_int_subset_add_sub_add_card_le X hκ hXX)
+
+/-- **Bogolyubov–Ruzsa lemma** in `ZMod q` for a prime `q`, with the bounds of Chang. If a nonempty
+set `X` satisfies `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, then `2 • X - 2 • X` contains a proper
+generalized arithmetic progression `Q` of dimension at most `3 * 10 ^ 5 * κ * (1 + log κ)` with
+`#X ≤ exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2) * #Q.toFinset`. -/
 theorem exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le {q : ℕ} {κ : ℝ}
-    (X : Finset (ZMod q)) (hq : q.Prime) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
-    (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X) :
-    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧ Q.dim ≤ 3 * 10 ^ 5 * κ ^ 2 ∧
-      #X ≤ Real.exp (2 * 10 ^ 7 * κ ^ 2) * #Q.toFinset := by
-  obtain ⟨-, Q, -, -, hQ, hdim, hsub, hcard⟩ := exists_proper_gap_zmod_subset_add_sub_add_card_le X
-    hq hκ hXX ((mul_bohrGAPDim_le hκ).trans hXlower)
-  refine ⟨Q, hQ, by rwa [two_nsmul], by linarith [mul_bohrGAPDim_le hκ], hcard.trans ?_⟩
-  grw [mul_bohrLoss_bohrGAPDim_le hκ]
+    (X : Finset (ZMod q)) (hq : q.Prime) (hX : X.Nonempty) (hκ : 2 ≤ κ)
+    (hXX : #(X + X) ≤ κ * #X) :
+    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
+      Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset :=
+  exists_proper_gap_subset_nsmul_sub_nsmul_of_bohr hX hκ
+    (exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX)
 
 /-- If `#(X + X) ≤ κ * #X` for a nonempty `X`, where `2 ≤ κ`, and
 `E ≤ D * κ ^ 2 * (1 + log κ) ^ 3` with `D + 20 ≤ C`, then

@@ -13,9 +13,9 @@ project:
     floor(kappa - 1 + epsilon), as in Green and Tao. There is also a statement for subsets of
     ZMod q with q prime, where the progression has at most
     exp(10^10 kappa^2 (1 + log kappa)^3 + 2 kappa log t) |X| points. The first step of the
-    proof, the Bogolyubov-Ruzsa lemma, is stated too: if moreover
-    |X| >= 7 * 10^7 kappa^2, then 2X - 2X contains a proper progression of dimension at most
-    3 * 10^5 kappa^2 with at least exp(-2 * 10^7 kappa^2) |X| points.
+    proof, the Bogolyubov-Ruzsa lemma, is stated too, with the bounds of Chang: for X nonempty,
+    2X - 2X contains a proper progression of dimension at most 3 * 10^5 kappa (1 + log kappa)
+    with at least exp(-2 * 10^7 kappa (1 + log kappa)^2) |X| points.
   authors:
     - "Gabriel Dahia"
   license: "Apache-2.0"
@@ -199,7 +199,8 @@ automation:
         the first asked the agent to replace the argument of Section 4 by its version of
         Green's argument, to obtain Chang's bound, and the second to bump Tau Ceti to use its
         latest developments for that argument. Later, one instruction to remove the unused
-        declarations and to correct this file.
+        declarations and to correct this file, and one to state the Bogolyubov-Ruzsa lemma in
+        Challenge.lean with the bounds of Chang.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -250,7 +251,10 @@ automation:
     C kappa^2 (1 + log kappa)^3 + 2 kappa log t. Later, the agent removed the declarations that no
     main statement uses any more, among them the image of a progression under a homomorphism, the
     symmetric coefficient box, the lemmas on sums of a progression with itself and the comparison
-    with t-properness in the sense of Green and Tao. Every proof is checked by Lean.
+    with t-properness in the sense of Green and Tao. It then restated the Bogolyubov-Ruzsa lemma
+    with the bounds of Chang, of order kappa log kappa for the dimension and
+    exp(C kappa log^2 kappa) for the loss, in place of kappa^2 and exp(C kappa^2), and with X
+    nonempty in place of a lower bound on |X|. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -296,9 +300,13 @@ fidelity:
     Bogolyubov-Ruzsa lemma. Chang's Proposition 2.1 puts in 2A - 2A a proper progression with
     the dimension of (2.1), of order alpha log alpha, and the size of (2.2).
     exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le and
-    exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le need 2 <= kappa and
-    |X| >= 7 * 10^7 kappa^2, and the latter q prime. They give dimension at most
-    3 * 10^5 kappa^2 and |X| <= exp(2 * 10^7 kappa^2) |Q|.
+    exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le need X nonempty and
+    2 <= kappa, and the latter q prime. They give dimension at most 3 * 10^5 kappa (1 + log kappa)
+    and |X| <= exp(2 * 10^7 kappa (1 + log kappa)^2) |Q|. These are (2.1) and (2.2) up to the
+    constants: (2.2) is |A| < 8 (10 d^2)^d |P|, and the library has
+    |X| <= 8 (8 d)^(3 d) |Q|, which loses d^(3 d) in place of d^(2 d) because the progression in
+    the Bohr set comes from Minkowski's second theorem in place of Theorem 8.7 of Nathanson. For
+    |X| < 256 bohrGAPDim kappa the progression is {0}.
 
     A progression is a structure GAP with an origin x_0 and a finitely supported bound
     b : G -> N; its points are x_0 + sum_v c_v v with c <= b. Its steps are the v with
@@ -335,15 +343,15 @@ alignment:
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
-        For |X| >= 7 * 10^7 kappa^2, with dimension at most 3 * 10^5 kappa^2 and
-        |X| <= exp(2 * 10^7 kappa^2) |Q|.
+        For X nonempty, with dimension at most 3 * 10^5 kappa (1 + log kappa) and
+        |X| <= exp(2 * 10^7 kappa (1 + log kappa)^2) |Q|.
     - source: "Chang, Proposition 2.1 (the Bogolyubov-Ruzsa lemma), in ZMod q"
       lean: "ChangFreimanRuzsa.exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
       status: "proved"
       note: >-
-        For q prime and |X| >= 7 * 10^7 kappa^2, with dimension at most 3 * 10^5 kappa^2 and
-        |X| <= exp(2 * 10^7 kappa^2) |Q|.
+        For q prime and X nonempty, with dimension at most 3 * 10^5 kappa (1 + log kappa) and
+        |X| <= exp(2 * 10^7 kappa (1 + log kappa)^2) |Q|.
     - source: "Chang, Theorem 2, with a t-proper progression"
       lean: "ChangFreimanRuzsa.exists_tProperGAP_subset_dim_le_card_le'"
       module: "ChangFreimanRuzsaPalomar.Challenge"
