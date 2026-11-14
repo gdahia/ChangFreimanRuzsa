@@ -221,8 +221,8 @@ automation:
     elements of the last packing set as steps of the progression instead of covering by
     their differences. Later, the agent replaced the structure GAP by an origin and a
     finitely supported bound, defined the sum of two progressions and 2-properness as the
-    properness of P + P, and adapted the proofs; properization now uses the 2-dilate of the
-    coefficient box, no longer doubles the lengths, and has the exponent
+    properness of P + P, and adapted the proofs; the properization of the time then used the
+    2-dilate of the coefficient box, no longer doubled the lengths, and had the exponent
     2 (d + 2)^3 log (d + 2) in place of 3 (d + 2)^3 log (d + 2). Later, the agent replaced
     the import of all of Mathlib in Challenge.lean by the modules its statements need, and
     made the headers, spelling and notation of the docstrings uniform. It also replaced the
@@ -236,9 +236,9 @@ automation:
     kappa (2 kappa - 1) <= epsilon |X| from the bound on the Freiman dimension of
     SumOfSetsInSeveralDimensions, and added them to Challenge.lean and Solution.lean. Later,
     the agent defined the multiple t P of a progression and replaced 2-properness by
-    t-properness for every t >= 2 in the properization and in the main statements, at the cost of
-    an additional exponent (d + 2)^2 log (t / 2), where d is the dimension to which properization
-    applies. In Challenge.lean the multiple replaces the sum of progressions, and the theorems
+    t-properness for every t >= 2 in the properization and in the main statements, at the time at
+    the cost of an additional exponent (d + 2)^2 log (t / 2), where d was the dimension to which
+    that properization applied. In Challenge.lean the multiple replaces the sum of progressions, and the theorems
     exists_twoProperGAP_* are now exists_tProperGAP_*. In the last task, the agent first bumped
     Lean, Mathlib, APAP and Tau Ceti. It then replaced the properization through short relations
     and the reduction to the Freiman dimension by the convex-body argument of Green's notes. It
@@ -420,10 +420,13 @@ alignment:
         |X| <= 8 (8 d)^(3 d) |Q| in place of (2.2). The version for integers is
         exists_proper_gap_int_subset_add_sub_add_card_le of Int.lean.
     - source: "Chang, Section 1, Step 1 (Ruzsa's model)"
-      lean: "ChangFreimanRuzsa.exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le"
+      lean: "ChangFreimanRuzsa.exists_subset_card_le_mul_card_isAddFreimanIso"
       module: "ChangFreimanRuzsa.BogolyubovRuzsa.RuzsaModel"
       status: "proved"
-      note: "From ZMod q with q prime, in place of Z, into ZMod m for any m >= |sX - sX|."
+      note: >-
+        From ZMod q with q prime, in place of Z, into ZMod m for any m >= |sX - sX|.
+        exists_subset_card_le_mul_card_isAddFreimanIso_of_card_add_le takes
+        m = |sX - sX| <= kappa^(2 s) |X| by the Plünnecke-Ruzsa inequality.
     - source: "Chang, Lemma 3.1"
       lean: "ChangFreimanRuzsa.exists_card_le_largeSpec_subset_addSpan"
       module: "ChangFreimanRuzsa.BogolyubovRuzsa.Fourier"
