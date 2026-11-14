@@ -18,9 +18,6 @@ and let `r` be the dimension of the real span of the translated vectors. The map
 that span is a Freiman isomorphism of order `2` from `X` onto a subset of `ℤ ^ r ⊆ ℚ ^ r` that
 contains the origin and spans `ℝ ^ r`. Hence `r` is at most the Freiman dimension `freimanDim X`.
 
-This is the model of Appendix A of Marcelo Campos, Gabriel Dahia and João Pedro Marciano, *On the
-independence number of sparser random Cayley graphs*, J. London Math. Soc. 110 (2024).
-
 ## Main definitions
 
 * `translatedCoords f X x₀`: the translated vectors `f x - f x₀` with `x ∈ X`.

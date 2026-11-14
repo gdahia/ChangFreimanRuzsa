@@ -18,7 +18,8 @@ and defines the map that sends a vector of `r` coordinates to the combination of
 these coefficients, over `ℤ` and over `ℝ`. It also defines the inverse map `ℤ ^ d → ℤ ^ r`, which
 sends a point of `Λ` to its coordinates in the basis and is zero outside `Λ`. On `Λ` it is additive.
 The coordinates of the points of `S` span `ℝ ^ r`, so in these coordinates `S` is not contained in
-a proper subspace.
+a proper subspace. The coordinates are those of the map `ψ` with `ψ(Λ') = ℤ ^ r` in Section 3 of
+Green's notes *Progressions and convex geometry*.
 
 ## Main definitions
 

@@ -16,8 +16,7 @@ additive map `Int.castAddHom` applied in each coordinate. For a real subspace `H
 defines the lattice `H ∩ ℤ ^ d` as `subspaceIntegerLattice H`, a submodule of `H`. When `H` is
 spanned by a finite set `S` of integer vectors, `integerGeneratedSubspace_isZLattice` shows that
 `H ∩ ℤ ^ d` is a full lattice in `H`, so that its rank is the dimension of `H`. This is the lattice
-of Appendix A of Campos, Dahia and Marciano, *On the independence number of sparser random Cayley
-graphs*. The file also shows that every point of `ℤ ^ d ⊆ ℝ ^ d` is the image of an integer vector
+`Λ' = H ∩ ℤ ^ d` of Section 3 of Green's notes *Progressions and convex geometry*. The file also shows that every point of `ℤ ^ d ⊆ ℝ ^ d` is the image of an integer vector
 under `intVectorToReal`, and defines `saturatedSpan S`, the subgroup of integer vectors in the real
 span of `S`.
 -/
