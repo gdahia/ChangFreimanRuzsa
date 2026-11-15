@@ -20,13 +20,19 @@ In the proof of Chang's theorem for `X : Finset (ZMod q)`,
 file transports that progression back to `X₁ + X₁ - (X₁ + X₁)`. The statements hold in arbitrary
 abelian groups.
 
+## Main definitions
+
+* `GAP.freimanImage f P`: the progression with origin `f P.origin`, steps
+  `f (P.origin + P.step i) - f P.origin` and the bounds of `P`.
+
 ## Main statements
 
 * `GAP.apply_origin_add_linearCombination`: on the points of a GAP `Q`, a Freiman
   `2`-homomorphism `f` is affine. It sends `Q.origin + ∑ i, w i • Q.step i` to
   `f Q.origin + ∑ i, w i • (f (Q.origin + Q.step i) - f Q.origin)`.
-* `GAP.exists_proper_toFinset_eq_image_of_isAddFreimanIso`: a Freiman `2`-isomorphism defined on
-  the points of a proper GAP maps it onto a proper GAP of at most the same dimension.
+* `GAP.toFinset_freimanImage` and `GAP.proper_freimanImage`: a Freiman `2`-homomorphism `f`
+  defined on the points of a GAP `P` maps them onto the points of `P.freimanImage f`, which is
+  proper when `P` is proper and `f` is a Freiman `2`-isomorphism.
 * `card_add_le_of_isAddFreimanIso`: a Freiman `2`-isomorphism from `B` onto `A` satisfies
   `#(B + B) ≤ #(A + A)`.
 * `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`: a Freiman `8`-isomorphism from `A`
@@ -56,23 +62,32 @@ private lemma exists_eq_add_single {ι : Type*} [DecidableEq ι] {w : ι → ℕ
 
 namespace GAP
 
-variable {G H : Type*} [DecidableEq G] [AddCommGroup G] [DecidableEq H] [AddCommGroup H]
+variable {G H : Type*} [AddCommGroup G] [AddCommGroup H]
+
+/-- The progression with origin `f P.origin`, steps `f (P.origin + P.step i) - f P.origin` and the
+bounds of `P`. Its points are the image of the points of `P` under a Freiman `2`-homomorphism `f`
+(`GAP.toFinset_freimanImage`). -/
+@[expose] def freimanImage (f : H → G) (P : GAP H) : GAP G :=
+  ⟨P.dim, f P.origin, fun i ↦ f (P.origin + P.step i) - f P.origin, P.bound⟩
+
+@[simp] lemma dim_freimanImage (f : H → G) (P : GAP H) : (P.freimanImage f).dim = P.dim := rfl
+
+variable [DecidableEq G] [DecidableEq H]
 
 /-! ### Rigidity of a progression under a Freiman 2-homomorphism -/
 
-lemma origin_add_linearCombination_mem (Q : GAP H) {w : Fin Q.dim → ℕ}
-    (hw : ∀ i, w i < Q.length i) :
-    Q.origin + Fintype.linearCombination ℕ Q.step w ∈ Q.toFinset := by
-  rw [Q.toFinset_eq, mem_image]
-  exact ⟨fun i ↦ ⟨w i, hw i⟩, mem_univ _, rfl⟩
+omit [DecidableEq G] in
+private lemma origin_add_linearCombination_mem (Q : GAP H) {w : Fin Q.dim → ℕ}
+    (hw : w ≤ Q.bound) : Q.origin + Fintype.linearCombination ℕ Q.step w ∈ (Q : Finset H) := by
+  rw [Fintype.linearCombination_apply]
+  exact Q.eval_mem_toFinset hw
 
 omit [DecidableEq G] in
 /-- Adding the `i`-th step inside the points of a GAP `Q` changes the image under a Freiman
 `2`-homomorphism `f` by `f (Q.origin + Q.step i) - f Q.origin`. -/
-lemma apply_add_step (Q : GAP H) {B : Set G} {f : H → G}
-    (hf : IsAddFreimanHom 2 (Q.toFinset : Set H) B f) {i : Fin Q.dim} {x : H}
-    (hx : x ∈ Q.toFinset) (hxi : x + Q.step i ∈ Q.toFinset)
-    (hi : Q.origin + Q.step i ∈ Q.toFinset) :
+private lemma apply_add_step (Q : GAP H) {B : Set G} {f : H → G}
+    (hf : IsAddFreimanHom 2 (Q : Set H) B f) {i : Fin Q.dim} {x : H} (hx : x ∈ (Q : Finset H))
+    (hxi : x + Q.step i ∈ (Q : Finset H)) (hi : Q.origin + Q.step i ∈ (Q : Finset H)) :
     f (x + Q.step i) = f x + (f (Q.origin + Q.step i) - f Q.origin) := by
   rw [← add_sub_assoc, eq_sub_iff_add_eq]
   exact hf.add_eq_add hxi Q.origin_mem hx hi (by abel)
@@ -82,8 +97,7 @@ omit [DecidableEq G] in
 `Q.origin + ∑ i, w i • Q.step i` to
 `f Q.origin + ∑ i, w i • (f (Q.origin + Q.step i) - f Q.origin)`. -/
 lemma apply_origin_add_linearCombination (Q : GAP H) {B : Set G} {f : H → G}
-    (hf : IsAddFreimanHom 2 (Q.toFinset : Set H) B f) {w : Fin Q.dim → ℕ}
-    (hw : ∀ i, w i < Q.length i) :
+    (hf : IsAddFreimanHom 2 (Q : Set H) B f) {w : Fin Q.dim → ℕ} (hw : w ≤ Q.bound) :
     f (Q.origin + Fintype.linearCombination ℕ Q.step w) =
       f Q.origin +
         Fintype.linearCombination ℕ (fun i ↦ f (Q.origin + Q.step i) - f Q.origin) w := by
@@ -92,39 +106,34 @@ lemma apply_origin_add_linearCombination (Q : GAP H) {B : Set G} {f : H → G}
   obtain rfl | ⟨i, hi : w i ≠ 0⟩ := (eq_or_ne w 0).imp_right Function.ne_iff.1
   · simp
   obtain ⟨u, rfl⟩ := exists_eq_add_single hi
-  have hu : ∀ j, u j < Q.length j := fun j ↦ (Nat.le_add_right _ _).trans_lt (hw j)
+  have hu : u ≤ Q.bound := fun j ↦ (Nat.le_add_right _ _).trans (hw j)
   have hw' := Q.origin_add_linearCombination_mem hw
   simp only [map_add, Fintype.linearCombination_apply_single, one_smul, ← add_assoc] at hw' ⊢
   rw [Q.apply_add_step hf (Q.origin_add_linearCombination_mem hu) hw' (by
-    simpa using Q.origin_add_linearCombination_mem fun j ↦ (Nat.le_add_left _ _).trans_lt (hw j)),
+    simpa using Q.origin_add_linearCombination_mem fun j ↦ (Nat.le_add_left _ _).trans (hw j)),
     ih u (Pi.lt_def.2 ⟨fun j ↦ Nat.le_add_right _ _, i, by simp⟩) hu]
 
-/-- The image of a GAP `Q` under a Freiman `2`-homomorphism `f` is the progression with origin
-`f Q.origin`, steps `f (Q.origin + Q.step i) - f Q.origin` and the same lengths. -/
-lemma image_gapMap_eq_image (Q : GAP H) {B : Set G} {f : H → G}
-    (hf : IsAddFreimanHom 2 (Q.toFinset : Set H) B f) :
-    univ.image (gapMap (f Q.origin) (fun i ↦ f (Q.origin + Q.step i) - f Q.origin) Q.length) =
-      Q.toFinset.image f := by
-  rw [Q.toFinset_eq, image_image]
-  congr with w
-  exact (Q.apply_origin_add_linearCombination hf fun i ↦ (w i).isLt).symm
+/-- The image of the points of a GAP `P` under a Freiman `2`-homomorphism `f` is the set of points
+of `P.freimanImage f`. -/
+lemma toFinset_freimanImage {P : GAP H} {B : Set G} {f : H → G}
+    (hf : IsAddFreimanHom 2 (P : Set H) B f) :
+    (P.freimanImage f : Finset G) = (P : Finset H).image f := by
+  rw [toFinset, toFinset, image_image]
+  apply image_congr
+  rintro (w : Fin P.dim → ℕ) hw
+  have h := P.apply_origin_add_linearCombination hf (mem_Iic.1 hw)
+  rw [Fintype.linearCombination_apply, Fintype.linearCombination_apply] at h
+  exact h.symm
 
-/-- A Freiman `2`-isomorphism defined on the points of a proper GAP maps it onto a proper GAP of
-at most the same dimension, with the same lengths.
-
-The image is proper because it has `∏ i, Q.length i` elements, so its coefficient map is
-injective. -/
-lemma exists_proper_toFinset_eq_image_of_isAddFreimanIso {Q : GAP H} (hQ : Q.Proper) {B : Set G}
-    {f : H → G} (hf : IsAddFreimanIso 2 (Q.toFinset : Set H) B f) :
-    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.toFinset = Q.toFinset.image f := by
-  have himage := Q.image_gapMap_eq_image hf.isAddFreimanHom
-  refine ⟨ofSteps (f Q.origin) (fun i ↦ f (Q.origin + Q.step i) - f Q.origin) Q.length,
-    proper_ofSteps Q.length_pos ?_, dim_ofSteps_le, (toFinset_ofSteps Q.length_pos).trans himage⟩
-  rw [← Set.injOn_univ, ← coe_univ]
-  apply injOn_of_card_image_eq
-  rw [himage, card_image_of_injOn hf.bijOn.injOn, Q.card_eq_prod_length hQ, card_univ,
-    Fintype.card_pi]
-  simp
+omit [DecidableEq G] in
+/-- A Freiman `2`-isomorphism defined on the points of a proper GAP `P` maps it onto the proper
+GAP `P.freimanImage f`, which has `P.size` elements. -/
+lemma proper_freimanImage {P : GAP H} (hP : P.Proper) {B : Set G} {f : H → G}
+    (hf : IsAddFreimanIso 2 (P : Set H) B f) : (P.freimanImage f).Proper := by
+  classical
+  rw [proper_iff_card_eq_size, toFinset_freimanImage hf.isAddFreimanHom,
+    card_image_of_injOn hf.bijOn.injOn, P.card_eq_size hP]
+  rfl
 
 end GAP
 
@@ -212,12 +221,12 @@ private lemma isAddFreimanIso_signedTransport {A : Finset G} {B : Finset H} {ψ 
 cardinality contained in `A + A - (A + A)`. -/
 lemma exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso {A : Finset G} {B : Finset H}
     {φ : G → H} (hφ : IsAddFreimanIso 8 (A : Set G) (B : Set H) φ) {Q : GAP H} (hQ : Q.Proper)
-    (hQB : Q.toFinset ⊆ (B + B) - (B + B)) :
-    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ R.toFinset.card = Q.toFinset.card ∧
-      R.toFinset ⊆ (A + A) - (A + A) := by
+    (hQB : (Q : Finset H) ⊆ (B + B) - (B + B)) :
+    ∃ R : GAP G, R.Proper ∧ R.dim ≤ Q.dim ∧ #(R : Finset G) = #(Q : Finset H) ∧
+      (R : Finset G) ⊆ (A + A) - (A + A) := by
   have hf := isAddFreimanIso_signedTransport hφ.invFunOn (coe_subset.2 hQB)
-  obtain ⟨R, hR, hRdim, hRQ⟩ := GAP.exists_proper_toFinset_eq_image_of_isAddFreimanIso hQ hf
-  refine ⟨R, hR, hRdim, ?_, ?_⟩ <;> rw [hRQ]
+  refine ⟨Q.freimanImage _, GAP.proper_freimanImage hQ hf, le_rfl, ?_, ?_⟩ <;>
+    rw [GAP.toFinset_freimanImage hf.isAddFreimanHom]
   · exact card_image_of_injOn hf.bijOn.injOn
   · rw [image_subset_iff]
     intro z hz

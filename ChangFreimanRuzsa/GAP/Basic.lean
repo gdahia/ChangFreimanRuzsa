@@ -5,414 +5,202 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import Mathlib.Algebra.Order.Ring.Nat
-public import Mathlib.Data.Finsupp.Interval
-public import Mathlib.Data.Int.Interval
+public import Mathlib.Algebra.Group.Pointwise.Finset.Basic
+public import Mathlib.Algebra.Group.Pointwise.Finset.Scalar
 public import Mathlib.Data.Pi.Interval
 public import Mathlib.LinearAlgebra.Finsupp.LinearCombination
 public import Mathlib.Order.Interval.Finset.Nat
 import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Algebra.Order.Ring.Nat
 
 /-!
 # Generalized arithmetic progressions
 
-A generalized arithmetic progression (GAP) in an additive monoid `G` is given by an `origin : G`
-and a finitely supported `bound : G →₀ ℕ`. Its points are `origin + ∑ v, c v • v` with
-`c ≤ bound`. The steps are the elements `v` with `bound v ≠ 0`, and the length of the step `v` is
-`bound v + 1`. The sum of two progressions adds the origins and the bounds, so that the points of
-`P + Q` are the sums of a point of `P` and a point of `Q`. The multiple `t • P` multiplies the
-origin and the bound by `t`, so that its points are the sums of `t` points of `P`.
+A generalized arithmetic progression (GAP) in an additive monoid `G` is given by a dimension
+`dim`, an `origin : G`, steps `step : Fin dim → G` and bounds `bound : Fin dim → ℕ`. Its points
+are `origin + ∑ i, w i • step i` with `w ≤ bound`, and the length of the step `i` is
+`bound i + 1`. A progression coerces to the finset of its points. The concatenation
+`GAP.append P Q` adds the origins and concatenates the steps and the bounds, so that its points are
+the sums of a point of `P` and a point of `Q`. The multiple `t • P` multiplies the origin and the
+bound by `t`, so that its points are the sums of `t` points of `P`. The translate `c +ᵥ P` adds `c`
+to the origin.
 
-Numbering the steps as `P.step i` for `i : Fin P.dim`, with lengths
-`P.length i = P.bound (P.step i) + 1 ≥ 2`, gives the usual description of the points of `P` as
-`P.origin + ∑ i, w i • P.step i` with `w i < P.length i`.
-
-A progression `P` is `t`-proper when `t • P` is proper. For `t = 2` this says that `P + P` is
-proper, as in Bilu's condition `F₂` and in Tao and Vu. Green and Tao call a progression with
-numbered steps `s i` and lengths `ℓ i` `t`-proper when the points `t • origin + ∑ i, w i • s i` with
-`w i < t * ℓ i` are distinct. The points of `t • P` are those with `w i ≤ t * (ℓ i - 1)`, so the
-condition of Green and Tao is stronger. It follows from `(2 * t) • P` being proper, since
-`t * ℓ i - 1 ≤ 2 * t * (ℓ i - 1)` when `2 ≤ ℓ i`. The progression `{0, 1}` in `ZMod 3` is
-`2`-proper but not `2`-proper in the sense of Green and Tao.
+A progression `P` is `t`-proper when `t • P` is proper. For `t = 2` this says that the
+concatenation of `P` with itself is proper, as in Bilu's condition `F₂` and in Tao and Vu. Green
+and Tao call a progression with steps `s i` and lengths `ℓ i` `t`-proper when the points
+`t • origin + ∑ i, w i • s i` with `w i < t * ℓ i` are distinct. The points of `t • P` are those
+with `w i ≤ t * (ℓ i - 1)`, so the condition of Green and Tao is stronger. When every `bound i` is
+positive, it follows from `(2 * t) • P` being proper, since `t * ℓ i - 1 ≤ 2 * t * (ℓ i - 1)` when
+`2 ≤ ℓ i`. The progression `{0, 1}` in `ZMod 3` is `2`-proper but not `2`-proper in the sense of
+Green and Tao.
 
 ## Main definitions
 
 * `GAP G`: a generalized arithmetic progression in `G`, not necessarily proper.
-* `GAP.toFinset`, `GAP.dim`: its set of points and its number of steps.
-* `GAP.Proper`: the points `origin + ∑ v, c v • v` with `c ≤ bound` are distinct.
-* `gapMap`: the point `origin + ∑ i, w i • step i` of the progression with numbered steps `step i`
-  and lengths `length i`, for coordinates `w i < length i`.
-* `GAP.ofSteps`: the GAP with prescribed origin, numbered steps and lengths.
-* `GAP.step` and `GAP.length`: the numbered steps and lengths of a GAP.
-* `GAP.size`: the number `∏ v ∈ P.bound.support, (P.bound v + 1)` of coefficient vectors.
-* `GAP.shift`: the translate of a GAP.
+* `GAP.eval`: the point with given coefficients.
+* `GAP.toFinset`: the finset of points, which is the coercion `(P : Finset G)`.
+* `GAP.Proper`: the points `origin + ∑ i, w i • step i` with `w ≤ bound` are distinct.
+* `GAP.size`: the number `∏ i, (P.bound i + 1)` of coefficient vectors.
+* `GAP.append`: the concatenation of two progressions.
 * `stepsHom` and `stepHom`: the homomorphism from `ℤ ^ d` to `G` given by the steps.
 
 ## Main statements
 
-* `GAP.toFinset_add`: the points of `P + Q` are the sums of a point of `P` and a point of `Q`.
+* `GAP.toFinset_append`: the points of `GAP.append P Q` are the sums of a point of `P` and a point
+  of `Q`.
+* `GAP.toFinset_vadd`: the points of `c +ᵥ P` are the translates by `c` of the points of `P`.
 * `GAP.proper_iff_card_eq_size`: a GAP `P` is proper if and only if it has `P.size` elements.
-* `GAP.proper_nsmul_iff_injective`: `t`-properness in terms of the numbered steps and lengths.
 -/
 
 @[expose] public section
 
 namespace ChangFreimanRuzsa
 
-open scoped Pointwise
+open scoped Finset Pointwise
 
 noncomputable section
 
-/-- The point `origin + ∑ i, w i • step i` of the generalized arithmetic progression with numbered
-steps `step i` and lengths `length i`, for coordinates `w i < length i`. -/
-def gapMap {G : Type*} [AddCommMonoid G] {d : ℕ} (origin : G) (step : Fin d → G)
-    (length : Fin d → ℕ) (w : (i : Fin d) → Fin (length i)) : G := origin + ∑ i, (w i : ℕ) • step i
-
 /-- A generalized arithmetic progression, not necessarily proper: the set of the points
-`origin + ∑ v, c v • v` with `c ≤ bound`. -/
+`origin + ∑ i, w i • step i` with `w ≤ bound`. -/
 structure GAP (G : Type*) [AddCommMonoid G] where
+  /-- The number of steps. -/
+  dim : ℕ
   /-- The base point. -/
   origin : G
-  /-- The bound on the coefficient of each step. -/
-  bound : G →₀ ℕ
+  /-- The steps. -/
+  step : Fin dim → G
+  /-- The largest coefficient of each step. The length of the step `i` is `bound i + 1`. -/
+  bound : Fin dim → ℕ
 
 namespace GAP
 
 variable {G : Type*} [AddCommMonoid G]
 
-/-- The point `origin + ∑ v, c v • v`. -/
-def eval (P : GAP G) (c : G →₀ ℕ) : G := P.origin + c.sum fun v n ↦ n • v
+/-- The point `origin + ∑ i, w i • step i`. -/
+def eval (P : GAP G) (w : Fin P.dim → ℕ) : G := P.origin + ∑ i, w i • P.step i
 
 /-- The set of points of a progression. -/
-def toFinset [DecidableEq G] (P : GAP G) : Finset G := (Finset.Iic P.bound).image P.eval
+@[coe] def toFinset [DecidableEq G] (P : GAP G) : Finset G := (Finset.Iic P.bound).image P.eval
 
-/-- The dimension of a progression: the number of its steps. -/
-def dim (P : GAP G) : ℕ := P.bound.support.card
+instance [DecidableEq G] : CoeOut (GAP G) (Finset G) := ⟨toFinset⟩
 
-/-- A progression is proper if the points `origin + ∑ v, c v • v` with `c ≤ bound` are
+/-- A progression is proper if the points `origin + ∑ i, w i • step i` with `w ≤ bound` are
 distinct. -/
 def Proper (P : GAP G) : Prop := Set.InjOn P.eval (Set.Iic P.bound)
 
-/-- The sum of two progressions adds the origins and the bounds. -/
-instance : Add (GAP G) where
-  add P Q := ⟨P.origin + Q.origin, P.bound + Q.bound⟩
+/-- The number `∏ i, (P.bound i + 1)` of coefficient vectors `w ≤ P.bound` of a GAP. -/
+def size (P : GAP G) : ℕ := ∏ i, (P.bound i + 1)
 
 /-- The multiple `t • P` of a progression multiplies the origin and the bound by `t`. A progression
 `P` is `t`-proper when `t • P` is proper. -/
 instance : SMul ℕ (GAP G) where
-  smul t P := ⟨t • P.origin, t • P.bound⟩
+  smul t P := ⟨P.dim, t • P.origin, P.step, t • P.bound⟩
 
-end GAP
+/-- The concatenation of two progressions adds the origins and concatenates the steps and the
+bounds. -/
+def append (P Q : GAP G) : GAP G :=
+  ⟨P.dim + Q.dim, P.origin + Q.origin, Fin.append P.step Q.step, Fin.append P.bound Q.bound⟩
 
-/-! ## Decompositions of finitely supported functions -/
+/-- The translate `c +ᵥ P` of a progression adds `c` to the origin. -/
+instance : VAdd G (GAP G) where
+  vadd c P := ⟨P.dim, c + P.origin, P.step, P.bound⟩
 
-section Decomposition
+/-! ## Points -/
 
-variable {ι : Type*}
-
-/-- A function `c ≤ a + b` with values in `ℕ` is the sum of functions `c₁ ≤ a` and `c₂ ≤ b`. -/
-lemma exists_add_eq_of_le_add {a b c : ι →₀ ℕ} (h : c ≤ a + b) :
-    ∃ c₁ ≤ a, ∃ c₂ ≤ b, c₁ + c₂ = c := by
-  refine ⟨c ⊓ a, inf_le_right, c - c ⊓ a, ?_, add_tsub_cancel_of_le inf_le_left⟩
-  rw [Finsupp.le_def] at h ⊢
-  intro v
-  grind [Finsupp.inf_apply, Finsupp.tsub_apply, Finsupp.add_apply, h v]
-
-/-- A function below `Finsupp.single v m` is `Finsupp.single v n` for some `n`. -/
-lemma eq_single_of_le_single {c : ι →₀ ℕ} {v : ι} {m : ℕ} (h : c ≤ Finsupp.single v m) :
-    c = Finsupp.single v (c v) := by
-  classical
-  ext u
-  grind [Finsupp.le_def.1 h u]
-
-/-- The functions below `∑ i, Finsupp.single (s i) (n i)` are the functions
-`∑ i, Finsupp.single (s i) (w i)` with `w ≤ n`. -/
-lemma le_sum_single_iff {d : ℕ} {s : Fin d → ι} {n : Fin d → ℕ} {c : ι →₀ ℕ} :
-    c ≤ ∑ i, Finsupp.single (s i) (n i) ↔
-      ∃ w : Fin d → ℕ, (∀ i, w i ≤ n i) ∧ ∑ i, Finsupp.single (s i) (w i) = c := by
-  constructor
-  · intro h
-    induction d generalizing c with
-    | zero =>
-      refine ⟨0, fun i ↦ i.elim0, ?_⟩
-      simp_all
-    | succ d ih =>
-      rw [Fin.sum_univ_succ] at h
-      obtain ⟨c₁, hc₁, c₂, hc₂, rfl⟩ := exists_add_eq_of_le_add h
-      obtain ⟨w, hw, rfl⟩ := ih hc₂
-      refine ⟨Fin.cons (c₁ (s 0)) w, ?_, ?_⟩
-      · intro i
-        cases i using Fin.cases
-        · simpa using Finsupp.le_def.1 hc₁ (s 0)
-        · simpa using hw _
-      · conv_rhs => rw [eq_single_of_le_single hc₁]
-        simp [Fin.sum_univ_succ]
-  · rintro ⟨w, hw, rfl⟩
-    apply Finset.sum_le_sum
-    intro i _
-    exact Finsupp.single_mono (hw i)
-
-end Decomposition
-
-namespace GAP
-
-variable {G : Type*} [AddCommMonoid G]
-
-/-! ## Points and sums -/
-
-lemma ext {P Q : GAP G} (horigin : P.origin = Q.origin) (hbound : P.bound = Q.bound) : P = Q := by
-  cases P
-  cases Q
-  congr
-
-@[simp] lemma origin_add (P Q : GAP G) : (P + Q).origin = P.origin + Q.origin := rfl
-
-@[simp] lemma bound_add (P Q : GAP G) : (P + Q).bound = P.bound + Q.bound := rfl
-
-@[simp] lemma origin_nsmul (t : ℕ) (P : GAP G) : (t • P).origin = t • P.origin := rfl
-
-@[simp] lemma bound_nsmul (t : ℕ) (P : GAP G) : (t • P).bound = t • P.bound := rfl
-
-lemma eval_eq_linearCombination (P : GAP G) (c : G →₀ ℕ) :
-    P.eval c = P.origin + Finsupp.linearCombination ℕ id c := by
-  rw [eval, Finsupp.linearCombination_apply]
-  rfl
+@[simp] lemma dim_nsmul (t : ℕ) (P : GAP G) : (t • P).dim = P.dim := rfl
 
 @[simp] lemma eval_zero (P : GAP G) : P.eval 0 = P.origin := by
   simp [eval]
-
-lemma eval_add (P Q : GAP G) (c₁ c₂ : G →₀ ℕ) :
-    (P + Q).eval (c₁ + c₂) = P.eval c₁ + Q.eval c₂ := by
-  simp only [eval_eq_linearCombination, map_add, origin_add]
-  exact add_add_add_comm _ _ _ _
-
-lemma eval_sum_single (P : GAP G) {d : ℕ} (s : Fin d → G) (w : Fin d → ℕ) :
-    P.eval (∑ i, Finsupp.single (s i) (w i)) = P.origin + ∑ i, w i • s i := by
-  simp [eval_eq_linearCombination, map_sum]
 
 section Carrier
 
 variable [DecidableEq G]
 
-lemma mem_toFinset {P : GAP G} {x : G} : x ∈ P.toFinset ↔ ∃ c ≤ P.bound, P.eval c = x := by
+lemma mem_toFinset {P : GAP G} {x : G} : x ∈ (P : Finset G) ↔ ∃ w ≤ P.bound, P.eval w = x := by
   simp [toFinset]
 
-lemma eval_mem_toFinset (P : GAP G) {c : G →₀ ℕ} (hc : c ≤ P.bound) : P.eval c ∈ P.toFinset :=
-  mem_toFinset.2 ⟨c, hc, rfl⟩
+lemma eval_mem_toFinset (P : GAP G) {w : Fin P.dim → ℕ} (hw : w ≤ P.bound) :
+    P.eval w ∈ (P : Finset G) :=
+  mem_toFinset.2 ⟨w, hw, rfl⟩
 
-lemma origin_mem (P : GAP G) : P.origin ∈ P.toFinset := by
-  simpa using P.eval_mem_toFinset (c := 0) zero_le
+lemma origin_mem (P : GAP G) : P.origin ∈ (P : Finset G) := by
+  simpa using P.eval_mem_toFinset (w := 0) zero_le
 
-lemma nonempty (P : GAP G) : P.toFinset.Nonempty :=
+lemma nonempty (P : GAP G) : (P : Finset G).Nonempty :=
   ⟨_, P.origin_mem⟩
-
-/-- The points of `P + Q` are the sums of a point of `P` and a point of `Q`. -/
-lemma toFinset_add (P Q : GAP G) : (P + Q).toFinset = P.toFinset + Q.toFinset := by
-  ext x
-  simp only [mem_toFinset, Finset.mem_add, bound_add]
-  constructor
-  · rintro ⟨c, hc, rfl⟩
-    obtain ⟨c₁, hc₁, c₂, hc₂, rfl⟩ := exists_add_eq_of_le_add hc
-    exact ⟨_, ⟨c₁, hc₁, rfl⟩, _, ⟨c₂, hc₂, rfl⟩, (eval_add P Q c₁ c₂).symm⟩
-  · rintro ⟨_, ⟨c₁, hc₁, rfl⟩, _, ⟨c₂, hc₂, rfl⟩, rfl⟩
-    exact ⟨c₁ + c₂, add_le_add hc₁ hc₂, eval_add P Q c₁ c₂⟩
 
 end Carrier
 
-lemma dim_add_le (P Q : GAP G) : (P + Q).dim ≤ P.dim + Q.dim := by
-  classical
-  exact (Finset.card_le_card Finsupp.support_add).trans (Finset.card_union_le _ _)
-
-/-! ## Progressions with numbered steps -/
-
-/-- The GAP with the given origin, numbered steps `step i` and lengths `length i`, whose bound is
-`∑ i, Finsupp.single (step i) (length i - 1)`. Equal steps are merged, and steps of length `1` do
-not contribute. -/
-def ofSteps {d : ℕ} (origin : G) (step : Fin d → G) (length : Fin d → ℕ) : GAP G :=
-  ⟨origin, ∑ i, Finsupp.single (step i) (length i - 1)⟩
-
-section OfSteps
-
-variable {d : ℕ} {origin : G} {step : Fin d → G} {length : Fin d → ℕ}
-
-lemma toFinset_ofSteps [DecidableEq G] (hl : ∀ i, 0 < length i) :
-    (ofSteps origin step length).toFinset = Finset.univ.image (gapMap origin step length) := by
-  ext x
-  simp only [mem_toFinset, ofSteps, le_sum_single_iff, Finset.mem_image, Finset.mem_univ, true_and]
-  constructor
-  · rintro ⟨_, ⟨w, hw, rfl⟩, rfl⟩
-    refine ⟨fun i ↦ ⟨w i, by grind [hw i, hl i]⟩, ?_⟩
-    rw [eval_sum_single]
-    rfl
-  · rintro ⟨w, rfl⟩
-    refine ⟨_, ⟨fun i ↦ w i, fun i ↦ by grind [(w i).isLt], rfl⟩, ?_⟩
-    rw [eval_sum_single]
-    rfl
-
-lemma proper_ofSteps (hl : ∀ i, 0 < length i) (h : Function.Injective (gapMap origin step length)) :
-    (ofSteps origin step length).Proper := by
-  intro c hc c' hc' he
-  obtain ⟨w, hw, rfl⟩ := le_sum_single_iff.1 (Set.mem_Iic.1 hc)
-  obtain ⟨w', hw', rfl⟩ := le_sum_single_iff.1 (Set.mem_Iic.1 hc')
-  rw [eval_sum_single, eval_sum_single] at he
-  obtain rfl : w = w' := by
-    funext i
-    simpa [Fin.ext_iff] using congr_fun (@h (fun i ↦ ⟨w i, by grind [hw i, hl i]⟩)
-      (fun i ↦ ⟨w' i, by grind [hw' i, hl i]⟩) he) i
-  rfl
-
-/-- A GAP with distinct numbered steps is proper if and only if its points
-`origin + ∑ i, w i • step i` with `w i < length i` are distinct. -/
-lemma proper_ofSteps_iff (hs : Function.Injective step) (hl : ∀ i, 0 < length i) :
-    (ofSteps origin step length).Proper ↔ Function.Injective (gapMap origin step length) := by
-  classical
-  refine ⟨?_, proper_ofSteps hl⟩
-  intro h w₁ w₂ hw
-  have heq := h (le_sum_single_iff.2 ⟨fun i ↦ w₁ i, fun i ↦ by grind [(w₁ i).isLt], rfl⟩)
-    (le_sum_single_iff.2 ⟨fun i ↦ w₂ i, fun i ↦ by grind [(w₂ i).isLt], rfl⟩)
-    (by rwa [eval_sum_single, eval_sum_single])
-  funext i
-  exact Fin.ext (by simpa [Finsupp.finsetSum_apply, Finsupp.single_apply, hs.eq_iff] using
-    DFunLike.congr_fun heq (step i))
-
-lemma dim_ofSteps_le : (ofSteps origin step length).dim ≤ d := by
-  classical
-  refine (Finset.card_le_card (t := Finset.univ.image step)
-    (Finsupp.support_finsetSum.trans ?_)).trans (Finset.card_image_le.trans_eq (Finset.card_fin d))
-  intro v hv
-  obtain ⟨i, -, hi⟩ := Finset.mem_biUnion.1 hv
-  exact Finset.mem_image.2 ⟨i, Finset.mem_univ _, (Finset.mem_singleton.1
-    (Finsupp.support_single_subset hi)).symm⟩
-
-lemma card_toFinset_ofSteps_le [DecidableEq G] (hl : ∀ i, 0 < length i) :
-    (ofSteps origin step length).toFinset.card ≤ ∏ i, length i := by
-  rw [toFinset_ofSteps hl]
-  exact Finset.card_image_le.trans (by simp)
-
-end OfSteps
-
-/-- The steps of a GAP, numbered: the elements `v` with `P.bound v ≠ 0`. -/
-def step (P : GAP G) (i : Fin P.dim) : G := P.bound.support.equivFin.symm i
-
-/-- The length `P.bound v + 1` of the `i`-th step `v` of a GAP. -/
-def length (P : GAP G) (i : Fin P.dim) : ℕ := P.bound (P.step i) + 1
-
-lemma step_injective (P : GAP G) : Function.Injective P.step :=
-  Subtype.val_injective.comp P.bound.support.equivFin.symm.injective
-
-lemma step_mem_support (P : GAP G) (i : Fin P.dim) : P.step i ∈ P.bound.support :=
-  (P.bound.support.equivFin.symm i).prop
-
-lemma one_lt_length (P : GAP G) (i : Fin P.dim) : 1 < P.length i :=
-  Nat.succ_lt_succ (Nat.pos_of_ne_zero (Finsupp.mem_support_iff.1 (P.step_mem_support i)))
-
-lemma length_pos (P : GAP G) (i : Fin P.dim) : 0 < P.length i :=
-  Nat.succ_pos _
-
-lemma bound_ofSteps_step_length (P : GAP G) (origin : G) :
-    (ofSteps origin P.step P.length).bound = P.bound := by
-  simp only [ofSteps, length, Nat.add_sub_cancel]
-  conv_rhs => rw [← Finsupp.sum_single P.bound]
-  rw [Finsupp.sum, ← Finset.sum_coe_sort (s := P.bound.support),
-    ← P.bound.support.equivFin.symm.sum_comp]
-  rfl
-
-lemma ofSteps_step_length (P : GAP G) : ofSteps P.origin P.step P.length = P :=
-  ext rfl (P.bound_ofSteps_step_length P.origin)
-
-lemma toFinset_eq [DecidableEq G] (P : GAP G) :
-    P.toFinset = Finset.univ.image (gapMap P.origin P.step P.length) := by
-  conv_lhs => rw [← P.ofSteps_step_length]
-  exact toFinset_ofSteps P.length_pos
-
 /-! ## The size of a progression -/
 
-/-- The number `∏ v ∈ P.bound.support, (P.bound v + 1)` of coefficient vectors `c ≤ P.bound` of a
-GAP. -/
-def size (P : GAP G) : ℕ := ∏ v ∈ P.bound.support, (P.bound v + 1)
-
-lemma size_eq_card_Iic [DecidableEq G] (P : GAP G) : P.size = (Finset.Iic P.bound).card := by
-  simp [size, Finsupp.card_Iic]
-
-lemma size_eq_prod_length (P : GAP G) : P.size = ∏ i, P.length i := by
-  rw [size, ← Finset.prod_coe_sort (s := P.bound.support),
-    ← P.bound.support.equivFin.symm.prod_comp]
-  rfl
+lemma size_eq_card_Iic (P : GAP G) : P.size = (Finset.Iic P.bound).card := by
+  simp [size, Pi.card_Iic]
 
 section Size
 
 variable [DecidableEq G]
 
-lemma card_le_size (P : GAP G) : P.toFinset.card ≤ P.size :=
+lemma card_le_size (P : GAP G) : #(P : Finset G) ≤ P.size :=
   Finset.card_image_le.trans_eq P.size_eq_card_Iic.symm
 
 /-- A GAP `P` is proper if and only if it has `P.size` elements. This is the definition of
 properness of Chang and of Green. -/
-lemma proper_iff_card_eq_size (P : GAP G) : P.Proper ↔ P.toFinset.card = P.size := by
+lemma proper_iff_card_eq_size (P : GAP G) : P.Proper ↔ #(P : Finset G) = P.size := by
   rw [size_eq_card_Iic, toFinset, Finset.card_image_iff, Finset.coe_Iic]
   rfl
 
-lemma card_eq_size {P : GAP G} (h : P.Proper) : P.toFinset.card = P.size :=
+lemma card_eq_size {P : GAP G} (h : P.Proper) : #(P : Finset G) = P.size :=
   P.proper_iff_card_eq_size.1 h
-
-/-- A GAP `P` is proper if and only if it has `∏ i, P.length i` elements. -/
-lemma proper_iff_card_eq_prod_length (P : GAP G) :
-    P.Proper ↔ P.toFinset.card = ∏ i, P.length i := by
-  rw [proper_iff_card_eq_size, size_eq_prod_length]
-
-lemma card_eq_prod_length (P : GAP G) (h : P.Proper) : P.toFinset.card = ∏ i, P.length i :=
-  P.proper_iff_card_eq_prod_length.1 h
 
 end Size
 
-lemma size_add_le (P Q : GAP G) : (P + Q).size ≤ P.size * Q.size := by
-  classical
-  rw [size_eq_card_Iic, size_eq_card_Iic, size_eq_card_Iic]
-  refine (Finset.card_le_card ?_).trans Finset.card_add_le
-  intro c hc
-  obtain ⟨c₁, hc₁, c₂, hc₂, rfl⟩ := exists_add_eq_of_le_add (Finset.mem_Iic.1 hc)
-  exact Finset.add_mem_add (Finset.mem_Iic.2 hc₁) (Finset.mem_Iic.2 hc₂)
+/-! ## Concatenation -/
 
-/-- The sum of a GAP `P` and a GAP with the same bound has at most `2 ^ P.dim` times as many
-coefficient vectors as `P`. -/
-lemma size_add_le_of_bound_eq {P Q : GAP G} (h : Q.bound = P.bound) :
-    (P + Q).size ≤ 2 ^ P.dim * P.size := by
-  classical
-  rw [size, bound_add, h, Finsupp.support_add_eq_union, Finset.union_self, dim, size,
-    ← Finset.prod_const, ← Finset.prod_mul_distrib]
-  apply Finset.prod_le_prod
-  intro v _
-  simp only [Finsupp.add_apply]
-  grind
+@[simp] lemma dim_append (P Q : GAP G) : (append P Q).dim = P.dim + Q.dim := rfl
 
-/-! ## `t`-proper progressions -/
+/-- The point of `GAP.append P Q` with coefficients `Fin.append u v` is the sum of the points of `P`
+and of `Q` with coefficients `u` and `v`. -/
+private lemma eval_append (P Q : GAP G) (u : Fin P.dim → ℕ) (v : Fin Q.dim → ℕ) :
+    (append P Q).eval (Fin.append u v) = P.eval u + Q.eval v := by
+  unfold append
+  simp only [eval, Fin.sum_univ_add, Fin.append_left, Fin.append_right]
+  exact add_add_add_comm _ _ _ _
 
-/-- The multiple `t • P` of a GAP is the GAP with the steps of `P` and the lengths
-`t * (P.length i - 1) + 1`. -/
-lemma nsmul_eq_ofSteps (t : ℕ) (P : GAP G) :
-    t • P = ofSteps (t • P.origin) P.step fun i ↦ t * (P.length i - 1) + 1 := by
-  refine ext rfl ?_
-  rw [bound_nsmul, ← P.bound_ofSteps_step_length 0]
-  simp only [ofSteps, Finset.smul_sum, Finsupp.smul_single, smul_eq_mul, Nat.add_sub_cancel]
+/-- A function `w ≤ Fin.append a b` is the concatenation of functions below `a` and `b`. -/
+private lemma le_append_iff {m n : ℕ} {a : Fin m → ℕ} {b : Fin n → ℕ} {w : Fin (m + n) → ℕ} :
+    w ≤ Fin.append a b ↔ (fun i ↦ w (Fin.castAdd n i)) ≤ a ∧ (fun i ↦ w (Fin.natAdd m i)) ≤ b := by
+  simp [Pi.le_def, Fin.forall_fin_add]
 
-/-- A GAP is `t`-proper if and only if the points `t • P.origin + ∑ i, w i • P.step i` with
-`w i < t * (P.length i - 1) + 1` are distinct. -/
-lemma proper_nsmul_iff_injective (t : ℕ) (P : GAP G) : (t • P).Proper ↔
-    Function.Injective (gapMap (t • P.origin) P.step fun i ↦ t * (P.length i - 1) + 1) := by
-  rw [nsmul_eq_ofSteps]
-  exact proper_ofSteps_iff P.step_injective fun i ↦ Nat.succ_pos _
+/-- The points of `GAP.append P Q` are the sums of a point of `P` and a point of `Q`. -/
+@[simp, norm_cast]
+lemma toFinset_append [DecidableEq G] (P Q : GAP G) :
+    (append P Q : Finset G) = P + Q := by
+  ext x
+  simp only [mem_toFinset, Finset.mem_add]
+  constructor
+  · rintro ⟨w, hw, rfl⟩
+    obtain ⟨u, v, rfl⟩ : ∃ u v, Fin.append u v = w := ⟨_, _, Fin.append_castAdd_natAdd⟩
+    obtain ⟨hu, hv⟩ := le_append_iff.1 hw
+    exact ⟨_, ⟨u, by simpa using hu, rfl⟩, _, ⟨v, by simpa using hv, rfl⟩, (eval_append ..).symm⟩
+  · rintro ⟨_, ⟨u, hu, rfl⟩, _, ⟨v, hv, rfl⟩, rfl⟩
+    exact ⟨Fin.append u v, le_append_iff.2 (by simpa using ⟨hu, hv⟩), eval_append ..⟩
+
+lemma size_append (P Q : GAP G) : (append P Q).size = P.size * Q.size := by
+  unfold append
+  simp [size, Fin.prod_univ_add]
 
 /-! ## Translates -/
 
-/-- Translate a GAP by a constant. -/
-def shift (P : GAP G) (c : G) : GAP G := ⟨P.origin + c, P.bound⟩
+@[simp] lemma dim_vadd (c : G) (P : GAP G) : (c +ᵥ P).dim = P.dim := rfl
 
-lemma toFinset_shift [DecidableEq G] (P : GAP G) (c : G) :
-    (P.shift c).toFinset = P.toFinset.image (· + c) := by
-  rw [toFinset, toFinset, Finset.image_image]
+/-- The points of `c +ᵥ P` are the translates by `c` of the points of `P`. -/
+@[simp, norm_cast]
+lemma toFinset_vadd [DecidableEq G] (c : G) (P : GAP G) :
+    (c +ᵥ P : Finset G) = c +ᵥ (P : Finset G) := by
+  rw [Finset.vadd_finset_def, toFinset, toFinset, Finset.image_image]
   congr 1
-  funext x
-  simp [shift, eval, add_right_comm]
+  funext w
+  exact add_assoc _ _ _
 
 end GAP
 
@@ -445,6 +233,12 @@ variable {G : Type*} [AddCommGroup G]
 
 /-- The homomorphism `(Fin P.dim → ℤ) →+ G` given by the steps of a GAP. -/
 def stepHom (P : GAP G) : (Fin P.dim → ℤ) →+ G := stepsHom P.step
+
+/-- The point of a GAP with prescribed coefficients, read through the step homomorphism. -/
+lemma GAP.eval_eq_stepsHom (P : GAP G) (w : Fin P.dim → ℕ) :
+    P.eval w = P.origin + stepsHom P.step fun i ↦ (w i : ℤ) := by
+  rw [stepsHom_natCast]
+  rfl
 
 end
 

@@ -5,11 +5,12 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GAP.Basic
-public import ChangFreimanRuzsa.GeometryOfNumbers.SymmetricBody
+public import ChangFreimanRuzsa.ConvexProgression.Basic
 public import Mathlib.Analysis.Convex.Body
+import ChangFreimanRuzsa.GAP.Relations
 import ChangFreimanRuzsa.GAP.Symmetric
 import ChangFreimanRuzsa.Properization.RelationQuotient
+import Mathlib.Algebra.Group.Action.Pointwise.Finset
 import Mathlib.Analysis.Normed.Affine.AddTorsorBases
 import TauCeti.Algebra.Order.BigOperators.Factorial
 import TauCeti.Analysis.Convex.Combination
@@ -18,11 +19,11 @@ import TauCeti.MeasureTheory.Measure.Lebesgue.Weighted.Crosspolytope
 import TauCeti.NumberTheory.GeometryOfNumbers.MinkowskiSecond
 
 /-!
-# Proper progressions from symmetric bodies
+# Proper progressions from convex progressions
 
-Let `K ⊆ ℝ ^ r` be a full symmetric body and `ψ : (Fin r → ℤ) →+ G`, and let `1 ≤ t`. If `ψ` is
-injective on the integer points of `(2 * t * r * r! ^ 2) • K`, then `ψ '' latticePoints K` lies in
-a `t`-proper progression of dimension at most `r` with at most `(3 * r! ^ 2) ^ r * r! * vol K`
+Let `P` be a convex progression with homomorphism `ψ : (Fin r → ℤ) →+ G` and body a full symmetric
+body `K ⊆ ℝ ^ r`, and let `1 ≤ t`. If `P` is `(2 * t * r * r! ^ 2)`-proper, then `P` lies in a
+`t`-proper progression of dimension at most `r` with at most `(3 * r! ^ 2) ^ r * r! * vol K`
 elements. This is Lemma 1.5 of Green's notes *Progressions and convex geometry*.
 
 The proof takes a basis `w` of `ℤ ^ r` with `w i ∈ a i • K`, where `a i ≤ r` and
@@ -35,7 +36,7 @@ half-lengths `⌊r! ^ 2 / a i⌋`.
 
 ## Main statements
 
-* `exists_tProperGAP_image_latticePoints_subset_of_injOn`: the progression.
+* `ConvexProgression.exists_tProperGAP_superset`: the progression.
 -/
 
 public section
@@ -43,7 +44,7 @@ public section
 namespace ChangFreimanRuzsa
 
 open MeasureTheory Module Set
-open scoped Pointwise
+open scoped Finset Pointwise
 
 noncomputable section
 
@@ -209,15 +210,14 @@ private lemma abs_repr_le (hK : IsFullSymmetricBody K) {w : Basis (Fin r) ℤ (F
 
 variable {G : Type*} [AddCommGroup G]
 
-/-- **A proper progression from a symmetric body.** Let `K ⊆ ℝ ^ r` be a full symmetric body,
-`1 ≤ t` and `ψ : (Fin r → ℤ) →+ G` injective on the integer points of
-`(2 * t * r * r! ^ 2) • K`. Then `ψ '' latticePoints K` lies in a `t`-proper progression of
-dimension at most `r` with at most `(3 * r! ^ 2) ^ r * r! * vol K` elements. -/
-lemma exists_tProperGAP_image_latticePoints_subset_of_injOn [DecidableEq G]
+/-- Let `K ⊆ ℝ ^ r` be a full symmetric body, `1 ≤ t` and `ψ : (Fin r → ℤ) →+ G` injective on the
+integer points of `(2 * t * r * r! ^ 2) • K`. Then `ψ '' latticePoints K` lies in a `t`-proper
+progression of dimension at most `r` with at most `(3 * r! ^ 2) ^ r * r! * vol K` elements. -/
+private lemma exists_tProperGAP_image_latticePoints_subset_of_injOn [DecidableEq G]
     (hK : IsFullSymmetricBody K) {t : ℕ} (ht : 1 ≤ t) {ψ : (Fin r → ℤ) →+ G}
     (hψ : InjOn ψ (latticePoints ((2 * t * r * r.factorial ^ 2 : ℝ) • K))) :
-    ∃ Q : GAP G, (t • Q).Proper ∧ ψ '' latticePoints K ⊆ Q.toFinset ∧ Q.dim ≤ r ∧
-      Q.toFinset.card ≤ (3 * r.factorial ^ 2) ^ r * r.factorial * volume.real K := by
+    ∃ Q : GAP G, (t • Q).Proper ∧ ψ '' latticePoints K ⊆ Q ∧ Q.dim ≤ r ∧
+      #(Q : Finset G) ≤ (3 * r.factorial ^ 2) ^ r * r.factorial * volume.real K := by
   obtain ⟨w, a, ha, har, hw, hprod⟩ := exists_basis_mem_smul hK
   set M : ℝ := r.factorial ^ 2 with hMdef
   have hM : 0 < M := by positivity
@@ -225,9 +225,9 @@ lemma exists_tProperGAP_image_latticePoints_subset_of_injOn [DecidableEq G]
     rw [hMdef]
     exact_mod_cast (Nat.self_le_factorial r).trans (Nat.le_self_pow two_ne_zero _))
   have hN (i : Fin r) : (⌊M / a i⌋₊ : ℝ) ≤ M / a i := Nat.floor_le (div_pos hM (ha i)).le
-  refine ⟨symmetricGAP (fun i ↦ ψ (w i)) fun i ↦ ⌊M / a i⌋₊, ?_, ?_, dim_symmetricGAP_le, ?_⟩
-  · rw [nsmul_symmetricGAP]
-    refine proper_symmetricGAP fun n hn hn0 ↦ ?_
+  refine ⟨GAP.symmetric (fun i ↦ ψ (w i)) fun i ↦ ⌊M / a i⌋₊, ?_, ?_, GAP.dim_symmetric.le, ?_⟩
+  · rw [GAP.nsmul_symmetric]
+    refine GAP.proper_symmetric fun n hn hn0 ↦ ?_
     choose k hk hka using hw
     have ht' : (0 : ℝ) < 4 * t * M := by positivity
     have hu : intVectorToReal (w.equivFun.symm n) ∈ (2 * t * r * r.factorial ^ 2 : ℝ) • K := by
@@ -266,7 +266,7 @@ lemma exists_tProperGAP_image_latticePoints_subset_of_injOn [DecidableEq G]
       simp_rw [map_zsmul]
       rfl
     rw [hψv]
-    refine stepsHom_mem_symmetricGAP fun i ↦ ?_
+    refine GAP.mem_symmetric.2 ⟨_, fun i ↦ ?_, rfl⟩
     rw [Basis.equivFun_apply, Int.abs_eq_natAbs, Nat.cast_le, Nat.le_floor_iff
       (div_pos hM (ha i)).le, Nat.cast_natAbs, Int.cast_abs]
     exact abs_repr_le hK ha hw hprod hv i
@@ -276,8 +276,8 @@ lemma exists_tProperGAP_image_latticePoints_subset_of_injOn [DecidableEq G]
         hK.neg_mem (u := basisToReal w) ha fun i ↦ by simpa [basisToReal_apply] using hw i
       rwa [← Pi.basisFun_det_apply, abs_det_basisToReal, mul_one] at h
     have hcard := Nat.cast_le (α := ℝ).2
-      (card_symmetricGAP_le (x := fun i ↦ ψ (w i)) (L := fun i ↦ ⌊M / a i⌋₊))
-    rw [Nat.cast_prod] at hcard
+      (GAP.symmetric (fun i ↦ ψ (w i)) fun i ↦ ⌊M / a i⌋₊).card_le_size
+    rw [GAP.size_symmetric, Nat.cast_prod] at hcard
     refine hcard.trans ?_
     calc ∏ i, (((2 * ⌊M / a i⌋₊ + 1 : ℕ)) : ℝ) ≤ ∏ i, (3 * M / a i) := by
           gcongr with i
@@ -292,6 +292,25 @@ lemma exists_tProperGAP_image_latticePoints_subset_of_injOn [DecidableEq G]
         refine le_mul_of_one_le_right (by positivity) ?_
         rw [div_le_iff₀ (by positivity)] at hlow
         nlinarith [one_le_pow₀ (n := r) (one_le_two (α := ℝ))]
+
+/-- **A proper progression from a convex progression.** Let `P` be a convex progression of
+dimension `r` whose body is a full symmetric body, and let `1 ≤ t`. If `P` is
+`(2 * t * r * r! ^ 2)`-proper, then it lies in a `t`-proper progression of dimension at most `r`
+with at most `(3 * r! ^ 2) ^ r * r! * vol P.body` elements. -/
+lemma ConvexProgression.exists_tProperGAP_superset [DecidableEq G] {P : ConvexProgression G}
+    (hP : IsFullSymmetricBody P.body) {t : ℕ} (ht : 1 ≤ t)
+    (hPt : P.TProper (2 * t * P.dim * P.dim.factorial ^ 2)) :
+    ∃ Q : GAP G, (t • Q).Proper ∧ P.toSet ⊆ Q ∧ Q.dim ≤ P.dim ∧
+      #(Q : Finset G) ≤
+        (3 * P.dim.factorial ^ 2) ^ P.dim * P.dim.factorial * volume.real P.body := by
+  obtain ⟨Q, hQ, hPQ, hQdim, hQcard⟩ :=
+    exists_tProperGAP_image_latticePoints_subset_of_injOn hP ht hPt
+  refine ⟨P.origin +ᵥ Q, (GAP.proper_nsmul_vadd_iff t _ Q).2 hQ, ?_, hQdim, ?_⟩
+  · intro x hx
+    obtain ⟨v, hv, rfl⟩ := mem_toSet.1 hx
+    rw [Finset.mem_coe, GAP.toFinset_vadd]
+    exact Finset.vadd_mem_vadd_finset (hPQ ⟨v, hv, rfl⟩)
+  · rwa [GAP.toFinset_vadd, Finset.card_vadd_finset]
 
 end
 

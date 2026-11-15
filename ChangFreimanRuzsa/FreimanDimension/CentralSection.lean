@@ -5,22 +5,23 @@ Authors: Gabriel Dahia
 -/
 module
 
+public import ChangFreimanRuzsa.ConvexProgression.Basic
 public import ChangFreimanRuzsa.GeometryOfNumbers.LatticeCoordinates
-public import ChangFreimanRuzsa.GeometryOfNumbers.SymmetricBody
 public import SumOfSetsInSeveralDimensions.FreimanDimension
 import ChangFreimanRuzsa.FreimanDimension.Model
 
 /-!
 # Central sections of a symmetric body and the Freiman dimension
 
-Let `K ⊆ ℝ ^ m` be a full symmetric body and `ψ : (Fin m → ℤ) →+ G` a homomorphism into an abelian
-group that is injective on the integer points of `2 • K`. Let `X` be a finite set of points
-`o + ψ v` with `v` an integer point of `K`, and let `x₀ ∈ X`. Choose `f x ∈ latticePoints K` with
-`x = o + ψ (f x)`. Since `K + K = 2 • K`, the map `f` is a Freiman isomorphism of order `2` from `X`
-onto its image. The vectors `f x - f x₀` lie in `2 • K`, and their real span `H` has dimension
-`r ≤ freimanDim X` by `modelDim_le_freimanDim`. In coordinates of a basis of the integer points of
-`H`, the central section `H ∩ 2 • K` is a full symmetric body `K' ⊆ ℝ ^ r`, every `x ∈ X` is
-`x₀ + ψ' v` with `v` an integer point of `K'`, and `vol K' ≤ (2 * (m + 2)) ^ m * vol K`.
+Let `P` be a convex progression in an abelian group with origin `o`, homomorphism
+`ψ : (Fin m → ℤ) →+ G` and body a full symmetric body `K ⊆ ℝ ^ m`, and let `ψ` be injective on the
+integer points of `2 • K`. Let `X` be a finite set of points of `P`, and let `x₀ ∈ X`. Choose
+`f x ∈ latticePoints K` with `x = o + ψ (f x)`. Since `K + K = 2 • K`, the map `f` is a Freiman
+isomorphism of order `2` from `X` onto its image. The vectors `f x - f x₀` lie in `2 • K`, and their
+real span `H` has dimension `r ≤ freimanDim X` by `modelDim_le_freimanDim`. In coordinates of a
+basis of the integer points of `H`, the central section `H ∩ 2 • K` is a full symmetric body
+`K' ⊆ ℝ ^ r`, every `x ∈ X` is `x₀ + ψ' v` with `v` an integer point of `K'`, and
+`vol K' ≤ (2 * (m + 2)) ^ m * vol K`.
 
 ## Main statements
 
@@ -28,8 +29,8 @@ onto its image. The vectors `f x - f x₀` lie in `2 • K`, and their real span
   the span of some of its integer points, in lattice coordinates, is a full symmetric body.
 * `IsFullSymmetricBody.volume_real_preimage_realOfLatticeCoordinates_le`: its volume is at most
   `(m + 2) ^ m * vol K`.
-* `exists_isFullSymmetricBody_dim_le_freimanDim`: the passage to a body of dimension at most
-  `freimanDim X`.
+* `ConvexProgression.exists_superset_dim_le_freimanDim`: the passage to a convex progression of
+  dimension at most `freimanDim X`.
 -/
 
 public section
@@ -102,39 +103,39 @@ private lemma isAddFreimanIso_two_of_eq_add (hK : Convex ℝ K) {ψ : (Fin m →
   · intro a ha b hb c hc e he
     rw [hsum a ha b hb, hsum c hc e he, add_right_inj, hψ.eq_iff (hadd a ha b hb) (hadd c hc e he)]
 
-/-- **Passage to the Freiman dimension.** Let `K ⊆ ℝ ^ m` be a full symmetric body and `ψ` a
-homomorphism injective on the integer points of `2 • K`. If every point of `X` is `o + ψ v` with `v`
-an integer point of `K` and `x₀ ∈ X`, then there are a full symmetric body `K' ⊆ ℝ ^ r` with
-`r ≤ freimanDim X` and `vol K' ≤ (2 * (m + 2)) ^ m * vol K`, and a homomorphism `ψ'`, such that
-every point of `X` is `x₀ + ψ' v` with `v` an integer point of `K'`. -/
-lemma exists_isFullSymmetricBody_dim_le_freimanDim [DecidableEq G] (hK : IsFullSymmetricBody K)
-    {ψ : (Fin m → ℤ) →+ G} (hψ : InjOn ψ (latticePoints ((2 : ℝ) • K))) {X : Finset G} {o x₀ : G}
-    (hX : ∀ x ∈ X, ∃ v ∈ latticePoints K, x = o + ψ v) (hx₀ : x₀ ∈ X) :
-    ∃ (r : ℕ) (K' : Set (Fin r → ℝ)) (ψ' : (Fin r → ℤ) →+ G), r ≤ freimanDim X ∧
-      IsFullSymmetricBody K' ∧ (∀ x ∈ X, ∃ v ∈ latticePoints K', x = x₀ + ψ' v) ∧
-      volume.real K' ≤ (2 * (m + 2)) ^ m * volume.real K := by
-  choose! f hfK hfX using hX
-  have hS : (translatedCoords f X x₀ : Set (Fin m → ℤ)) ⊆ latticePoints ((2 : ℝ) • K) := by
+/-- **Passage to the Freiman dimension.** Let `P` be a `2`-proper convex progression of dimension
+`m` whose body is a full symmetric body. If a finite nonempty set `X` lies in `P`, then it lies in a
+convex progression of dimension at most `freimanDim X` whose body is a full symmetric body of volume
+at most `(2 * (m + 2)) ^ m * vol P.body`. -/
+lemma ConvexProgression.exists_superset_dim_le_freimanDim [DecidableEq G]
+    {P : ConvexProgression G} (hP : IsFullSymmetricBody P.body) (hP₂ : P.TProper 2) {X : Finset G}
+    (hX : X.Nonempty) (hXP : ↑X ⊆ P.toSet) :
+    ∃ Q : ConvexProgression G, Q.dim ≤ freimanDim X ∧ IsFullSymmetricBody Q.body ∧
+      ↑X ⊆ Q.toSet ∧ volume.real Q.body ≤ (2 * (P.dim + 2)) ^ P.dim * volume.real P.body := by
+  obtain ⟨x₀, hx₀⟩ := hX
+  choose! f hfK hfX using fun x (hx : x ∈ X) ↦ mem_toSet.1 (hXP hx)
+  have hS : (translatedCoords f X x₀ : Set (Fin P.dim → ℤ)) ⊆
+      latticePoints ((2 : ℝ) • P.body) := by
     rw [coe_translatedCoords]
     rintro _ ⟨x, hx, rfl⟩
-    rw [mem_latticePoints, map_sub, ← sub_self_eq_two_smul hK.convex hK.neg_mem]
+    rw [mem_latticePoints, map_sub, ← sub_self_eq_two_smul hP.convex hP.neg_mem]
     exact sub_mem_sub (hfK x hx) (hfK x₀ hx₀)
-  refine ⟨modelDim f X x₀, _, ψ.comp (ofLatticeCoordinates _),
-    modelDim_le_freimanDim (isAddFreimanIso_two_of_eq_add hK.convex hψ hfK hfX) hx₀,
-    (hK.smul one_le_two).preimage_realOfLatticeCoordinates hS, ?_, ?_⟩
+  refine ⟨⟨modelDim f X x₀, x₀, P.hom.comp (ofLatticeCoordinates _), _⟩,
+    modelDim_le_freimanDim (isAddFreimanIso_two_of_eq_add hP.convex hP₂ hfK
+      fun x hx ↦ (hfX x hx).symm) hx₀,
+    (hP.smul one_le_two).preimage_realOfLatticeCoordinates hS, ?_, ?_⟩
   · intro x hx
-    refine ⟨latticeCoordinates _ (f x - f x₀), ?_, ?_⟩
-    · rw [mem_latticePoints, mem_preimage,
-        realOfLatticeCoordinates_latticeCoordinates (sub_mem_saturatedSpan f x₀ hx)]
-      exact hS (sub_mem_translatedCoords f x₀ hx)
-    · rw [AddMonoidHom.comp_apply, ofLatticeCoordinates_latticeCoordinates
-        (sub_mem_saturatedSpan f x₀ hx), map_sub, add_sub, eq_sub_iff_add_eq]
-      conv_lhs => rw [hfX x hx]
-      conv_rhs => rw [hfX x₀ hx₀]
+    refine mem_toSet.2 ⟨latticeCoordinates _ (f x - f x₀), ?_, ?_⟩
+    · simpa [realOfLatticeCoordinates_latticeCoordinates (sub_mem_saturatedSpan f x₀ hx)] using
+        hS (sub_mem_translatedCoords f x₀ hx)
+    · dsimp only
+      rw [AddMonoidHom.comp_apply, ofLatticeCoordinates_latticeCoordinates
+        (sub_mem_saturatedSpan f x₀ hx), map_sub, add_sub, sub_eq_iff_eq_add]
+      conv_lhs => rw [← hfX x₀ hx₀]
+      conv_rhs => rw [← hfX x hx]
       abel
-  · grw [(hK.smul one_le_two).volume_real_preimage_realOfLatticeCoordinates_le hS,
-      volume_real_smul zero_le_two, mul_pow]
-    apply le_of_eq
+  · refine ((hP.smul one_le_two).volume_real_preimage_realOfLatticeCoordinates_le hS).trans_eq ?_
+    rw [volume_real_smul zero_le_two, mul_pow]
     ring
 
 end ChangFreimanRuzsa

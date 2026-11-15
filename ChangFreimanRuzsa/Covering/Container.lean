@@ -230,40 +230,32 @@ namespace GAP
 
 /-- The progression of the packing argument. Starting from `Q`, it adds one step of length `2` for
 each entry of `l`, applies `GAP.difference` twice and adds one step of length `2` for each element
-of `W`. If `S ⊆ Q.toFinset + listSubsetSum l`, then it contains `S - S - (S - S) + W`. -/
+of `W`. If `S ⊆ listSubsetSum l + Q`, then it contains `S - S - (S - S) + W`. -/
 def packingContainer (Q : GAP G) (l : List G) (W : Finset G) : GAP G :=
-  (Q.consBinaryList l).difference.difference.consBinaryList W.toList
+  consList W.toList (consList l Q).difference.difference
 
 lemma sub_sub_add_subset_packingContainer {Q : GAP G} {l : List G} {S : Finset G}
-    (hS : S ⊆ Q.toFinset + listSubsetSum l) (W : Finset G) :
-    S - S - (S - S) + W ⊆ (Q.packingContainer l W).toFinset :=
-  add_subset_consBinaryList_toList (sub_subset_difference_of_subset
-    (sub_subset_difference_of_subset (hS.trans (Q.add_listSubsetSum_subset_consBinaryList l)))) W
+    (hS : S ⊆ listSubsetSum l + Q) (W : Finset G) :
+    S - S - (S - S) + W ⊆ (Q.packingContainer l W : Finset G) := by
+  rw [packingContainer, toFinset_consList, toFinset_difference, toFinset_difference,
+    toFinset_consList, add_comm]
+  gcongr
+  exact subset_listSubsetSum_toList W
 
 omit [DecidableEq G] in
-lemma dim_packingContainer_le (Q : GAP G) (l : List G) (W : Finset G) :
-    (Q.packingContainer l W).dim ≤ Q.dim + l.length + #W := by
-  refine (dim_consBinaryList_le _ _).trans ?_
-  rw [length_toList]
-  exact Nat.add_le_add_right ((dim_difference_le _).trans
-    ((dim_difference_le _).trans (dim_consBinaryList_le _ _))) _
+lemma dim_packingContainer (Q : GAP G) (l : List G) (W : Finset G) :
+    (Q.packingContainer l W).dim = Q.dim + l.length + #W := by
+  rw [packingContainer, dim_consList, dim_difference, dim_difference, dim_consList, length_toList]
 
 omit [DecidableEq G] in
 lemma size_packingContainer_le (Q : GAP G) (l : List G) (W : Finset G) :
     (Q.packingContainer l W).size ≤
       2 ^ (#W + 2 * (Q.dim + l.length) + l.length) * Q.size := by
   rw [(by ring : 2 ^ (#W + 2 * (Q.dim + l.length) + l.length) * Q.size =
-    2 ^ #W * (2 ^ (Q.dim + l.length) * (2 ^ (Q.dim + l.length) * (2 ^ l.length * Q.size))))]
-  refine (size_consBinaryList_le _ _).trans ?_
-  rw [length_toList]
+    2 ^ #W * (2 ^ (Q.dim + l.length) * (2 ^ (Q.dim + l.length) * (2 ^ l.length * Q.size)))),
+    packingContainer, size_consList, length_toList]
   gcongr
-  refine (size_difference_le _).trans ?_
-  gcongr
-  · exact (dim_difference_le _).trans (dim_consBinaryList_le _ _)
-  refine (size_difference_le _).trans ?_
-  gcongr
-  · exact dim_consBinaryList_le _ _
-  exact size_consBinaryList_le _ _
+  grw [size_difference_le, dim_difference, size_difference_le, dim_consList, size_consList]
 
 end GAP
 
@@ -298,16 +290,16 @@ lemma exists_gap_subset_dim_le_size_le_of_subset_add_sub_add
     {κ : ℝ} {X X₁ : Finset G} {Q₁ : GAP G} (hXne : X.Nonempty) (hκ : 2 ≤ κ)
     (hXX : (X + X).card ≤ κ * X.card) (hX₁X : X₁ ⊆ X) (hX₁card : X.card ≤ 8 * X₁.card)
     (hQ₁proper : Q₁.Proper) (hQ₁dimle : (Q₁.dim : ℝ) ≤ bohrGAPDim κ)
-    (hQ₁subX : Q₁.toFinset ⊆ (X + X) - (X + X))
-    (hQlow : X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.toFinset.card) :
+    (hQ₁subX : (Q₁ : Finset G) ⊆ (X + X) - (X + X))
+    (hQlow : X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * (Q₁ : Finset G).card) :
     ∃ P : GAP G,
-      X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
+      X ⊆ P ∧ P.dim ≤ containerExponent κ ∧
         P.size ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨l, F, hl, hlen, hQ₁X, hF, hcover⟩ := exists_length_le_iterationBound_subset_add_sub
     hXne (by linarith) hXX hX₁X Q₁.nonempty hQ₁subX hQlow
   obtain ⟨W, hW, hXW⟩ := exists_card_le_subset_sub_sub_add (by linarith) hXX
     (card_pos.1 (by grind [hXne.card_pos])) hX₁X hX₁card (hcover.trans
-      (add_sub_subset_add_sub_add (fun _ hx ↦ mem_listSubsetSum_of_mem (mem_toList.2 hx))
+      (add_sub_subset_add_sub_add (subset_listSubsetSum_toList F)
         (zero_mem_listSubsetSum F.toList)))
   obtain ⟨-, hlcard⟩ := forall₂_and.1 hl
   have hlength : ((l.flatMap Finset.toList ++ F.toList).length : ℝ) ≤
@@ -318,9 +310,9 @@ lemma exists_gap_subset_dim_le_size_le_of_subset_add_sub_add
       (by exact_mod_cast hF : (#F : ℝ) ≤ translateCount κ)]
   refine ⟨Q₁.packingContainer (l.flatMap Finset.toList ++ F.toList) W,
     hXW.trans (GAP.sub_sub_add_subset_packingContainer ?_ W), ?_, ?_⟩
-  · rw [listSubsetSum_append, ← add_assoc]
+  · rw [listSubsetSum_append, add_comm _ (Q₁ : Finset G), ← add_assoc]
     exact add_subset_add_right (add_subset_add_left (sum_subset_listSubsetSum_flatMap_toList l))
-  · refine (Nat.cast_le.2 (GAP.dim_packingContainer_le _ _ _)).trans ?_
+  · rw [GAP.dim_packingContainer]
     push_cast
     linarith [mul_add_bohrGAPDim_add_le_containerExponent hκ]
   · refine (Nat.cast_le.2 (Q₁.size_packingContainer_le _ W)).trans ?_
@@ -343,7 +335,7 @@ lemma exists_gap_zmod_subset_dim_le_size_le {q : ℕ} {κ : ℝ} (X : Finset (ZM
     (hXX : (X + X).card ≤ κ * X.card)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ X.card) :
     ∃ P : GAP (ZMod q),
-      X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
+      X ⊆ P ∧ P.dim ≤ containerExponent κ ∧
         P.size ≤ Real.exp (containerExponent κ) * X.card := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁proper, hQ₁dimle, hQ₁subX, hQlow⟩ :=
     exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX hXlower

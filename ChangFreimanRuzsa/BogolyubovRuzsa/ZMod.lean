@@ -169,8 +169,8 @@ progression `Q` of dimension at most `d` with `m ≤ bohrLoss d * #Q.toFinset`, 
 lemma exists_proper_gap_chordSet_card_le {m d : ℕ} [NeZero m] (Δ : Finset (AddChar (ZMod m) ℂ))
     (hΔ : #Δ + 1 ≤ d) (hm : 32 * (d : ℝ) ≤ m) :
     ∃ Q : GAP (ZMod m), Q.Proper ∧ Q.dim ≤ d ∧
-      (Q.toFinset : Set (ZMod m)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ∧
-      m ≤ bohrLoss d * #Q.toFinset := by
+      (Q : Set (ZMod m)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ((4 : ℝ) * (#Δ + 1))⁻¹} ∧
+      m ≤ bohrLoss d * #(Q : Finset (ZMod m)) := by
   have hΔR : (#Δ : ℝ) + 1 ≤ d := by exact_mod_cast hΔ
   have hε : 2 * Real.pi ≤ ((4 : ℝ) * (#Δ + 1))⁻¹ * m := by
     rw [inv_mul_eq_div, le_div_iff₀ (by positivity)]
@@ -199,8 +199,8 @@ lemma exists_proper_gap_zmod_subset_add_sub_add_card_le {q : ℕ} {κ : ℝ} (X 
     ∃ (X₁ : Finset (ZMod q)) (Q₁ : GAP (ZMod q)),
       X₁ ⊆ X ∧ X.card ≤ 8 * X₁.card ∧ Q₁.Proper ∧
         (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧
-        Q₁.toFinset ⊆ (X + X) - (X + X) ∧
-        X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * Q₁.toFinset.card := by
+        (Q₁ : Finset (ZMod q)) ⊆ (X + X) - (X + X) ∧
+        X.card ≤ 8 * bohrLoss (bohrGAPDim κ) * (Q₁ : Finset (ZMod q)).card := by
   have hX : X.Nonempty := nonempty_of_mul_bohrGAPDim_le hXlower
   obtain ⟨m, X₁, φ, hm, hX₁X, hX₁, hφ, hXm, hmY, hYY⟩ :=
     exists_subset_isAddFreimanIso_eight_card_le hq (by linarith) hX hXX

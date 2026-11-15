@@ -5,23 +5,22 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GeometryOfNumbers.SymmetricBody
+public import ChangFreimanRuzsa.ConvexProgression.Basic
 import ChangFreimanRuzsa.Properization.RelationQuotient
 
 /-!
-# Iterated quotients of a symmetric body
+# Iterated quotients of a convex progression
 
-Let `K ⊆ ℝ ^ d` be a full symmetric body and `φ : (Fin d → ℤ) →+ G` a homomorphism into an abelian
-group in which the multiples `n • a` with `n < N` of every nonzero `a` are distinct, and let
-`1 ≤ s`. Write `F d = (s * (d + 2) ^ 2) ^ d`. If `F d * vol K < N`, then repeating
-`exists_quotient_of_not_injOn` gives a full symmetric body `K' ⊆ ℝ ^ m` with `m ≤ d` and
-`vol K' ≤ F d * vol K`, and a homomorphism `ψ : (Fin m → ℤ) →+ G`, injective on the integer points
-of `s • K'`, with `φ '' latticePoints K ⊆ ψ '' latticePoints K'`. Each step lowers the dimension and
-multiplies the volume by at most `s * d ^ 2`.
+Let `P` be a convex progression of dimension `d` in an abelian group in which the multiples `n • a`
+with `n < N` of every nonzero `a` are distinct, let its body `K ⊆ ℝ ^ d` be a full symmetric body,
+and let `1 ≤ s`. Write `F d = (s * (d + 2) ^ 2) ^ d`. If `F d * vol K < N`, then repeating
+`exists_quotient_of_not_injOn` gives an `s`-proper convex progression `Q ⊇ P` of dimension `m ≤ d`
+whose body `K' ⊆ ℝ ^ m` is a full symmetric body with `vol K' ≤ F d * vol K`. Each step lowers the
+dimension and multiplies the volume by at most `s * d ^ 2`.
 
 ## Main statements
 
-* `exists_injOn_latticePoints_smul`: the iterated quotient.
+* `ConvexProgression.exists_tProper_superset`: the iterated quotient.
 -/
 
 public section
@@ -54,33 +53,36 @@ private lemma ncard_latticePoints_two_mul_smul_le {d : ℕ} {K : Set (Fin d → 
   gcongr
   nlinarith
 
-/-- **Iterated quotients.** Let `K ⊆ ℝ ^ d` be a full symmetric body, `1 ≤ s`, and
-`φ : (Fin d → ℤ) →+ G`. If the multiples `n • a` with `n < N` of every nonzero `a` are distinct and
-`(s * (d + 2) ^ 2) ^ d * vol K < N`, then there are a full symmetric body `K' ⊆ ℝ ^ m` with `m ≤ d`
-and `vol K' ≤ (s * (d + 2) ^ 2) ^ d * vol K`, and `ψ : (Fin m → ℤ) →+ G`, injective on the integer
-points of `s • K'`, with `φ '' latticePoints K ⊆ ψ '' latticePoints K'`. -/
-lemma exists_injOn_latticePoints_smul (hG : ∀ a : G, a ≠ 0 → InjOn (fun n : ℕ ↦ n • a) (Iio N))
-    (hs : 1 ≤ s) {d : ℕ} {K : Set (Fin d → ℝ)} (hK : IsFullSymmetricBody K)
-    (φ : (Fin d → ℤ) →+ G) (hN : (s * (d + 2) ^ 2) ^ d * volume.real K < N) :
-    ∃ (m : ℕ) (K' : Set (Fin m → ℝ)) (ψ : (Fin m → ℤ) →+ G), m ≤ d ∧ IsFullSymmetricBody K' ∧
-      InjOn ψ (latticePoints (s • K')) ∧ φ '' latticePoints K ⊆ ψ '' latticePoints K' ∧
-      volume.real K' ≤ (s * (d + 2) ^ 2) ^ d * volume.real K := by
+/-- **Iterated quotients.** Let `P` be a convex progression of dimension `d` whose body is a full
+symmetric body, and let `1 ≤ s`. If the multiples `n • a` with `n < N` of every nonzero `a` are
+distinct and `(s * (d + 2) ^ 2) ^ d * vol P.body < N`, then `P` lies in an `s`-proper convex
+progression `Q` of dimension at most `d` whose body is a full symmetric body of volume at most
+`(s * (d + 2) ^ 2) ^ d * vol P.body`. -/
+lemma ConvexProgression.exists_tProper_superset
+    (hG : ∀ a : G, a ≠ 0 → InjOn (fun n : ℕ ↦ n • a) (Iio N)) (hs : 1 ≤ s)
+    (P : ConvexProgression G) (hP : IsFullSymmetricBody P.body)
+    (hN : (s * (P.dim + 2) ^ 2) ^ P.dim * volume.real P.body < N) :
+    ∃ Q : ConvexProgression G, Q.dim ≤ P.dim ∧ IsFullSymmetricBody Q.body ∧ Q.TProper s ∧
+      P.toSet ⊆ Q.toSet ∧
+        volume.real Q.body ≤ (s * (P.dim + 2) ^ 2) ^ P.dim * volume.real P.body := by
   have hF (d : ℕ) : 1 ≤ (s * ((d : ℝ) + 2) ^ 2) ^ d := one_le_pow₀
     (one_le_mul_of_one_le_of_one_le hs (one_le_pow₀ (by linarith [Nat.cast_nonneg (α := ℝ) d])))
+  obtain ⟨d, x₀, φ, K⟩ := P
+  dsimp only at hP hN ⊢
   induction d with
   | zero =>
-    exact ⟨0, K, φ, le_rfl, hK, fun _ _ _ _ _ ↦ Subsingleton.elim _ _, subset_rfl, by simp⟩
+    exact ⟨⟨0, x₀, φ, K⟩, le_rfl, hP, fun _ _ _ _ _ ↦ Subsingleton.elim _ _, subset_rfl, by simp⟩
   | succ m ih =>
     by_cases hφ : InjOn φ (latticePoints (s • K))
-    · exact ⟨m + 1, K, φ, le_rfl, hK, hφ, subset_rfl,
+    · exact ⟨⟨m + 1, x₀, φ, K⟩, le_rfl, hP, hφ, subset_rfl,
         le_mul_of_one_le_left measureReal_nonneg (hF _)⟩
-    obtain ⟨K₁, φ₁, hK₁, hφK₁, hvol⟩ := exists_quotient_of_not_injOn hG hK (by linarith)
-      (by exact_mod_cast (ncard_latticePoints_two_mul_smul_le hK hs).trans_lt hN) hφ
+    obtain ⟨K₁, φ₁, hK₁, hφK₁, hvol⟩ := exists_quotient_of_not_injOn hG hP (by linarith)
+      (by exact_mod_cast (ncard_latticePoints_two_mul_smul_le hP hs).trans_lt hN) hφ
     have hstep : (s * ((m : ℝ) + 2) ^ 2) ^ m * volume.real K₁ ≤
         (s * (((m + 1 : ℕ) : ℝ) + 2) ^ 2) ^ (m + 1) * volume.real K := by
       grw [hvol, ← pow_mul_le_pow_succ (by linarith) m]
       exact (mul_assoc _ _ _).symm.le
-    obtain ⟨m', K', ψ, hm', hK', hψ, hφψ, hvol'⟩ := ih hK₁ φ₁ (hstep.trans_lt hN)
-    exact ⟨m', K', ψ, hm'.trans m.le_succ, hK', hψ, hφK₁.trans hφψ, hvol'.trans hstep⟩
+    obtain ⟨Q, hQ, hQK, hQs, hPQ, hvol'⟩ := ih φ₁ K₁ hK₁ (hstep.trans_lt hN)
+    exact ⟨Q, hQ.trans m.le_succ, hQK, hQs, (vadd_set_mono hφK₁).trans hPQ, hvol'.trans hstep⟩
 
 end ChangFreimanRuzsa

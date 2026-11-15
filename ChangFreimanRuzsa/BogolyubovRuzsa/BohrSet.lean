@@ -48,7 +48,7 @@ The modulus `q` need not be prime: the lattice has index `q ^ k` in `ℤ ^ (k + 
 
 namespace ChangFreimanRuzsa
 
-open scoped Pointwise Nat
+open scoped Finset Pointwise Nat
 
 noncomputable section
 
@@ -304,7 +304,7 @@ variable {q k : ℕ} {r : Fin k → ZMod q} {D : ℕ} {v : Fin (k + 1) → Fin (
 coefficient bounds are `coeffBound t`. -/
 def freqGAP (q : ℕ) (v : Fin (k + 1) → Fin (k + 1) → ℤ) (t : Fin (k + 1) → ℝ) :
     GAP (ZMod q) :=
-  symmetricGAP (fun i ↦ ((v i 0 : ℤ) : ZMod q)) (coeffBound t)
+  GAP.symmetric (fun i ↦ ((v i 0 : ℤ) : ZMod q)) (coeffBound t)
 
 lemma stepsHom_intCast_apply_zero (q : ℕ) (v : Fin (k + 1) → Fin (k + 1) → ℤ)
     (n : Fin (k + 1) → ℤ) :
@@ -344,15 +344,15 @@ lemma apply_eq_zero_of_stepsHom_eq_zero [NeZero q] (hDq : D ≤ q) (hv : LinearI
 lemma proper_freqGAP [NeZero q] (hDq : D ≤ q) (hv : LinearIndependent ℤ v)
     (hmem : ∀ i, v i ∈ freqLattice r) (ht : ∀ i, 0 < t i)
     (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) : (freqGAP q v t).Proper :=
-  proper_symmetricGAP (apply_eq_zero_of_stepsHom_eq_zero hDq hv hmem ht hshort)
+  GAP.proper_symmetric (apply_eq_zero_of_stepsHom_eq_zero hDq hv hmem ht hshort)
 
 /-- Every element `y` of `freqGAP q v t` satisfies `(a : ZMod q) = r j * y` for an integer `a`
 with `|a| ≤ D`. -/
 lemma exists_intCast_eq_mul_of_mem_freqGAP [NeZero q] (hmem : ∀ i, v i ∈ freqLattice r)
     (ht : ∀ i, 0 < t i) (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) {y : ZMod q}
-    (hy : y ∈ (freqGAP q v t).toFinset) (j : Fin k) :
+    (hy : y ∈ (freqGAP q v t : Finset (ZMod q))) (j : Fin k) :
     ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D := by
-  obtain ⟨n, hn, rfl⟩ := exists_coeff_of_mem_symmetricGAP hy
+  obtain ⟨n, hn, rfl⟩ := GAP.mem_symmetric.1 hy
   refine ⟨(∑ i, n i • v i) j.succ, ?_, ?_⟩
   · rw [mem_freqLattice.mp (AddSubgroup.sum_mem _ fun i _ ↦ AddSubgroup.zsmul_mem _ (hmem i) _) j]
     exact congr_arg _ (stepsHom_intCast_apply_zero q v n).symm
@@ -368,12 +368,12 @@ factor `(4 * (k + 1)) ^ (2 * (k + 1))`. -/
 lemma exists_proper_gap_forall_exists_intCast_eq_mul {q k : ℕ} [NeZero q] (r : Fin k → ZMod q)
     {D : ℕ} (hD : 0 < D) (hDq : D ≤ q) :
     ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ k + 1 ∧
-      (∀ y ∈ Q.toFinset, ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
-      q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * Q.toFinset.card := by
+      (∀ y ∈ (Q : Finset (ZMod q)), ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
+      q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * #(Q : Finset (ZMod q)) := by
   obtain ⟨v, t, hv, hmem, ht, hshort, hprod⟩ := exists_linearIndependent_isShort_freqLattice r hD
-  refine ⟨freqGAP q v t, proper_freqGAP hDq hv hmem ht hshort, dim_symmetricGAP_le,
+  refine ⟨freqGAP q v t, proper_freqGAP hDq hv hmem ht hshort, GAP.dim_symmetric.le,
     fun y hy j ↦ exists_intCast_eq_mul_of_mem_freqGAP hmem ht hshort hy j, ?_⟩
-  rw [freqGAP, card_symmetricGAP (apply_eq_zero_of_stepsHom_eq_zero hDq hv hmem ht hshort)]
+  rw [GAP.card_eq_size (proper_freqGAP hDq hv hmem ht hshort), freqGAP, GAP.size_symmetric]
   push_cast
   calc (q : ℝ) * (D + 1 : ℝ) ^ k
       ≤ q * (D + 1 : ℝ) ^ k * ∏ i, (2 * coeffBound t i + 1 : ℝ) * (4 * (k + 1 : ℕ) * t i) :=
@@ -395,9 +395,9 @@ Bohr set can be `{0}`. -/
 lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMod q) ℂ)) {ε : ℝ}
     (hεq : 2 * Real.pi ≤ ε * q) (hε : ε ≤ 1) :
     ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ Δ.card + 1 ∧
-      (Q.toFinset : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
+      (Q : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
       (q : ℝ) * (ε / (2 * Real.pi)) ^ Δ.card ≤
-        (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * Q.toFinset.card := by
+        (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * #(Q : Finset (ZMod q)) := by
   have hq : (0 : ℝ) < q := by exact_mod_cast q.pos_of_neZero
   have hε0 : 0 < ε := by nlinarith [Real.pi_pos]
   choose r hr using fun i : Fin Δ.card ↦
@@ -418,7 +418,8 @@ lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMo
       _ ≤ q * (⌊ε * q / (2 * Real.pi)⌋₊ + 1 : ℝ) ^ Δ.card := by
           gcongr
           exact (Nat.lt_floor_add_one _).le
-      _ ≤ (4 * (Δ.card + 1 : ℝ)) ^ (2 * (Δ.card + 1)) * q ^ Δ.card * Q.toFinset.card := hsize
+      _ ≤ (4 * (Δ.card + 1 : ℝ)) ^ (2 * (Δ.card + 1)) * q ^ Δ.card * #(Q : Finset (ZMod q)) :=
+          hsize
       _ = _ := by ring
 
 end

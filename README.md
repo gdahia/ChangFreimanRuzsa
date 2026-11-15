@@ -96,8 +96,8 @@ The same holds for $X \subseteq \mathbb{Z}/q\mathbb{Z}$ with $q$ prime.
 
 [Challenge.lean](ChangFreimanRuzsaPalomar/Challenge.lean) contains Theorems 3 to 8, under the
 library names with a prime and with `sorry` placeholders, together with the definitions of `GAP`
-and of its points, dimension, properness and multiples. A progression `P` is `t`-proper when
-`(t • P).Proper`. The statements are in terms of Mathlib, which has no Freiman dimension, so
+and of its points, dimension, properness and multiples, and the coercion of a progression to the
+finset of its points. A progression `P` is `t`-proper when `(t • P).Proper`. The statements are in terms of Mathlib, which has no Freiman dimension, so
 Theorems 1 and 2 are not part of `Challenge.lean`.
 [Solution.lean](ChangFreimanRuzsaPalomar/Solution.lean) proves each statement by the library
 theorem. The library and the solution contain no `sorry`, and the theorems depend on no axioms
@@ -117,17 +117,18 @@ The library also states the theorems with named exponents, which the explicit bo
 
 | Files in `ChangFreimanRuzsa/` | Contents |
 | --- | --- |
-| `GAP/Basic.lean` | Progressions, proper and `t`-proper progressions |
-| `GAP/Relations.lean`, `GAP/Symmetric.lean`, `GAP/Constructions.lean` | Relations among the steps and `t`-properness in terms of them, symmetric progressions, progressions containing subset sums and differences |
-| `GAP/FreimanHom.lean` | Images of progressions under Freiman isomorphisms |
+| `GAP/Basic.lean` | Progressions and their finsets of points, proper and `t`-proper progressions, concatenation and translation |
+| `GAP/Relations.lean`, `GAP/Symmetric.lean`, `GAP/Constructions.lean` | Relations among the steps and `t`-properness in terms of them, symmetric progressions, progressions of subset sums and of differences |
+| `GAP/FreimanHom.lean` | The image `GAP.freimanImage` of a progression under a Freiman homomorphism, and transport along Freiman isomorphisms |
 | `GeometryOfNumbers/IntegerLattice.lean`, `GeometryOfNumbers/LatticeCoordinates.lean` | Integer lattices in subspaces, saturated spans, coordinates in a basis of the lattice of integer points of a span |
 | `GeometryOfNumbers/LatticePointCount.lean`, `GeometryOfNumbers/SymmetricBody.lean` | Integer points and volume, the theorem of van der Corput, symmetric convex bodies whose integer points span |
 | `GeometryOfNumbers/ProjectionVolume.lean`, `GeometryOfNumbers/RealBox.lean` | The volume of a projection of a symmetric convex body, real boxes |
 | `GeometryOfNumbers/MinkowskiSecond.lean` | Minkowski's second theorem for a weighted sum of squares |
+| `ConvexProgression/Basic.lean` | Convex progressions, `s`-proper convex progressions, and the convex progression of the box of a progression |
 | `BogolyubovRuzsa/` | Ruzsa's model lemma, Chang's lemma and Bohr sets, a proper progression in a Bohr set, and the Bogolyubov–Ruzsa lemma in `ZMod q` |
 | `Covering/` | Chang's packing argument and the progression containing `X`, with the exponent `containerExponent` |
 | `FreimanDimension/` | The Freiman model of a set of integer points, and the central section of a symmetric body by the span of the model |
-| `Properization/` | Quotients of a symmetric body by short relations, a `t`-proper progression from a symmetric body, and the passage from a progression to a `t`-proper progression of dimension at most `freimanDim X` |
+| `Properization/` | Quotients of a convex progression by short relations, a `t`-proper progression from a convex progression, and the passage from a progression to a `t`-proper progression of dimension at most `freimanDim X` |
 | `ZMod.lean` | Chang's theorem in `ZMod q` with dimension at most `freimanDim X` and named exponents |
 | `Int.lean` | Chang's theorem for sets of integers with dimension at most `freimanDim X` and named exponents |
 | `ExponentBounds.lean` | Bounds for the exponents of `Covering/Container.lean`, `Properization/ProperProgression.lean`, `ZMod.lean` and `Int.lean` |
@@ -139,9 +140,9 @@ scope, and the use of AI coding agents.
 ## Verification
 
 `Challenge.lean` imports only the Mathlib modules `Mathlib.Analysis.SpecialFunctions.Log.Basic`,
-`Mathlib.Data.Finsupp.Interval` and `Mathlib.Data.Nat.Prime.Defs`. It repeats the library
-definitions of `GAP`, `GAP.eval`, `GAP.toFinset`, `GAP.dim`, `GAP.Proper` and the multiple of a
-progression, and states `exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le'`,
+`Mathlib.Data.Pi.Interval` and `Mathlib.Data.Nat.Prime.Defs`. It repeats the library
+definitions of `GAP`, `GAP.eval`, `GAP.toFinset`, `GAP.dim`, `GAP.Proper`, the coercion
+`CoeOut (GAP G) (Finset G)` given by `GAP.toFinset` and the multiple of a progression, and states `exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le'`,
 `exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le'`,
 `exists_tProperGAP_subset_dim_le_card_le'`,
 `exists_tProperGAP_zmod_subset_dim_le_card_le'`,

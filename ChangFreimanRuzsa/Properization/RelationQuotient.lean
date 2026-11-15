@@ -5,10 +5,10 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GAP.Basic
 public import ChangFreimanRuzsa.GeometryOfNumbers.SymmetricBody
 public import Mathlib.LinearAlgebra.TensorProduct.Pi
 import Aesop.Main
+import ChangFreimanRuzsa.GAP.Basic
 import ChangFreimanRuzsa.GeometryOfNumbers.ProjectionVolume
 import Mathlib.LinearAlgebra.FreeModule.PID
 

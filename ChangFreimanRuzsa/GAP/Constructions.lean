@@ -6,32 +6,34 @@ Authors: Gabriel Dahia
 module
 
 public import ChangFreimanRuzsa.GAP.Basic
-import Mathlib.Tactic.Abel
+import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Algebra.Order.BigOperators.Ring.Finset
 
 /-!
-# Progressions containing subset sums and differences
+# Progressions of subset sums and of differences
 
-This file defines the subset sums of a list and progressions containing them, as well as a
-progression containing the differences of a progression. Chang's covering argument uses them to
-put a set covered by translates in a progression.
+This file defines the subset sums of a list, progressions whose points are a progression plus the
+subset sums of a list, and a progression whose points are the differences of two points of a
+progression. Chang's covering argument uses them to put a set covered by translates in a
+progression.
 
 ## Main definitions
 
 * `listSubsetSum l`: the subset sums of a list `l`, that is, the sum of the sets `{0, a}` for the
   entries `a` of `l`.
-* `GAP.consBinary P a`: the progression `P + {0, a}`.
-* `GAP.consBinaryList P l`: the progression `P` with one step of length `2` added for each entry
-  of `l`.
-* `GAP.difference P`: a progression containing `P - P`, the sum of `P` and its reflection
-  `GAP.neg P`.
+* `GAP.cons a P`: the progression `P` with the step `a` of length `2` added in front.
+* `GAP.consList l P`: the progression `P` with one step of length `2` added for each entry of `l`.
+* `GAP.difference P`: the progression with the steps of `P`, the bound `2 • P.bound` and the origin
+  `-∑ i, P.bound i • P.step i`.
 
 ## Main statements
 
-* `GAP.add_listSubsetSum_subset_consBinaryList` and `GAP.size_consBinaryList_le`: the progression
-  `P.consBinaryList l` contains `P` plus the subset sums of `l`, and has at most `2 ^ l.length`
-  times as many coefficient vectors as `P`.
-* `GAP.sub_subset_difference` and `GAP.size_difference_le`: the progression `P.difference`
-  contains `P - P` and has at most `2 ^ P.dim` times as many coefficient vectors as `P`.
+* `GAP.toFinset_cons` and `GAP.toFinset_consList`: the points of `GAP.cons a P` are
+  `{0, a} + P`, and those of `GAP.consList l P` are `listSubsetSum l + P`.
+* `GAP.size_consList`: the progression `GAP.consList l P` has `2 ^ l.length` times as many
+  coefficient vectors as `P`.
+* `GAP.toFinset_difference` and `GAP.size_difference_le`: the points of `P.difference` are
+  `P - P`, and it has at most `2 ^ P.dim` times as many coefficient vectors as `P`.
 -/
 
 @[expose] public section
@@ -80,6 +82,11 @@ lemma mem_listSubsetSum_of_mem {l : List G} {x : G} (hx : x ∈ l) : x ∈ listS
     · simpa using add_mem_add (by simp : x ∈ ({0, x} : Finset G)) (zero_mem_listSubsetSum l)
     · simpa using add_mem_add (by simp : 0 ∈ ({0, a} : Finset G)) (ih hx)
 
+/-- The elements of a finset are subset sums of the list of its elements. -/
+lemma subset_listSubsetSum_toList (S : Finset G) : S ⊆ listSubsetSum S.toList := by
+  intro x hx
+  exact mem_listSubsetSum_of_mem (mem_toList.2 hx)
+
 omit [DecidableEq G] [AddCommMonoid G] in
 /-- Listing the elements of `k` sets of `m` elements each gives a list of length `m * k`. -/
 lemma length_flatMap_toList {l : List (Finset G)} {m : ℕ} (hl : ∀ S ∈ l, #S = m) :
@@ -95,117 +102,121 @@ lemma sum_subset_listSubsetSum_flatMap_toList (l : List (Finset G)) :
   | nil => simp
   | cons S l ih =>
     rw [List.sum_cons, List.flatMap_cons, listSubsetSum_append]
-    refine add_subset_add ?_ ih
-    intro x hx
-    exact mem_listSubsetSum_of_mem (mem_toList.2 hx)
+    exact add_subset_add (subset_listSubsetSum_toList S) ih
 
 end ListSubsetSum
 
-/-! ## Progressions containing sums and differences -/
-
 namespace GAP
+
+/-! ## Progressions of subset sums -/
+
+section Cons
+
+variable {G : Type*} [AddCommMonoid G]
+
+/-- The progression `P` with the step `a` of length `2` added in front. Its points are
+`{0, a} + P`. -/
+def cons (a : G) (P : GAP G) : GAP G :=
+  ⟨P.dim + 1, P.origin, Fin.cons a P.step, Fin.cons 1 P.bound⟩
+
+@[simp] lemma dim_cons (a : G) (P : GAP G) : (cons a P).dim = P.dim + 1 := rfl
+
+private lemma eval_cons (a : G) (P : GAP G) (n : ℕ) (w : Fin P.dim → ℕ) :
+    (cons a P).eval (Fin.cons n w) = n • a + P.eval w := by
+  unfold cons
+  simp only [eval, Fin.sum_univ_succ, Fin.cons_zero, Fin.cons_succ]
+  exact add_left_comm _ _ _
+
+/-- The points of `GAP.cons a P` are `{0, a} + P`. -/
+@[simp, norm_cast]
+lemma toFinset_cons [DecidableEq G] (a : G) (P : GAP G) :
+    (cons a P : Finset G) = {0, a} + P := by
+  ext x
+  simp only [mem_toFinset, mem_add, mem_insert, mem_singleton]
+  constructor
+  · rintro ⟨w, hw, rfl⟩
+    obtain ⟨n, u, rfl⟩ : ∃ (n : ℕ) (u : Fin P.dim → ℕ), Fin.cons n u = w :=
+      ⟨_, _, Fin.cons_self_tail w⟩
+    obtain ⟨hn, hu⟩ := Fin.cons_le_cons.1 hw
+    refine ⟨n • a, ?_, _, ⟨u, hu, rfl⟩, (eval_cons ..).symm⟩
+    obtain rfl | rfl := Nat.le_one_iff_eq_zero_or_eq_one.1 hn <;> simp
+  · rintro ⟨_, rfl | rfl, _, ⟨w, hw, rfl⟩, rfl⟩
+    · exact ⟨Fin.cons 0 w, Fin.cons_le_cons.2 ⟨zero_le_one, hw⟩, (eval_cons ..).trans (by simp)⟩
+    · exact ⟨Fin.cons 1 w, Fin.cons_le_cons.2 ⟨le_rfl, hw⟩, (eval_cons ..).trans (by simp)⟩
+
+lemma size_cons (a : G) (P : GAP G) : (cons a P).size = 2 * P.size := by
+  unfold cons
+  simp [size, Fin.prod_univ_succ]
+
+/-- The progression `P` with one step of length `2` added for each entry of the list `l`. Its
+points are `listSubsetSum l + P`. -/
+def consList (l : List G) (P : GAP G) : GAP G := l.foldr cons P
+
+@[simp] lemma consList_nil (P : GAP G) : consList [] P = P := rfl
+
+@[simp] lemma consList_cons (a : G) (l : List G) (P : GAP G) :
+    consList (a :: l) P = cons a (consList l P) := rfl
+
+lemma dim_consList (l : List G) (P : GAP G) : (consList l P).dim = P.dim + l.length := by
+  induction l with
+  | nil => rfl
+  | cons a l ih => rw [consList_cons, dim_cons, ih, List.length_cons, add_assoc]
+
+/-- The points of `GAP.consList l P` are `listSubsetSum l + P`. -/
+@[simp, norm_cast]
+lemma toFinset_consList [DecidableEq G] (l : List G) (P : GAP G) :
+    (consList l P : Finset G) = listSubsetSum l + P := by
+  induction l with
+  | nil => simp
+  | cons a l ih => rw [consList_cons, toFinset_cons, ih, listSubsetSum_cons, add_assoc]
+
+lemma size_consList (l : List G) (P : GAP G) : (consList l P).size = 2 ^ l.length * P.size := by
+  induction l with
+  | nil => simp
+  | cons a l ih => rw [consList_cons, size_cons, ih, List.length_cons, pow_succ', mul_assoc]
+
+end Cons
+
+/-! ## The progression of differences -/
 
 variable {G : Type*} [AddCommGroup G]
 
-/-- The progression `{0, a}`, with the step `a` of length `2`. -/
-def pair (a : G) : GAP G := ⟨0, Finsupp.single a 1⟩
+/-- The progression with the steps of `P`, the bound `2 • P.bound` and the origin
+`-∑ i, P.bound i • P.step i`. Its points are `P - P`. -/
+def difference (P : GAP G) : GAP G :=
+  ⟨P.dim, -∑ i, P.bound i • P.step i, P.step, 2 • P.bound⟩
 
-lemma pair_subset_toFinset_pair [DecidableEq G] (a : G) : {0, a} ⊆ (pair a).toFinset := by
-  rw [insert_subset_iff, singleton_subset_iff]
+lemma dim_difference (P : GAP G) : P.difference.dim = P.dim := rfl
+
+/-- The point of `P.difference` with coefficients `w` is the difference of the points of `P` with
+coefficients `u` and `v` when `w + v = u + P.bound`. -/
+private lemma eval_difference_eq_sub (P : GAP G) {u v w : Fin P.dim → ℕ}
+    (h : ∀ i, w i + v i = u i + P.bound i) : P.difference.eval w = P.eval u - P.eval v := by
+  unfold difference
+  simp only [eval]
+  rw [add_sub_add_left_eq_sub, neg_add_eq_sub, sub_eq_sub_iff_add_eq_add]
+  simp only [← sum_add_distrib, ← add_nsmul, h]
+
+/-- The points of `P.difference` are the differences of two points of `P`. -/
+@[simp, norm_cast]
+lemma toFinset_difference [DecidableEq G] (P : GAP G) : (P.difference : Finset G) = P - P := by
+  ext x
+  simp only [mem_toFinset, mem_sub]
   constructor
-  · simpa [pair] using (pair a).origin_mem
-  · simpa [pair, eval] using (pair a).eval_mem_toFinset le_rfl
+  · rintro ⟨w, hw : ∀ i, w i ≤ 2 * P.bound i, rfl⟩
+    refine ⟨_, ⟨fun i ↦ min (w i) (P.bound i), fun i ↦ min_le_right _ _, rfl⟩, _,
+      ⟨fun i ↦ P.bound i + min (w i) (P.bound i) - w i, fun i ↦ by grind, rfl⟩,
+      (eval_difference_eq_sub P fun i ↦ by grind [hw i]).symm⟩
+  · rintro ⟨_, ⟨u, hu, rfl⟩, _, ⟨v, hv, rfl⟩, rfl⟩
+    exact ⟨u + (P.bound - v),
+      fun i ↦ (by grind [Pi.add_apply, Pi.sub_apply, hu i, hv i] : _ ≤ 2 * P.bound i),
+      eval_difference_eq_sub P fun i ↦ by grind [Pi.add_apply, Pi.sub_apply, hv i]⟩
 
-lemma size_pair (a : G) : (pair a).size = 2 := by
-  simp [pair, size]
-
-lemma dim_pair_le (a : G) : (pair a).dim ≤ 1 := by
-  classical
-  exact (card_le_card Finsupp.support_single_subset).trans_eq (card_singleton a)
-
-/-- The progression `P + {0, a}`: the step `a` of length `2` is added to `P`. -/
-def consBinary (P : GAP G) (a : G) : GAP G := P + pair a
-
-lemma add_pair_subset_consBinary [DecidableEq G] (P : GAP G) (a : G) :
-    P.toFinset + {0, a} ⊆ (P.consBinary a).toFinset := by
-  rw [consBinary, toFinset_add]
-  exact add_subset_add_left (pair_subset_toFinset_pair a)
-
-lemma dim_consBinary_le (P : GAP G) (a : G) : (P.consBinary a).dim ≤ P.dim + 1 :=
-  (P.dim_add_le _).trans (Nat.add_le_add_left (dim_pair_le a) _)
-
-lemma size_consBinary_le (P : GAP G) (a : G) : (P.consBinary a).size ≤ 2 * P.size := by
-  rw [mul_comm, ← size_pair a]
-  exact P.size_add_le _
-
-/-- The progression `P` with one step of length `2` added for each entry of the list `l`. -/
-def consBinaryList (P : GAP G) : List G → GAP G
-  | [] => P
-  | a :: l => (P.consBinaryList l).consBinary a
-
-lemma add_listSubsetSum_subset_consBinaryList [DecidableEq G] (P : GAP G) (l : List G) :
-    P.toFinset + listSubsetSum l ⊆ (P.consBinaryList l).toFinset := by
-  induction l with
-  | nil => simp [consBinaryList]
-  | cons a l ih =>
-    rw [listSubsetSum_cons, add_left_comm, add_comm {0, a}]
-    exact (add_subset_add_right ih).trans ((P.consBinaryList l).add_pair_subset_consBinary a)
-
-lemma add_subset_consBinaryList_toList [DecidableEq G] {P : GAP G} {S : Finset G}
-    (hS : S ⊆ P.toFinset) (W : Finset G) : S + W ⊆ (P.consBinaryList W.toList).toFinset :=
-  (add_subset_add hS fun _ hw ↦ mem_listSubsetSum_of_mem (mem_toList.2 hw)).trans
-    (P.add_listSubsetSum_subset_consBinaryList W.toList)
-
-lemma dim_consBinaryList_le (P : GAP G) (l : List G) :
-    (P.consBinaryList l).dim ≤ P.dim + l.length := by
-  induction l with
-  | nil => rfl
-  | cons a l ih =>
-    rw [consBinaryList, List.length_cons, ← add_assoc]
-    exact ((P.consBinaryList l).dim_consBinary_le a).trans (Nat.add_le_add_right ih 1)
-
-lemma size_consBinaryList_le (P : GAP G) (l : List G) :
-    (P.consBinaryList l).size ≤ 2 ^ l.length * P.size := by
-  induction l with
-  | nil => simp [consBinaryList]
-  | cons a l ih =>
-    rw [consBinaryList, List.length_cons, pow_succ, mul_comm _ 2, mul_assoc]
-    exact ((P.consBinaryList l).size_consBinary_le a).trans (Nat.mul_le_mul_left 2 ih)
-
-/-- The reflection `-P` of a progression `P`, with origin `-P.eval P.bound` and the bound of
-`P`. -/
-def neg (P : GAP G) : GAP G := ⟨-P.eval P.bound, P.bound⟩
-
-lemma neg_toFinset_subset_toFinset_neg [DecidableEq G] (P : GAP G) :
-    -P.toFinset ⊆ P.neg.toFinset := by
-  intro z hz
-  obtain ⟨x, hx, rfl⟩ := mem_neg.1 hz
-  obtain ⟨c, hc, rfl⟩ := mem_toFinset.1 hx
-  obtain ⟨e, he⟩ := exists_add_of_le hc
-  refine mem_toFinset.2 ⟨e, le_add_self.trans_eq he.symm, ?_⟩
-  simp only [neg, eval_eq_linearCombination, he, map_add]
-  abel
-
-/-- A progression containing `P - P`: the sum of `P` and its reflection. It has the steps of `P`
-and the bound `2 • P.bound`. -/
-def difference (P : GAP G) : GAP G := P + P.neg
-
-lemma sub_subset_difference [DecidableEq G] (P : GAP G) :
-    P.toFinset - P.toFinset ⊆ P.difference.toFinset := by
-  rw [difference, toFinset_add, sub_eq_add_neg]
-  exact add_subset_add_left P.neg_toFinset_subset_toFinset_neg
-
-lemma sub_subset_difference_of_subset [DecidableEq G] {P : GAP G} {S : Finset G}
-    (hS : S ⊆ P.toFinset) : S - S ⊆ P.difference.toFinset :=
-  (sub_subset_sub hS hS).trans P.sub_subset_difference
-
-lemma dim_difference_le (P : GAP G) : P.difference.dim ≤ P.dim := by
-  classical
-  rw [difference, dim, bound_add, Finsupp.support_add_eq_union, neg, union_self]
-  rfl
-
-lemma size_difference_le (P : GAP G) : P.difference.size ≤ 2 ^ P.dim * P.size :=
-  size_add_le_of_bound_eq rfl
+lemma size_difference_le (P : GAP G) : P.difference.size ≤ 2 ^ P.dim * P.size := by
+  dsimp only [difference, size]
+  rw [← Fin.prod_const, ← prod_mul_distrib]
+  gcongr
+  simp [mul_add]
 
 end GAP
 

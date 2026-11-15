@@ -62,8 +62,9 @@ theorem exists_tProperGAP_zmod_dim_le_freimanDim {q t : ℕ} {κ : ℝ} (X : Fin
     (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X)
     (hXupper : Real.exp (freimanDimExponent κ + tProperExponent t (freimanDim X)) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
-      #Q.toFinset ≤ Real.exp (freimanDimExponent κ + tProperExponent t (freimanDim X)) * #X := by
+    ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q ∧ Q.dim ≤ freimanDim X ∧
+      #(Q : Finset (ZMod q)) ≤
+        Real.exp (freimanDimExponent κ + tProperExponent t (freimanDim X)) * #X := by
   obtain ⟨P, hXP, hPdim, hPsize⟩ := exists_gap_zmod_subset_dim_le_size_le X hq hκ hXX hXlower
   have hP : Real.exp (containerExponent κ * Real.log (8 * (containerExponent κ + 2) ^ 3) +
       tProperExponent t (freimanDim X) + 1) * P.size ≤

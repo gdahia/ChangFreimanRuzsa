@@ -13,20 +13,20 @@ import Mathlib.Tactic.Abel
 # Symmetric progressions
 
 Let `x : Fin d → G` be steps in an abelian group and let `L : Fin d → ℕ`. The symmetric
-progression `symmetricGAP x L` consists of the combinations `∑ i, n i • x i` with `|n i| ≤ L i`.
-It has at most `∏ i, (2 * L i + 1)` elements, with equality when it is proper, and it is proper as
-soon as the steps admit no nonzero relation with `|n i| ≤ 2 * L i`.
+progression `GAP.symmetric x L` consists of the combinations `∑ i, n i • x i` with `|n i| ≤ L i`.
+Its size is `∏ i, (2 * L i + 1)`, and it is proper as soon as the steps admit no nonzero relation
+with `|n i| ≤ 2 * L i`.
 
 ## Main definitions
 
-* `symmetricGAP x L`: the symmetric progression with steps `x` and half-widths `L`.
+* `GAP.symmetric x L`: the symmetric progression with steps `x` and half-widths `L`.
 
 ## Main statements
 
-* `exists_coeff_of_mem_symmetricGAP` and `stepsHom_mem_symmetricGAP`: the elements of the
-  progression are the combinations of its steps with coefficients `|n i| ≤ L i`.
-* `proper_symmetricGAP`: a condition for properness.
-* `card_symmetricGAP` and `card_symmetricGAP_le`: the number of elements.
+* `GAP.mem_symmetric`: the elements of the progression are the combinations of its steps with
+  coefficients `|n i| ≤ L i`.
+* `GAP.proper_symmetric`: a condition for properness.
+* `GAP.nsmul_symmetric`: the multiple `t • GAP.symmetric x L` is `GAP.symmetric x (t • L)`.
 -/
 
 @[expose] public section
@@ -35,96 +35,66 @@ namespace ChangFreimanRuzsa
 
 noncomputable section
 
+namespace GAP
+
 /-- The progression with steps `x` whose `i`-th coefficient `n i` ranges over `|n i| ≤ L i`. -/
-def symmetricGAP {G : Type*} [AddCommGroup G] {d : ℕ} (x : Fin d → G)
-    (L : Fin d → ℕ) : GAP G :=
-  GAP.ofSteps (stepsHom x fun i ↦ -(L i : ℤ)) x fun i ↦ 2 * L i + 1
+def symmetric {G : Type*} [AddCommGroup G] {d : ℕ} (x : Fin d → G) (L : Fin d → ℕ) : GAP G :=
+  ⟨d, stepsHom x fun i ↦ -(L i : ℤ), x, fun i ↦ 2 * L i⟩
 
 variable {G : Type*} [AddCommGroup G] {d : ℕ} {x : Fin d → G} {L : Fin d → ℕ}
 
-lemma toFinset_symmetricGAP [DecidableEq G] :
-    (symmetricGAP x L).toFinset =
-      Finset.univ.image (gapMap (stepsHom x fun i ↦ -(L i : ℤ)) x fun i ↦ 2 * L i + 1) :=
-  GAP.toFinset_ofSteps fun _ ↦ Nat.succ_pos _
+@[simp] lemma dim_symmetric : (symmetric x L).dim = d := rfl
 
-lemma dim_symmetricGAP_le : (symmetricGAP x L).dim ≤ d :=
-  GAP.dim_ofSteps_le
+lemma size_symmetric : (symmetric x L).size = ∏ i, (2 * L i + 1) := rfl
 
-/-- The point of the symmetric progression with coordinates `w` is the combination of its steps
+/-- The point of the symmetric progression with coefficients `w` is the combination of its steps
 with coefficients `w i - L i`. -/
-lemma gapMap_symmetricGAP (w : (i : Fin d) → Fin (2 * L i + 1)) :
-    gapMap (stepsHom x fun i ↦ -(L i : ℤ)) x (fun i ↦ 2 * L i + 1) w =
-      stepsHom x fun i ↦ (w i : ℤ) - L i := by
-  rw [gapMap, stepsHom_apply, stepsHom_apply, ← Finset.sum_add_distrib]
+private lemma eval_symmetric (w : Fin (symmetric x L).dim → ℕ) :
+    (symmetric x L).eval w = stepsHom x fun i ↦ (w i : ℤ) - L i := by
+  dsimp only [symmetric, eval]
+  rw [stepsHom_apply, stepsHom_apply, ← Finset.sum_add_distrib]
   congr with i
   rw [sub_zsmul, natCast_zsmul, neg_zsmul]
   abel
 
-/-- Every element of the symmetric progression is a combination of its steps with coefficients
+/-- The elements of the symmetric progression are the combinations of its steps with coefficients
 `n i` satisfying `|n i| ≤ L i`. -/
-lemma exists_coeff_of_mem_symmetricGAP [DecidableEq G] {y : G}
-    (hy : y ∈ (symmetricGAP x L).toFinset) :
-    ∃ n : Fin d → ℤ, (∀ i, |n i| ≤ L i) ∧ y = stepsHom x n := by
-  rw [toFinset_symmetricGAP] at hy
-  obtain ⟨w, -, rfl⟩ := Finset.mem_image.mp hy
-  refine ⟨fun i ↦ (w i : ℤ) - L i, ?_, gapMap_symmetricGAP w⟩
-  intro i
-  rw [abs_le]
-  grind [(by simp : (w i : ℕ) < 2 * L i + 1)]
-
-/-- The points of the symmetric progression with distinct coordinates are distinct as soon as its
-steps admit no nonzero relation with coefficients in the doubled range. -/
-lemma injective_gapMap_symmetricGAP
-    (h : ∀ n : Fin d → ℤ, (∀ i, |n i| ≤ 2 * L i) → stepsHom x n = 0 → ∀ i, n i = 0) :
-    Function.Injective (gapMap (stepsHom x fun i ↦ -(L i : ℤ)) x fun i ↦ 2 * L i + 1) := by
-  intro w w' hww'
-  have hrel : stepsHom x
-      ((fun i : Fin d ↦ (w i : ℤ) - L i) - fun i : Fin d ↦ (w' i : ℤ) - L i) = 0 := by
-    rw [map_sub, sub_eq_zero]
-    exact (gapMap_symmetricGAP w).symm.trans (hww'.trans (gapMap_symmetricGAP w'))
-  have hbound (i : Fin d) :
-      |((fun i : Fin d ↦ (w i : ℤ) - L i) - fun i : Fin d ↦ (w' i : ℤ) - L i) i| ≤ 2 * L i := by
-    rw [Pi.sub_apply, abs_le]
-    grind [(by simp : (w i : ℕ) < 2 * L i + 1),
-      (by simp : (w' i : ℕ) < 2 * L i + 1)]
-  funext i
-  exact Fin.ext (by grind [h _ hbound hrel i, Pi.sub_apply])
+lemma mem_symmetric [DecidableEq G] {y : G} :
+    y ∈ (symmetric x L : Finset G) ↔ ∃ n : Fin d → ℤ, (∀ i, |n i| ≤ L i) ∧ stepsHom x n = y := by
+  rw [mem_toFinset]
+  constructor
+  · rintro ⟨w, hw : ∀ i, w i ≤ 2 * L i, rfl⟩
+    exact ⟨fun i ↦ (w i : ℤ) - L i, fun i ↦ by grind [abs_le, hw i], (eval_symmetric w).symm⟩
+  · rintro ⟨n, hn, rfl⟩
+    refine ⟨fun i ↦ (n i + L i).toNat, fun i ↦ (by grind [abs_le, hn i] : _ ≤ 2 * L i), ?_⟩
+    rw [eval_symmetric]
+    congr with i
+    grind [abs_le, hn i]
 
 /-- The symmetric progression is proper as soon as its steps admit no nonzero relation with
 coefficients in the doubled range. -/
-lemma proper_symmetricGAP
+lemma proper_symmetric
     (h : ∀ n : Fin d → ℤ, (∀ i, |n i| ≤ 2 * L i) → stepsHom x n = 0 → ∀ i, n i = 0) :
-    (symmetricGAP x L).Proper :=
-  GAP.proper_ofSteps (fun _ ↦ Nat.succ_pos _) (injective_gapMap_symmetricGAP h)
+    (symmetric x L).Proper := by
+  rintro w (hw : ∀ i, w i ≤ 2 * L i) w' (hw' : ∀ i, w' i ≤ 2 * L i) hww'
+  have hrel : stepsHom x
+      ((fun i : Fin d ↦ (w i : ℤ) - L i) - fun i : Fin d ↦ (w' i : ℤ) - L i) = 0 := by
+    rw [map_sub, sub_eq_zero, ← eval_symmetric, ← eval_symmetric]
+    exact hww'
+  funext i
+  grind [h _ (fun j ↦ by grind [abs_le, Pi.sub_apply, hw j, hw' j]) hrel i, Pi.sub_apply]
 
-lemma card_symmetricGAP [DecidableEq G]
-    (h : ∀ n : Fin d → ℤ, (∀ i, |n i| ≤ 2 * L i) → stepsHom x n = 0 → ∀ i, n i = 0) :
-    (symmetricGAP x L).toFinset.card = ∏ i, (2 * L i + 1) := by
-  rw [toFinset_symmetricGAP, Finset.card_image_of_injective _ (injective_gapMap_symmetricGAP h)]
-  simp
-
-/-- The symmetric progression contains every combination of its steps with coefficients `n i`
-satisfying `|n i| ≤ L i`. -/
-lemma stepsHom_mem_symmetricGAP [DecidableEq G] {n : Fin d → ℤ} (hn : ∀ i, |n i| ≤ L i) :
-    stepsHom x n ∈ (symmetricGAP x L).toFinset := by
-  rw [toFinset_symmetricGAP, Finset.mem_image]
-  refine ⟨fun i ↦ ⟨(n i + L i).toNat, by grind [abs_le, hn i]⟩, Finset.mem_univ _, ?_⟩
-  rw [gapMap_symmetricGAP]
-  congr with i
-  grind [abs_le, hn i]
-
-/-- The multiple `t • symmetricGAP x L` is the symmetric progression with the same steps and the
-half-lengths `t * L i`. -/
-lemma nsmul_symmetricGAP (t : ℕ) : t • symmetricGAP x L = symmetricGAP x (t • L) := by
-  refine GAP.ext ?_ ?_
-  · rw [GAP.origin_nsmul, symmetricGAP, GAP.ofSteps, symmetricGAP, GAP.ofSteps, ← map_nsmul]
+/-- The multiple `t • GAP.symmetric x L` is the symmetric progression with the same steps and the
+half-widths `t * L i`. -/
+lemma nsmul_symmetric (t : ℕ) : t • symmetric x L = symmetric x (t • L) := by
+  refine congrArg₂ (fun o b ↦ (⟨d, o, x, b⟩ : GAP G)) ?_ ?_ <;> dsimp only [symmetric]
+  · rw [← map_nsmul]
     congr with i
     simp
-  · simp [symmetricGAP, GAP.ofSteps, Finset.smul_sum, Finsupp.smul_single, mul_left_comm]
+  · funext i
+    exact mul_left_comm _ _ _
 
-lemma card_symmetricGAP_le [DecidableEq G] :
-    (symmetricGAP x L).toFinset.card ≤ ∏ i, (2 * L i + 1) :=
-  GAP.card_toFinset_ofSteps_le fun _ ↦ Nat.succ_pos _
+end GAP
 
 end
 
