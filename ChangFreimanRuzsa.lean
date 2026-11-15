@@ -19,8 +19,8 @@ public import ChangFreimanRuzsa.FreimanDimension.Model
 public import ChangFreimanRuzsa.GAP.Basic
 public import ChangFreimanRuzsa.GAP.Constructions
 public import ChangFreimanRuzsa.GAP.FreimanHom
-public import ChangFreimanRuzsa.GAP.Relations
 public import ChangFreimanRuzsa.GAP.Symmetric
+public import ChangFreimanRuzsa.GeometryOfNumbers.ConvexBody
 public import ChangFreimanRuzsa.GeometryOfNumbers.IntegerLattice
 public import ChangFreimanRuzsa.GeometryOfNumbers.LatticeCoordinates
 public import ChangFreimanRuzsa.GeometryOfNumbers.LatticePointCount

@@ -188,10 +188,12 @@ automation:
         Green's argument, to obtain Chang's bound, and the second to bump Tau Ceti to use its
         latest developments for that argument. Later, one instruction to remove the unused
         declarations and to correct this file, and one to state the Bogolyubov-Ruzsa lemma in
-        Challenge.lean with the bounds of Chang. Finally, a pair of instructions asked the
-        agent first to compare four designs of progressions in separate worktrees, then to
-        complete the design that the maintainer chose, with a coercion of progressions to
-        finsets and constructions stated through their finsets of points.
+        Challenge.lean with the bounds of Chang. Later, a pair of instructions asked the agent
+        first to compare four designs of progressions in separate worktrees, then to complete
+        the design that the maintainer chose, with a coercion of progressions to finsets and
+        constructions stated through their finsets of points. Finally, one instruction asked
+        the agent to make the progressions and convex progressions match those of the latest
+        development of AddCombi by the maintainer.
   spend_usd: "not tracked"
   notes: >-
     An AI agent directed by Gabriel Dahia ported the copied modules, rewrote the Bohr step
@@ -245,15 +247,22 @@ automation:
     with t-properness in the sense of Green and Tao. It then restated the Bogolyubov-Ruzsa lemma
     with the bounds of Chang, of order kappa log kappa for the dimension and
     exp(C kappa log^2 kappa) for the loss, in place of kappa^2 and exp(C kappa^2), and with X
-    nonempty in place of a lower bound on |X|. In the last task, the agent compared four designs
+    nonempty in place of a lower bound on |X|. In the next task, the agent compared four designs
     of progressions in separate worktrees: the previous structure with a finitely supported
     bound, a structure indexed by Fin, the predicates of AddCombi and a bundled convex
     progression. The maintainer adopted the structure indexed by Fin with a coercion to finsets,
     together with the convex progressions in the properization stage. The agent then stated the
     concatenation and the translates of progressions, the progressions of subset sums and of
     differences, the symmetric progressions and the image under a Freiman homomorphism by
-    equalities of finsets of points, and used the coercion in the main statements. Every proof
-    is checked by Lean.
+    equalities of finsets of points, and used the coercion in the main statements. In the last
+    task, the agent adopted the definitions of AddCombi: the lattice points of a convex body, the
+    box of a vector of bounds, the convex progression with a homomorphism from Fin d -> Z and a
+    convex body, its t-properness as the injectivity of the homomorphism on the lattice points
+    of the t-dilate of the body, and the progression as a convex progression whose body is a
+    box. It moved GAP and ConvexProgression to the root namespace, merged the relations among
+    the steps into the basic file of progressions, replaced the coercion by P.toFinset, and
+    restated the main statements with P.Proper 1 and P.Proper t, copying the definitions into
+    Challenge.lean. Every proof is checked by Lean.
 
 fidelity:
   divergences: >-
@@ -307,15 +316,20 @@ fidelity:
     the Bohr set comes from Minkowski's second theorem in place of Theorem 8.7 of Nathanson. For
     |X| < 256 bohrGAPDim kappa the progression is {0}.
 
-    A progression is a structure GAP with a dimension d, an origin x_0, steps s_i and bounds
-    b_i for i : Fin d; its points are x_0 + sum_i w_i s_i with 0 <= w_i <= b_i. These are the
-    points x_0 + sum_i w_i s_i with 0 <= w_i < l_i of (1.1) of Chang, with lengths
-    l_i = b_i + 1, which may equal 1. A progression is proper if these points are distinct.
-    Chang calls a progression proper if |P| is the product of the lengths, which is GAP.Proper
-    by GAP.proper_iff_card_eq_size. The statements write P for the finset of its points through
-    a coercion. The multiple t P multiplies the origin and the bounds by
-    t, so its points are the sums of t points of P, and P is t-proper if t P is proper: the
-    points t x_0 + sum_i w_i s_i with 0 <= w_i <= t (l_i - 1) are distinct. For t = 2 this says
+    A convex progression is a structure ConvexProgression with a dimension d, an origin x_0, a
+    homomorphism phi from Fin d -> Z to the group and a convex body K in Fin d -> R; its points
+    are x_0 + phi v for the lattice points v of K, and P.toFinset is the finset of these points.
+    It is t-proper, P.Proper t, if phi is injective on the lattice points of t K. A progression
+    is a structure GAP extending ConvexProgression with steps s_i and bounds b_i for i : Fin d,
+    where phi v = sum_i v_i s_i and K is the box 0 <= x <= b. Its points are
+    x_0 + sum_i w_i s_i with 0 <= w_i <= b_i. These are the points x_0 + sum_i w_i s_i with
+    0 <= w_i < l_i of (1.1) of Chang, with lengths l_i = b_i + 1, which may equal 1. Proper
+    progressions are those with P.Proper 1, whose points are distinct. Chang calls a progression
+    proper if |P| is the product of the lengths, which is P.Proper 1 by
+    GAP.proper_one_iff_card_eq_size. The multiple t P multiplies the origin and the bounds by t,
+    so its points are the sums of t points of P, and P.Proper t holds if and only if t P is
+    proper, by GAP.proper_nsmul_iff: the points t x_0 + sum_i w_i s_i with
+    0 <= w_i <= t (l_i - 1) are distinct. For t = 2 this says
     that P + P is proper, which is the condition F_2 of Bilu and the 2-proper progression of Tao
     and Vu. The t-proper progression of Green and Tao, Definition 1.1, asks the same for
     0 <= w_i <= t l_i - 1, which is stronger: {0, 1} in ZMod 3 is 2-proper here but not in their
@@ -466,7 +480,7 @@ alignment:
       status: "proved"
       note: "Through Minkowski's second theorem from Tau Ceti; ZMod q need not have q prime."
     - source: "Chang, Lemma 1.2"
-      lean: "ChangFreimanRuzsa.GAP.proper_freimanImage"
+      lean: "GAP.proper_freimanImage"
       module: "ChangFreimanRuzsa.GAP.FreimanHom"
       status: "proved"
       note: >-
@@ -493,7 +507,7 @@ alignment:
         exp (tProperExponent t (freimanDim X)) (8 (d + 2)^3)^d, where d is the dimension of the
         progression from Section 2.
     - source: "Green, Progressions and convex geometry, Lemma 1.5"
-      lean: "ChangFreimanRuzsa.ConvexProgression.exists_tProperGAP_superset"
+      lean: "ConvexProgression.exists_tProperGAP_superset"
       module: "ChangFreimanRuzsa.Properization.BodyProgression"
       status: "proved"
       note: >-
@@ -506,10 +520,10 @@ alignment:
       status: "proved"
       note: "With the factor (m + 1)^2 in place of m + 1 in the volume bound."
     - source: "Chang, Section 1, definition of a proper progression"
-      lean: "ChangFreimanRuzsa.GAP.proper_iff_card_eq_size"
+      lean: "GAP.proper_one_iff_card_eq_size"
       module: "ChangFreimanRuzsa.GAP.Basic"
       status: "proved"
-      note: "Chang's |P| = l(P) is equivalent to GAP.Proper, the distinctness of the points."
+      note: "Chang's |P| = l(P) is equivalent to P.Proper 1, the distinctness of the points."
 
 acknowledgements: >-
   Lean 4 and Mathlib; the APAP project of Yaël Dillies and Bhavik Mehta; the Tau Ceti

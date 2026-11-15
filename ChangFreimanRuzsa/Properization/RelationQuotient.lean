@@ -125,10 +125,10 @@ private lemma realBasisQuotient_surjective : Function.Surjective (realBasisQuoti
 /-- If `φ (b i) = 0`, then `φ` factors through `basisQuotient b i`. -/
 private lemma stepsHom_basisQuotient {G : Type*} [AddCommGroup G] {φ : (Fin (m + 1) → ℤ) →+ G}
     (hφ : φ (b i) = 0) (v : Fin (m + 1) → ℤ) :
-    stepsHom (fun j ↦ φ (b (i.succAbove j))) (basisQuotient b i v) = φ v := by
+    GAP.stepsHom (fun j ↦ φ (b (i.succAbove j))) (basisQuotient b i v) = φ v := by
   conv_rhs => rw [← b.sum_repr v]
   simp_rw [map_sum, map_zsmul]
-  rw [Fin.sum_univ_succAbove _ i, hφ, smul_zero, zero_add, stepsHom_apply]
+  rw [Fin.sum_univ_succAbove _ i, hφ, smul_zero, zero_add, GAP.stepsHom_apply]
   rfl
 
 /-- The coordinates other than the `i`-th map a symmetric convex compact set `K` containing
@@ -274,7 +274,7 @@ lemma exists_quotient_of_not_injOn (hG : ∀ a : G, a ≠ 0 → InjOn (fun n : �
     eq_zero_of_zsmul_eq_zero hG hk ((natAbs_lt_ncard_latticePoints (hK.convex.smul _)
       (hK.isCompact.smul _).isBounded (neg_mem_smul_set hK.neg_mem _) (b.ne_zero i) hxK).trans hN)
       (by rwa [← map_zsmul])
-  refine ⟨realBasisQuotient b i '' K, stepsHom fun j ↦ φ (b (i.succAbove j)),
+  refine ⟨realBasisQuotient b i '' K, GAP.stepsHom fun j ↦ φ (b (i.succAbove j)),
     hK.image_realBasisQuotient b i, ?_, ?_⟩
   · rintro _ ⟨v, hv, rfl⟩
     exact ⟨_, basisQuotient_mem_latticePoints b i hv, stepsHom_basisQuotient b i hbi v⟩

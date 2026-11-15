@@ -5,6 +5,7 @@ Authors: Gabriel Dahia
 -/
 module
 
+public import ChangFreimanRuzsa.ConvexProgression.Basic
 public import ChangFreimanRuzsa.GeometryOfNumbers.LatticePointCount
 import Aesop.Main
 
@@ -199,6 +200,39 @@ lemma volume_real_le_ncard_latticePoints_two_smul {K : Set (Fin n → ℝ)} (hK 
   rw [sub_self_eq_two_smul hK hsymm,
     ← (finite_latticePoints (hKc.smul (2 : ℝ)).isBounded).cast_ncard_eq] at h
   exact (ENNReal.toReal_mono (by simp) h).trans_eq (by simp)
+
+/-! ## Convex bodies and convex progressions -/
+
+/-- A full symmetric body, as a convex body. -/
+def IsFullSymmetricBody.toConvexBody {K : Set (Fin n → ℝ)} (hK : IsFullSymmetricBody K) :
+    ConvexBody (Fin n → ℝ) :=
+  ⟨K, hK.convex, hK.isCompact, hK.nonempty⟩
+
+@[simp]
+lemma IsFullSymmetricBody.coe_toConvexBody {K : Set (Fin n → ℝ)} (hK : IsFullSymmetricBody K) :
+    (hK.toConvexBody : Set (Fin n → ℝ)) = K :=
+  rfl
+
+/-- The finset of lattice points of a convex body is its set of integer points. -/
+private lemma _root_.ConvexBody.coe_latticePoints (𝒦 : ConvexBody (Fin n → ℝ)) :
+    (𝒦.latticePoints : Set (Fin n → ℤ)) = latticePoints 𝒦 := by
+  ext v
+  rw [Finset.mem_coe, ConvexBody.mem_latticePoints]
+  rfl
+
+variable {G : Type*} [AddCommGroup G] {P : ConvexProgression G}
+
+/-- The points of a convex progression are the `origin + hom v` with `v` an integer point of the
+body. -/
+lemma _root_.ConvexProgression.mem_iff_exists_latticePoints {x : G} :
+    x ∈ P ↔ ∃ v ∈ latticePoints (P.body : Set (Fin P.dim → ℝ)), P.origin + P.hom v = x := by
+  simp only [ConvexProgression.mem_def, ← Finset.mem_coe, ConvexBody.coe_latticePoints]
+
+/-- A convex progression is `s`-proper if and only if its homomorphism is injective on the integer
+points of `s • body`. -/
+lemma _root_.ConvexProgression.proper_iff_injOn {s : ℝ} :
+    P.Proper s ↔ Set.InjOn P.hom (latticePoints (s • (P.body : Set (Fin P.dim → ℝ)))) := by
+  rw [ConvexProgression.Proper, ConvexBody.coe_latticePoints, ConvexBody.coe_smul]
 
 end
 

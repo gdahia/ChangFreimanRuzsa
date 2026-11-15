@@ -5,8 +5,8 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.ConvexProgression.Basic
 public import ChangFreimanRuzsa.GeometryOfNumbers.LatticeCoordinates
+public import ChangFreimanRuzsa.GeometryOfNumbers.SymmetricBody
 public import SumOfSetsInSeveralDimensions.FreimanDimension
 import ChangFreimanRuzsa.FreimanDimension.Model
 
@@ -107,25 +107,29 @@ private lemma isAddFreimanIso_two_of_eq_add (hK : Convex ℝ K) {ψ : (Fin m →
 `m` whose body is a full symmetric body. If a finite nonempty set `X` lies in `P`, then it lies in a
 convex progression of dimension at most `freimanDim X` whose body is a full symmetric body of volume
 at most `(2 * (m + 2)) ^ m * vol P.body`. -/
-lemma ConvexProgression.exists_superset_dim_le_freimanDim [DecidableEq G]
-    {P : ConvexProgression G} (hP : IsFullSymmetricBody P.body) (hP₂ : P.TProper 2) {X : Finset G}
-    (hX : X.Nonempty) (hXP : ↑X ⊆ P.toSet) :
-    ∃ Q : ConvexProgression G, Q.dim ≤ freimanDim X ∧ IsFullSymmetricBody Q.body ∧
-      ↑X ⊆ Q.toSet ∧ volume.real Q.body ≤ (2 * (P.dim + 2)) ^ P.dim * volume.real P.body := by
+lemma _root_.ConvexProgression.exists_superset_dim_le_freimanDim [DecidableEq G]
+    {P : ConvexProgression G} (hP : IsFullSymmetricBody (P.body : Set (Fin P.dim → ℝ)))
+    (hP₂ : P.Proper 2) {X : Finset G} (hX : X.Nonempty) (hXP : ∀ x ∈ X, x ∈ P) :
+    ∃ Q : ConvexProgression G, Q.dim ≤ freimanDim X ∧
+      IsFullSymmetricBody (Q.body : Set (Fin Q.dim → ℝ)) ∧ (∀ x ∈ X, x ∈ Q) ∧
+        volume.real (Q.body : Set (Fin Q.dim → ℝ)) ≤
+          (2 * (P.dim + 2)) ^ P.dim * volume.real (P.body : Set (Fin P.dim → ℝ)) := by
   obtain ⟨x₀, hx₀⟩ := hX
-  choose! f hfK hfX using fun x (hx : x ∈ X) ↦ mem_toSet.1 (hXP hx)
+  choose! f hfK hfX using fun x (hx : x ∈ X) ↦
+    ConvexProgression.mem_iff_exists_latticePoints.1 (hXP x hx)
   have hS : (translatedCoords f X x₀ : Set (Fin P.dim → ℤ)) ⊆
-      latticePoints ((2 : ℝ) • P.body) := by
+      latticePoints ((2 : ℝ) • (P.body : Set (Fin P.dim → ℝ))) := by
     rw [coe_translatedCoords]
     rintro _ ⟨x, hx, rfl⟩
     rw [mem_latticePoints, map_sub, ← sub_self_eq_two_smul hP.convex hP.neg_mem]
     exact sub_mem_sub (hfK x hx) (hfK x₀ hx₀)
-  refine ⟨⟨modelDim f X x₀, x₀, P.hom.comp (ofLatticeCoordinates _), _⟩,
-    modelDim_le_freimanDim (isAddFreimanIso_two_of_eq_add hP.convex hP₂ hfK
-      fun x hx ↦ (hfX x hx).symm) hx₀,
-    (hP.smul one_le_two).preimage_realOfLatticeCoordinates hS, ?_, ?_⟩
+  have hK := (hP.smul one_le_two).preimage_realOfLatticeCoordinates hS
+  refine ⟨⟨modelDim f X x₀, x₀, P.hom.comp (ofLatticeCoordinates _), hK.toConvexBody⟩,
+    modelDim_le_freimanDim (isAddFreimanIso_two_of_eq_add hP.convex
+      (ConvexProgression.proper_iff_injOn.1 hP₂) hfK fun x hx ↦ (hfX x hx).symm) hx₀, hK, ?_, ?_⟩
   · intro x hx
-    refine mem_toSet.2 ⟨latticeCoordinates _ (f x - f x₀), ?_, ?_⟩
+    refine ConvexProgression.mem_iff_exists_latticePoints.2
+      ⟨latticeCoordinates _ (f x - f x₀), ?_, ?_⟩
     · simpa [realOfLatticeCoordinates_latticeCoordinates (sub_mem_saturatedSpan f x₀ hx)] using
         hS (sub_mem_translatedCoords f x₀ hx)
     · dsimp only

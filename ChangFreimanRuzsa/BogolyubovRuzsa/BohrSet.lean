@@ -308,8 +308,8 @@ def freqGAP (q : ℕ) (v : Fin (k + 1) → Fin (k + 1) → ℤ) (t : Fin (k + 1)
 
 lemma stepsHom_intCast_apply_zero (q : ℕ) (v : Fin (k + 1) → Fin (k + 1) → ℤ)
     (n : Fin (k + 1) → ℤ) :
-    stepsHom (fun i ↦ ((v i 0 : ℤ) : ZMod q)) n = (((∑ i, n i • v i) 0 : ℤ) : ZMod q) := by
-  simp [stepsHom_apply, Finset.sum_apply]
+    GAP.stepsHom (fun i ↦ ((v i 0 : ℤ) : ZMod q)) n = (((∑ i, n i • v i) 0 : ℤ) : ZMod q) := by
+  simp [GAP.stepsHom_apply, Finset.sum_apply]
 
 /-- A vector of the frequency lattice in half the frequency box whose first coordinate is
 divisible by `q` is zero when `D ≤ q`. -/
@@ -333,7 +333,8 @@ lemma apply_eq_zero_of_stepsHom_eq_zero [NeZero q] (hDq : D ≤ q) (hv : LinearI
     (hmem : ∀ i, v i ∈ freqLattice r) (ht : ∀ i, 0 < t i)
     (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) (n : Fin (k + 1) → ℤ)
     (hn : ∀ i, |n i| ≤ 2 * coeffBound t i)
-    (hzero : stepsHom (fun i ↦ ((v i 0 : ℤ) : ZMod q)) n = 0) (i : Fin (k + 1)) : n i = 0 := by
+    (hzero : GAP.stepsHom (fun i ↦ ((v i 0 : ℤ) : ZMod q)) n = 0) (i : Fin (k + 1)) :
+    n i = 0 := by
   apply Fintype.linearIndependent_iff.mp hv n _ i
   refine eq_zero_of_mem_freqLattice hDq
     (AddSubgroup.sum_mem _ fun i _ ↦ AddSubgroup.zsmul_mem _ (hmem i) _)
@@ -343,14 +344,15 @@ lemma apply_eq_zero_of_stepsHom_eq_zero [NeZero q] (hDq : D ≤ q) (hv : LinearI
 /-- The progression `freqGAP q v t` is proper. -/
 lemma proper_freqGAP [NeZero q] (hDq : D ≤ q) (hv : LinearIndependent ℤ v)
     (hmem : ∀ i, v i ∈ freqLattice r) (ht : ∀ i, 0 < t i)
-    (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) : (freqGAP q v t).Proper :=
-  GAP.proper_symmetric (apply_eq_zero_of_stepsHom_eq_zero hDq hv hmem ht hshort)
+    (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) : (freqGAP q v t).Proper 1 := by
+  simpa [freqGAP] using GAP.proper_symmetric (t := 1) fun n hn ↦
+    apply_eq_zero_of_stepsHom_eq_zero hDq hv hmem ht hshort n (by simpa using hn)
 
 /-- Every element `y` of `freqGAP q v t` satisfies `(a : ZMod q) = r j * y` for an integer `a`
 with `|a| ≤ D`. -/
 lemma exists_intCast_eq_mul_of_mem_freqGAP [NeZero q] (hmem : ∀ i, v i ∈ freqLattice r)
     (ht : ∀ i, 0 < t i) (hshort : ∀ i, IsShort (freqBox q D) (t i) (v i)) {y : ZMod q}
-    (hy : y ∈ (freqGAP q v t : Finset (ZMod q))) (j : Fin k) :
+    (hy : y ∈ freqGAP q v t) (j : Fin k) :
     ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D := by
   obtain ⟨n, hn, rfl⟩ := GAP.mem_symmetric.1 hy
   refine ⟨(∑ i, n i • v i) j.succ, ?_, ?_⟩
@@ -367,9 +369,9 @@ for integers `a` with `|a| ≤ D`, and whose size is at least `q * ((D + 1) / q)
 factor `(4 * (k + 1)) ^ (2 * (k + 1))`. -/
 lemma exists_proper_gap_forall_exists_intCast_eq_mul {q k : ℕ} [NeZero q] (r : Fin k → ZMod q)
     {D : ℕ} (hD : 0 < D) (hDq : D ≤ q) :
-    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ k + 1 ∧
-      (∀ y ∈ (Q : Finset (ZMod q)), ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
-      q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * #(Q : Finset (ZMod q)) := by
+    ∃ Q : GAP (ZMod q), Q.Proper 1 ∧ Q.dim ≤ k + 1 ∧
+      (∀ y ∈ Q, ∀ j, ∃ a : ℤ, (a : ZMod q) = r j * y ∧ |a| ≤ D) ∧
+      q * (D + 1 : ℝ) ^ k ≤ (4 * (k + 1 : ℝ)) ^ (2 * (k + 1)) * q ^ k * #Q.toFinset := by
   obtain ⟨v, t, hv, hmem, ht, hshort, hprod⟩ := exists_linearIndependent_isShort_freqLattice r hD
   refine ⟨freqGAP q v t, proper_freqGAP hDq hv hmem ht hshort, GAP.dim_symmetric.le,
     fun y hy j ↦ exists_intCast_eq_mul_of_mem_freqGAP hmem ht hshort hy j, ?_⟩
@@ -394,10 +396,10 @@ The hypothesis `2 * π ≤ ε * q` makes the Bohr set wider than one step of `ZM
 Bohr set can be `{0}`. -/
 lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMod q) ℂ)) {ε : ℝ}
     (hεq : 2 * Real.pi ≤ ε * q) (hε : ε ≤ 1) :
-    ∃ Q : GAP (ZMod q), Q.Proper ∧ Q.dim ≤ Δ.card + 1 ∧
-      (Q : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
+    ∃ Q : GAP (ZMod q), Q.Proper 1 ∧ Q.dim ≤ Δ.card + 1 ∧
+      (Q.toFinset : Set (ZMod q)) ⊆ {x | ∀ ψ ∈ Δ, ‖1 - ψ x‖ ≤ ε} ∧
       (q : ℝ) * (ε / (2 * Real.pi)) ^ Δ.card ≤
-        (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * #(Q : Finset (ZMod q)) := by
+        (4 * ((Δ.card : ℝ) + 1)) ^ (2 * (Δ.card + 1)) * #Q.toFinset := by
   have hq : (0 : ℝ) < q := by exact_mod_cast q.pos_of_neZero
   have hε0 : 0 < ε := by nlinarith [Real.pi_pos]
   choose r hr using fun i : Fin Δ.card ↦
@@ -407,7 +409,7 @@ lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMo
     (Nat.floor_le_of_le (div_le_of_le_mul₀ (by positivity) hq.le (by nlinarith [Real.pi_gt_three])))
   refine ⟨Q, hproper, hdim, ?_, ?_⟩
   · intro y hy ψ hψ
-    obtain ⟨a, ha, habs⟩ := hchord y hy (Δ.equivFin ⟨ψ, hψ⟩)
+    obtain ⟨a, ha, habs⟩ := hchord y (by simpa using hy) (Δ.equivFin ⟨ψ, hψ⟩)
     refine (by simpa using hr _ y a ha : ‖1 - ψ y‖ ≤ 2 * Real.pi * |(a : ℝ)| / q).trans ?_
     rw [div_le_iff₀ hq, ← le_div_iff₀' (by positivity)]
     exact (by exact_mod_cast habs : |(a : ℝ)| ≤ ⌊ε * q / (2 * Real.pi)⌋₊).trans
@@ -418,7 +420,7 @@ lemma exists_proper_gap_chordSet {q : ℕ} [NeZero q] (Δ : Finset (AddChar (ZMo
       _ ≤ q * (⌊ε * q / (2 * Real.pi)⌋₊ + 1 : ℝ) ^ Δ.card := by
           gcongr
           exact (Nat.lt_floor_add_one _).le
-      _ ≤ (4 * (Δ.card + 1 : ℝ)) ^ (2 * (Δ.card + 1)) * q ^ Δ.card * #(Q : Finset (ZMod q)) :=
+      _ ≤ (4 * (Δ.card + 1 : ℝ)) ^ (2 * (Δ.card + 1)) * q ^ Δ.card * #Q.toFinset :=
           hsize
       _ = _ := by ring
 

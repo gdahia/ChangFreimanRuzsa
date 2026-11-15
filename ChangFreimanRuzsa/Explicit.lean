@@ -61,11 +61,14 @@ namespace ChangFreimanRuzsa
 `X`. -/
 private lemma exists_proper_gap_subset_nsmul_sub_nsmul_dim_eq_zero {G : Type*} [AddCommGroup G]
     [DecidableEq G] {X : Finset G} (hX : X.Nonempty) :
-    ∃ Q : GAP G, Q.Proper ∧ (Q : Finset G) ⊆ 2 • X - 2 • X ∧ Q.dim = 0 ∧ #(Q : Finset G) = 1 := by
-  have hQ : ((⟨0, 0, Fin.elim0, Fin.elim0⟩ : GAP G) : Finset G) = {0} := by
+    ∃ Q : GAP G, Q.Proper 1 ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧ Q.dim = 0 ∧ #Q.toFinset = 1 := by
+  have hQ : ({ dim := 0, origin := 0, step := Fin.elim0, bound := Fin.elim0 } : GAP G).toFinset =
+      {0} := by
     ext x
-    simp [GAP.mem_toFinset, GAP.eval, eq_comm]
-  refine ⟨⟨0, 0, Fin.elim0, Fin.elim0⟩, ?_, ?_, rfl, by simp [hQ]⟩
+    rw [ConvexProgression.mem_toFinset, GAP.mem_toConvexProgression, GAP.mem_iff_exists_eval]
+    simp [GAP.eval, eq_comm]
+  refine ⟨{ dim := 0, origin := 0, step := Fin.elim0, bound := Fin.elim0 }, ?_, ?_, rfl,
+    by simp [hQ]⟩
   · intro c _ c' _ _
     exact Subsingleton.elim c c'
   · rw [hQ, singleton_subset_iff]
@@ -77,11 +80,11 @@ conclusion of `exists_proper_gap_int_subset_add_sub_add_card_le` whenever
 private lemma exists_proper_gap_subset_nsmul_sub_nsmul_of_bohr {G : Type*} [AddCommGroup G]
     [DecidableEq G] {κ : ℝ} {X : Finset G} (hX : X.Nonempty) (hκ : 2 ≤ κ)
     (h : 256 * (bohrGAPDim κ : ℝ) ≤ #X → ∃ (X₁ : Finset G) (Q : GAP G), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧
-      Q.Proper ∧ (Q.dim : ℝ) ≤ bohrGAPDim κ ∧ (Q : Finset G) ⊆ X + X - (X + X) ∧
-        #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #(Q : Finset G)) :
-    ∃ Q : GAP G, Q.Proper ∧ (Q : Finset G) ⊆ 2 • X - 2 • X ∧
+      Q.Proper 1 ∧ (Q.dim : ℝ) ≤ bohrGAPDim κ ∧ Q.toFinset ⊆ X + X - (X + X) ∧
+        #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q.toFinset) :
+    ∃ Q : GAP G, Q.Proper 1 ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
       Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
-      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #(Q : Finset G) := by
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset := by
   have hL := Real.log_nonneg (by linarith : (1 : ℝ) ≤ κ)
   by_cases hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X
   · obtain ⟨-, Q, -, -, hQ, hdim, hsub, hcard⟩ := h hXlower
@@ -99,25 +102,25 @@ private lemma exists_proper_gap_subset_nsmul_sub_nsmul_of_bohr {G : Type*} [AddC
 set `X` of integers satisfies `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, then `2 • X - 2 • X` contains a
 proper generalized arithmetic progression `Q` of dimension at most
 `3 * 10 ^ 5 * κ * (1 + log κ)` with
-`#X ≤ exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2) * #(Q : Finset ℤ)`. -/
+`#X ≤ exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2) * #Q.toFinset`. -/
 theorem exists_proper_gap_subset_nsmul_sub_nsmul_dim_le_card_le {κ : ℝ} (X : Finset ℤ)
     (hX : X.Nonempty) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
-    ∃ Q : GAP ℤ, Q.Proper ∧ (Q : Finset ℤ) ⊆ 2 • X - 2 • X ∧
+    ∃ Q : GAP ℤ, Q.Proper 1 ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
       Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
-      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #(Q : Finset ℤ) :=
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset :=
   exists_proper_gap_subset_nsmul_sub_nsmul_of_bohr hX hκ
     (exists_proper_gap_int_subset_add_sub_add_card_le X hκ hXX)
 
 /-- **Bogolyubov–Ruzsa lemma** in `ZMod q` for a prime `q`, with the bounds of Chang. If a nonempty
 set `X` satisfies `#(X + X) ≤ κ * #X`, where `2 ≤ κ`, then `2 • X - 2 • X` contains a proper
 generalized arithmetic progression `Q` of dimension at most `3 * 10 ^ 5 * κ * (1 + log κ)` with
-`#X ≤ exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2) * #(Q : Finset (ZMod q))`. -/
+`#X ≤ exp (2 * 10 ^ 7 * κ * (1 + log κ) ^ 2) * #Q.toFinset`. -/
 theorem exists_proper_gap_zmod_subset_nsmul_sub_nsmul_dim_le_card_le {q : ℕ} {κ : ℝ}
     (X : Finset (ZMod q)) (hq : q.Prime) (hX : X.Nonempty) (hκ : 2 ≤ κ)
     (hXX : #(X + X) ≤ κ * #X) :
-    ∃ Q : GAP (ZMod q), Q.Proper ∧ (Q : Finset (ZMod q)) ⊆ 2 • X - 2 • X ∧
+    ∃ Q : GAP (ZMod q), Q.Proper 1 ∧ Q.toFinset ⊆ 2 • X - 2 • X ∧
       Q.dim ≤ 3 * 10 ^ 5 * κ * (1 + Real.log κ) ∧
-      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #(Q : Finset (ZMod q)) :=
+      #X ≤ Real.exp (2 * 10 ^ 7 * κ * (1 + Real.log κ) ^ 2) * #Q.toFinset :=
   exists_proper_gap_subset_nsmul_sub_nsmul_of_bohr hX hκ
     (exists_proper_gap_zmod_subset_add_sub_add_card_le X hq hκ hXX)
 
@@ -144,8 +147,8 @@ with at most `Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * 
 points. -/
 theorem exists_tProperGAP_subset_dim_le_freimanDim_card_le {t : ℕ} {κ : ℝ} (X : Finset ℤ)
     (hX : X.Nonempty) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
-    ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P ∧ P.dim ≤ freimanDim X ∧
-      #(P : Finset ℤ) ≤
+    ∃ P : GAP ℤ, P.Proper t ∧ X ⊆ P.toFinset ∧ P.dim ≤ freimanDim X ∧
+      #P.toFinset ≤
         Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨P, hP, hXP, hdim, hcard⟩ := exists_tProperGAP_int_dim_le_freimanDim X hX ht hκ hXX
   refine ⟨P, hP, hXP, hdim, hcard.trans ?_⟩
@@ -162,8 +165,8 @@ theorem exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le {q t : ℕ} {κ 
     (X : Finset (ZMod q)) (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
     (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q ∧ Q.dim ≤ freimanDim X ∧
-      #(Q : Finset (ZMod q)) ≤
+    ∃ Q : GAP (ZMod q), Q.Proper t ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤
         Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   have hXd := (mul_bohrGAPDim_le hκ).trans hXlower
   have he : Real.exp (freimanDimExponent κ + tProperExponent t (freimanDim X)) * #X ≤
@@ -181,8 +184,8 @@ progression of dimension at most `2 * κ - 1` with at most
 Freiman dimension of `X` is at most `2 * κ - 1`. -/
 theorem exists_tProperGAP_subset_dim_le_card_le {t : ℕ} {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
-    ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P ∧ P.dim ≤ 2 * κ - 1 ∧
-      #(P : Finset ℤ) ≤
+    ∃ P : GAP ℤ, P.Proper t ∧ X ⊆ P.toFinset ∧ P.dim ≤ 2 * κ - 1 ∧
+      #P.toFinset ≤
         Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨P, hP, hXP, hdim, hcard⟩ :=
     exists_tProperGAP_subset_dim_le_freimanDim_card_le X hX ht hκ hXX
@@ -199,8 +202,8 @@ theorem exists_tProperGAP_zmod_subset_dim_le_card_le {q t : ℕ} {κ : ℝ} (X :
     (hq : q.Prime) (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X)
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
     (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q) :
-    ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q ∧ Q.dim ≤ 2 * κ - 1 ∧
-      #(Q : Finset (ZMod q)) ≤
+    ∃ Q : GAP (ZMod q), Q.Proper t ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ 2 * κ - 1 ∧
+      #Q.toFinset ≤
         Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ :=
     exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le X hq ht hκ hXX hXlower hXupper
@@ -224,8 +227,8 @@ dimension at most `⌊κ - 1 + ε⌋₊` with at most
 `Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X` points. -/
 theorem exists_tProperGAP_subset_dim_le_floor_card_le {t : ℕ} {κ ε : ℝ} (X : Finset ℤ) (ht : 2 ≤ t)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
-    ∃ P : GAP ℤ, (t • P).Proper ∧ X ⊆ P ∧ P.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
-      #(P : Finset ℤ) ≤
+    ∃ P : GAP ℤ, P.Proper t ∧ X ⊆ P.toFinset ∧ P.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
+      #P.toFinset ≤
         Real.exp (2 * 10 ^ 11 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain rfl | hX := X.eq_empty_or_nonempty
   · simp at hXε
@@ -246,8 +249,8 @@ theorem exists_tProperGAP_zmod_subset_dim_le_floor_card_le {q t : ℕ} {κ ε : 
     (hXlower : 7 * 10 ^ 7 * κ ^ 2 ≤ #X)
     (hXupper : Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X ≤ q)
     (hXε : κ * (2 * κ - 1) ≤ ε * #X) :
-    ∃ Q : GAP (ZMod q), (t • Q).Proper ∧ X ⊆ Q ∧ Q.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
-      #(Q : Finset (ZMod q)) ≤
+    ∃ Q : GAP (ZMod q), Q.Proper t ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ ⌊κ - 1 + ε⌋₊ ∧
+      #Q.toFinset ≤
         Real.exp (10 ^ 10 * κ ^ 2 * (1 + Real.log κ) ^ 3 + 2 * κ * Real.log t) * #X := by
   obtain ⟨Q, hQ, hXQ, hdim, hcard⟩ :=
     exists_tProperGAP_zmod_subset_dim_le_freimanDim_card_le X hq ht hκ hXX hXlower hXupper

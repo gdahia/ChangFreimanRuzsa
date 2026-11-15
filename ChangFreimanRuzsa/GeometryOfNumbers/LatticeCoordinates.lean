@@ -86,7 +86,7 @@ lemma intVectorToReal_latticeBasisIntVector (i : Fin (integerGeneratedRank S)) :
 /-- The homomorphism `ℤ ^ r →+ ℤ ^ d` that sends `v` to the integer point of the span of `S` with
 coordinates `v` in `integerGeneratedLatticeBasis S`. -/
 def ofLatticeCoordinates : (Fin (integerGeneratedRank S) → ℤ) →+ (Fin d → ℤ) :=
-  stepsHom (latticeBasisIntVector S)
+  GAP.stepsHom (latticeBasisIntVector S)
 
 /-- The linear map `ℝ ^ r →ₗ[ℝ] ℝ ^ d` that sends `x` to the point of the span of `S` with
 coordinates `x` in `integerGeneratedLatticeBasis S`. -/
@@ -110,7 +110,7 @@ lemma realOfLatticeCoordinates_mem (x : Fin (integerGeneratedRank S) → ℝ) :
 lemma realOfLatticeCoordinates_intVectorToReal (v : Fin (integerGeneratedRank S) → ℤ) :
     realOfLatticeCoordinates S (intVectorToReal v) =
       intVectorToReal (ofLatticeCoordinates S v) := by
-  rw [ofLatticeCoordinates, stepsHom_apply, map_sum, realOfLatticeCoordinates,
+  rw [ofLatticeCoordinates, GAP.stepsHom_apply, map_sum, realOfLatticeCoordinates,
     LinearMap.comp_apply, LinearEquiv.coe_coe, Module.Basis.equivFun_symm_apply, map_sum]
   congr with i : 1
   rw [map_zsmul, intVectorToReal_latticeBasisIntVector, map_smul,

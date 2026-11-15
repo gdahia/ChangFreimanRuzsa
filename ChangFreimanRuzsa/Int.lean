@@ -172,9 +172,9 @@ reduction of `X` modulo a large prime, carried back to `ℤ` by
 `exists_proper_gap_subset_add_sub_add_of_isAddFreimanIso`. -/
 lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : Finset ℤ)
     (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
-    ∃ (X₁ : Finset ℤ) (Q₁ : GAP ℤ), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧ Q₁.Proper ∧
-      (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧ (Q₁ : Finset ℤ) ⊆ (X + X) - (X + X) ∧
-      #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #(Q₁ : Finset ℤ) := by
+    ∃ (X₁ : Finset ℤ) (Q₁ : GAP ℤ), X₁ ⊆ X ∧ #X ≤ 8 * #X₁ ∧ Q₁.Proper 1 ∧
+      (Q₁.dim : ℝ) ≤ bohrGAPDim κ ∧ Q₁.toFinset ⊆ (X + X) - (X + X) ∧
+      #X ≤ 8 * bohrLoss (bohrGAPDim κ) * #Q₁.toFinset := by
   obtain ⟨q, hq, hprime⟩ := Nat.exists_infinite_primes (16 * X.sup Int.natAbs + 1)
   have hiso := isAddFreimanIso_intCast (q := q) (X := X) (by grind)
   have hcard : #(X.image (Int.cast : ℤ → ZMod q)) = #X := card_image_of_injOn hiso.bijOn.injOn
@@ -193,7 +193,7 @@ lemma exists_proper_gap_int_subset_add_sub_add_card_le {κ : ℝ} (X : Finset �
 at most `c` and of size at most `exp c * #X`. -/
 lemma exists_gap_int_subset_dim_le_size_le {κ : ℝ} (X : Finset ℤ) (hκ : 2 ≤ κ)
     (hXX : #(X + X) ≤ κ * #X) (hXlower : 256 * (bohrGAPDim κ : ℝ) ≤ #X) :
-    ∃ P : GAP ℤ, X ⊆ P ∧ P.dim ≤ containerExponent κ ∧
+    ∃ P : GAP ℤ, X ⊆ P.toFinset ∧ P.dim ≤ containerExponent κ ∧
       P.size ≤ Real.exp (containerExponent κ) * #X := by
   obtain ⟨X₁, Q₁, hX₁X, hX₁card, hQ₁, hQ₁dim, hQ₁sub, hQ₁card⟩ :=
     exists_proper_gap_int_subset_add_sub_add_card_le X hκ hXX hXlower
@@ -221,8 +221,8 @@ Let `2 ≤ t`, write `E` for `intFreimanDimExponent κ` and `T` for
 at most `freimanDim X` and with at most `exp (E + T) * #X` points. -/
 theorem exists_tProperGAP_int_dim_le_freimanDim {t : ℕ} {κ : ℝ} (X : Finset ℤ) (hX : X.Nonempty)
     (ht : 2 ≤ t) (hκ : 2 ≤ κ) (hXX : #(X + X) ≤ κ * #X) :
-    ∃ Q : GAP ℤ, (t • Q).Proper ∧ X ⊆ Q ∧ Q.dim ≤ freimanDim X ∧
-      #(Q : Finset ℤ) ≤
+    ∃ Q : GAP ℤ, Q.Proper t ∧ X ⊆ Q.toFinset ∧ Q.dim ≤ freimanDim X ∧
+      #Q.toFinset ≤
         Real.exp (intFreimanDimExponent κ + tProperExponent t (freimanDim X)) * #X := by
   have hκ' : (2 : ℝ) ≤ 2 * κ := by linarith
   obtain ⟨X', hXX', hX'X', hX'lower, hX'upper⟩ :=

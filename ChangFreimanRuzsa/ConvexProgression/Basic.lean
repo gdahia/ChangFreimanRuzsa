@@ -5,48 +5,41 @@ Authors: Gabriel Dahia
 -/
 module
 
-public import ChangFreimanRuzsa.GAP.Basic
-public import ChangFreimanRuzsa.GeometryOfNumbers.RealBox
-import ChangFreimanRuzsa.GAP.Relations
+public import ChangFreimanRuzsa.GeometryOfNumbers.ConvexBody
 
 /-!
 # Convex progressions
 
 A convex progression in an abelian group `G` is given by a dimension `dim`, an `origin : G`, a
-homomorphism `hom : (Fin dim → ℤ) →+ G` and a body `body ⊆ ℝ ^ dim`. Its points are
-`origin + hom v` with `v` an integer point of `body`. In Section 1 of Green's notes *Progressions
-and convex geometry* the body is a full symmetric body, and the progression is `s`-proper when
-`hom` is injective on the integer points of `s • body`.
-
-A GAP `P` lies in the convex progression `P.toConvexProgression` with the same origin and steps and
-the box `realBox (P.bound + 1)`. The box is wider than the coefficient box `0 ≤ w ≤ P.bound`, so
-that it is a full symmetric body even when some `P.bound i` is `0`, and its volume is
-`2 ^ P.dim * P.size`.
+homomorphism `hom : (Fin dim → ℤ) →+ G` and a convex body `body` in `Fin dim → ℝ`. Its points are
+`origin + hom v` with `v` a lattice point of `body`. We write `x ∈ P` when `x` is a point of `P`,
+and `P.toFinset` is the finset of its points when `G` has decidable equality. It is `t`-proper,
+written `P.Proper t`, when `hom` is injective on the lattice points of `t • body`.
 
 ## Main definitions
 
 * `ConvexProgression G`: a convex progression in `G`.
-* `ConvexProgression.toSet`: the set of its points.
-* `ConvexProgression.TProper s`: `hom` is injective on the integer points of `s • body`.
-* `GAP.toConvexProgression`: the convex progression of the box of a GAP.
+* `ConvexProgression.toFinset`: the finset of points.
+* `ConvexProgression.Proper t`: `hom` is injective on the lattice points of `t • body`.
 
 ## Main statements
 
-* `GAP.coe_toFinset_subset_toSet`: a GAP lies in its convex progression.
-* `GAP.isFullSymmetricBody_toConvexProgression` and `GAP.volume_real_body_toConvexProgression`:
-  the box is a full symmetric body of volume `2 ^ P.dim * P.size`.
+* `ConvexProgression.proper_one_iff_card_toFinset`: a convex progression is `1`-proper if and only
+  if it has as many points as its body has lattice points.
+* `ConvexProgression.Proper.mono`: if the body contains `0`, then being `b`-proper implies being
+  `a`-proper for all `0 ≤ a ≤ b`.
+
+## Tags
+
+convex progression, convex body, lattice points, additive combinatorics
 -/
 
-@[expose] public section
+public section
 
-namespace ChangFreimanRuzsa
-
-open MeasureTheory Set
+open Finset
 open scoped Pointwise
 
-noncomputable section
-
-/-- A convex progression: the set of the points `origin + hom v` with `v` an integer point of
+/-- A convex progression: the set of the points `origin + hom v` with `v` a lattice point of
 `body`. -/
 structure ConvexProgression (G : Type*) [AddCommGroup G] where
   /-- The dimension of the ambient lattice. -/
@@ -55,61 +48,69 @@ structure ConvexProgression (G : Type*) [AddCommGroup G] where
   origin : G
   /-- The homomorphism from the lattice to `G`. -/
   hom : (Fin dim → ℤ) →+ G
-  /-- The body whose integer points parametrize the progression. -/
-  body : Set (Fin dim → ℝ)
+  /-- The convex body whose lattice points parametrize the progression. -/
+  body : ConvexBody (Fin dim → ℝ)
 
 namespace ConvexProgression
 
 variable {G : Type*} [AddCommGroup G] {P : ConvexProgression G}
 
-/-- The set of points `origin + hom v` with `v` an integer point of `body`. -/
-def toSet (P : ConvexProgression G) : Set G := P.origin +ᵥ P.hom '' latticePoints P.body
+/-- The points of a convex progression are the `origin + hom v` with `v` a lattice point of
+`body`. -/
+instance : Membership G (ConvexProgression G) where
+  mem P x := ∃ v ∈ P.body.latticePoints, P.origin + P.hom v = x
 
-lemma mem_toSet {x : G} : x ∈ P.toSet ↔ ∃ v ∈ latticePoints P.body, P.origin + P.hom v = x := by
-  simp [toSet, mem_vadd_set]
+lemma mem_def {x : G} : x ∈ P ↔ ∃ v ∈ P.body.latticePoints, P.origin + P.hom v = x := .rfl
 
-/-- A convex progression is `s`-proper if `hom` is injective on the integer points of
-`s • body`. -/
-def TProper (s : ℝ) (P : ConvexProgression G) : Prop := InjOn P.hom (latticePoints (s • P.body))
+/-- The finset of points of a convex progression. -/
+@[expose]
+noncomputable def toFinset [DecidableEq G] (P : ConvexProgression G) : Finset G :=
+  P.body.latticePoints.image fun v ↦ P.origin + P.hom v
 
-lemma TProper.mono (hP : IsFullSymmetricBody P.body) {a b : ℝ} (hab : |a| ≤ |b|)
-    (h : P.TProper b) : P.TProper a :=
-  InjOn.mono (latticePoints_mono (hP.smul_subset_smul hab)) h
+section Finset
+
+variable [DecidableEq G]
+
+@[simp]
+lemma mem_toFinset {x : G} : x ∈ P.toFinset ↔ x ∈ P := by
+  simp [toFinset, mem_def]
+
+@[simp, norm_cast]
+lemma coe_toFinset (P : ConvexProgression G) : (P.toFinset : Set G) = {x | x ∈ P} :=
+  Set.ext fun _ ↦ mem_toFinset
+
+/-- A convex progression has at most as many points as its body has lattice points. -/
+lemma card_toFinset_le (P : ConvexProgression G) : #P.toFinset ≤ #P.body.latticePoints :=
+  card_image_le
+
+end Finset
+
+/-- A convex progression is `t`-proper if `hom` is injective on the lattice points of
+`t • body`. -/
+@[expose]
+def Proper (t : ℝ) (P : ConvexProgression G) : Prop := Set.InjOn P.hom (t • P.body).latticePoints
+
+/-- A convex progression is `1`-proper if and only if it has as many points as its body has lattice
+points. -/
+lemma proper_one_iff_card_toFinset [DecidableEq G] :
+    P.Proper 1 ↔ #P.toFinset = #P.body.latticePoints := by
+  rw [Proper, one_smul, toFinset, card_image_iff]
+  simp [Set.InjOn]
+
+/-- Every convex progression is `0`-proper, because `0` is the only lattice point of
+`0 • body`. -/
+@[simp]
+lemma proper_zero (P : ConvexProgression G) : P.Proper 0 := by
+  simp [Proper]
+
+/-- If the body contains `0`, then being `b`-proper implies being `a`-proper for all
+`0 ≤ a ≤ b`. -/
+lemma Proper.mono (h₀ : 0 ∈ P.body) {a b : ℝ} (ha : 0 ≤ a) (hab : a ≤ b) (h : P.Proper b) :
+    P.Proper a := by
+  refine Set.InjOn.mono ?_ h
+  lift b to NNReal using ha.trans hab
+  lift a to NNReal using ha
+  exact coe_subset.2 <| ConvexBody.latticePoints_mono <| P.body.smul_le_of_le h₀ <|
+    NNReal.coe_le_coe.1 hab
 
 end ConvexProgression
-
-namespace GAP
-
-variable {G : Type*} [AddCommGroup G]
-
-/-- The convex progression with the origin and the steps of `P` and the box of half-widths
-`P.bound i + 1`. -/
-abbrev toConvexProgression (P : GAP G) : ConvexProgression G :=
-  ⟨P.dim, P.origin, stepsHom P.step, realBox (P.bound + 1)⟩
-
-/-- A GAP lies in its convex progression. -/
-lemma coe_toFinset_subset_toSet [DecidableEq G] (P : GAP G) :
-    (P : Set G) ⊆ P.toConvexProgression.toSet := by
-  intro x hx
-  obtain ⟨c, hc, rfl⟩ := (P.mem_toFinset_iff_exists_intCoeffs).1 hx
-  refine ConvexProgression.mem_toSet.2 ⟨c, mem_realBox.2 ?_, rfl⟩
-  intro i
-  rw [intVectorToReal_apply]
-  have h : |c i| ≤ ((P.bound i + 1 : ℕ) : ℤ) := by grind [abs_le]
-  exact_mod_cast h
-
-lemma isFullSymmetricBody_toConvexProgression (P : GAP G) :
-    IsFullSymmetricBody P.toConvexProgression.body :=
-  isFullSymmetricBody_realBox fun _ ↦ Nat.succ_pos _
-
-lemma volume_real_body_toConvexProgression (P : GAP G) :
-    volume.real P.toConvexProgression.body = 2 ^ P.dim * P.size := by
-  rw [toConvexProgression, volume_real_realBox, size, Nat.cast_prod, ← Fin.prod_const,
-    ← Finset.prod_mul_distrib]
-  rfl
-
-end GAP
-
-end
-
-end ChangFreimanRuzsa
